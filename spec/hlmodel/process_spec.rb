@@ -6,6 +6,10 @@ describe RBSim::HLModel::Process do
       end
   end
 
+  subject { RBSim::HLModel::Process.new(:test_node) }
+
+  its(:node){ should eq :test_node }
+
   describe "#with_event" do
     it "registers new event handler" do
       expect {
