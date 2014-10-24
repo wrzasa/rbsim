@@ -12,16 +12,22 @@ describe 'RBSim#dsl' do
      end
     end
 
-    it "has two nets"
+    it "has two nets" do
+      expect(model.nets.size).to eq 2
+    end
 
-    it "has net called :net01"
+    it "has net called :net01" do
+      expect(model.nets[:net01]).not_to be_nil
+    end
     context "net called :net01" do
       subject { model.nets[:net01] }
       its(:bw) { should eq(100) }
       its(:delay) { should eq(10) }
     end
 
-    it "has net called :net02"
+    it "has net called :net02" do
+      expect(model.nets[:net02]).not_to be_nil
+    end
     context "net called :net02" do
       subject { model.nets[:net02] }
       its(:bw) { should eq(1000) }
