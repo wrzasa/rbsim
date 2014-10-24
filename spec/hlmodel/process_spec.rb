@@ -26,6 +26,17 @@ describe RBSim::HLModel::Process do
     expect(subject.serve_user_event).to eq "I am happy John"
   end
 
+  it "serves system events" do
+    sysevent1 = subject.system_event_names[0]
+    sysevent2 = subject.system_event_names[1]
+    subject.register_event sysevent1, block: block, param2: 123
+    subject.register_event sysevent2, time: 1000
+    expect(subject.serve_system_event).
+      to eq({ name: sysevent1, args: { block: block, param2: 123 } })
+    expect(subject.serve_system_event).
+      to eq({ name: sysevent2, args: { time: 1000 } })
+  end
+
   context "with program name given" do
     subject { RBSim::HLModel::Process.new(:test_node, :apache_webserver) }
     its(:program){ should eq :apache_webserver }
@@ -76,8 +87,28 @@ describe RBSim::HLModel::Process do
     it "refuses to serve system event" do
       system_event = subject.system_event_names.first
       subject.register_event system_event
-      expect { subject.serve_user_event }.not_to change(subject, :event_queue_size)
+      expect { subject.serve_user_event }.to raise_error RuntimeError
     end
+  end
+
+  describe "#serve_system_event" do
+    let(:sysevent1){ subject.system_event_names[0] }
+    let(:sysevent2){ subject.system_event_names[1] }
+    it "serves first event from queue" do
+      subject.register_event sysevent1, param1: 123, param2: 345
+      expect(subject.serve_system_event).to eq({name: sysevent1, args: { param1: 123, param2: 345 } })
+    end
+    it "removes served event from queue" do
+      subject.register_event sysevent1
+      expect{ subject.serve_system_event }.to change(subject, :event_queue_size).by(-1)
+    end
+    it "refuses to serve user event" do
+      subject.with_event :user_event do
+      end
+      subject.register_event :user_event
+      expect { subject.serve_system_event }.to raise_error RuntimeError
+    end
+
   end
 
   describe "#has_event?" do

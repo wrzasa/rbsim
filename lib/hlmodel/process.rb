@@ -3,6 +3,7 @@ module RBSim
 
     class Process
       NoHandlerForUserEvent = Class.new RuntimeError
+      InvalidEventType = Class.new RuntimeError
 
       attr_reader :node, :program
 
@@ -34,11 +35,22 @@ module RBSim
         @event_queue << { name: event, block: handler, args: args }
       end
 
-      # serve first user event if there is any
+      # serve first event if it is a user event
       def serve_user_event
-        return nil if has_system_event?
+        if has_system_event?
+          raise InvalidEventType.new("#{@event_queue.first[:name]} is not a user event!")
+        end
         event = @event_queue.shift
         event[:block].call event[:args]
+      end
+
+      # serve first event if it is a system event
+      def serve_system_event
+        if has_user_event?
+          raise InvalidEventType.new("#{@event_queue.first[:name]} is not a system event!")
+        end
+        event = @event_queue.shift
+        { name: event[:name], args: event[:args] }
       end
 
       # is there a user event to serve?
