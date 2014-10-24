@@ -1,5 +1,3 @@
-require 'docile'
-
 module RBSim
   class DSL
     def initialize(model)

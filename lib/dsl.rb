@@ -1,3 +1,4 @@
+require 'docile'
 require 'dsl/infrastructure.rb'
 require 'hlmodel/infrastructure.rb'
 
