@@ -60,19 +60,50 @@ describe RBSim::HLModel::Process do
       subject.with_event :example_event, &block
     end
 
-    it "is true if user event is first in event queue" do
-      subject.register_event :example_event
-      expect(subject.has_event?).to be true
+    context "without event name" do
+      it "is true if user event is first in event queue" do
+        subject.register_event :example_event
+        expect(subject.has_event?).to be true
+      end
+
+      it "is false if event queue is empty" do
+        expect(subject.has_event?).to be false
+      end
+
+      it "is true if system event is first in queue" do
+        system_event = subject.system_event_names.first
+        subject.register_event system_event
+        expect(subject.has_event?).to be true
+      end
     end
 
-    it "is false if event queue is empty" do
-      expect(subject.has_event?).to be false
-    end
+    context "with event name" do
+      it "is false if event queue is empty" do
+        expect(subject.has_event? :example_event).to be false
+      end
 
-    it "is true if system event is first in queue" do
-      system_event = subject.system_event_names.first
-      subject.register_event system_event
-      expect(subject.has_event?).to be true
+      it "is true if user event with given name is first in event queue" do
+        subject.register_event :example_event
+        expect(subject.has_event? :example_event).to be true
+      end
+
+      it "is true if system event with given name is first in event queue" do
+        system_event = subject.system_event_names.first
+        subject.register_event system_event
+        expect(subject.has_event? system_event).to be true
+      end
+
+      it "is false if user event with given name is not first in event queue" do
+        subject.register_event :example_event
+        expect(subject.has_event? :other_event).to be false
+      end
+
+      it "is false if system event with given name is not first in event queue" do
+        system_event = subject.system_event_names[0]
+        other_system_event = subject.system_event_names[1]
+        subject.register_event system_event
+        expect(subject.has_event? other_system_event).to be false
+      end
     end
   end
 

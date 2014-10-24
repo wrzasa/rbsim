@@ -52,8 +52,11 @@ module RBSim
       end
 
       # is there any event to serve?
-      def has_event?
-        !@event_queue.empty?
+      def has_event?(name = nil)
+        return false if @event_queue.empty?
+        return true if name == nil
+        return true if @event_queue.first[:name] == name
+        false
       end
 
       # system events need special handling, by special
