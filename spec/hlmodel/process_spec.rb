@@ -10,7 +10,7 @@ describe RBSim::HLModel::Process do
     it "registers new event handler" do
       expect {
         subject.with_event :example_event, &block
-      }.to change(subject.event_handlers, :size).by(1)
+      }.to change(subject, :handlers_size).by(1)
     end
   end
 
@@ -19,13 +19,13 @@ describe RBSim::HLModel::Process do
       subject.with_event :example_event, &block
       expect {
         subject.register_event :example_event, param1: 123, param2: 345
-      }.to change(subject.event_queue, :size).by(1)
+      }.to change(subject, :event_queue_size).by(1)
     end
     it "puts system event in event queue" do
       system_event = subject.system_event_names.first
       expect {
         subject.register_event system_event
-      }.to change(subject.event_queue, :size).by(1)
+      }.to change(subject, :event_queue_size).by(1)
     end
     it "does not register user event if has no handler" do
       expect {
@@ -46,12 +46,12 @@ describe RBSim::HLModel::Process do
     end
     it "removes served event from queue" do
       subject.register_event :example_event
-      expect{ subject.serve_user_event }.to change(subject.event_queue, :size).by(-1)
+      expect{ subject.serve_user_event }.to change(subject, :event_queue_size).by(-1)
     end
     it "refuses to serve system event" do
       system_event = subject.system_event_names.first
       subject.register_event system_event
-      expect { subject.serve_user_event }.not_to change(subject.event_queue, :size)
+      expect { subject.serve_user_event }.not_to change(subject, :event_queue_size)
     end
   end
 

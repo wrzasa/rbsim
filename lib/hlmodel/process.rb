@@ -4,8 +4,6 @@ module RBSim
     class Process
       NoHandlerForUserEvent = Class.new RuntimeError
 
-      attr_reader :event_handlers, :event_queue
-
       def initialize
         @event_handlers = {}
         @event_queue = []
@@ -57,6 +55,14 @@ module RBSim
         return true if name == nil
         return true if @event_queue.first[:name] == name
         false
+      end
+
+      def handlers_size
+        @event_handlers.size
+      end
+
+      def event_queue_size
+        @event_queue.size
       end
 
       # system events need special handling, by special
