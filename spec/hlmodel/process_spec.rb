@@ -10,6 +10,22 @@ describe RBSim::HLModel::Process do
 
   its(:node){ should eq :test_node }
 
+  # Here is basic usage example
+  it "serves user events in order" do
+    subject.with_event :be_glad do |who|
+      "I am glad #{who}"
+    end
+    subject.with_event :be_happy do |who|
+      "I am happy #{who}"
+    end
+    subject.register_event :be_happy, "Jack"
+    subject.register_event :be_glad, "John"
+    subject.register_event :be_happy, "John"
+    expect(subject.serve_user_event).to eq "I am happy Jack"
+    expect(subject.serve_user_event).to eq "I am glad John"
+    expect(subject.serve_user_event).to eq "I am happy John"
+  end
+
   context "with program name given" do
     subject { RBSim::HLModel::Process.new(:test_node, :apache_webserver) }
     its(:program){ should eq :apache_webserver }
@@ -158,18 +174,4 @@ describe RBSim::HLModel::Process do
     end
   end
 
-  it "serves user events in order" do
-    subject.with_event :be_glad do |who|
-      "I am glad #{who}"
-    end
-    subject.with_event :be_happy do |who|
-      "I am happy #{who}"
-    end
-    subject.register_event :be_happy, "Jack"
-    subject.register_event :be_glad, "John"
-    subject.register_event :be_happy, "John"
-    expect(subject.serve_user_event).to eq "I am happy Jack"
-    expect(subject.serve_user_event).to eq "I am glad John"
-    expect(subject.serve_user_event).to eq "I am happy John"
-  end
 end
