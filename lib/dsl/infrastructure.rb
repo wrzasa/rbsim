@@ -16,6 +16,15 @@ module RBSim
       delay = args[:delay]
       @model.nets << HLModel::Net.new(name, bw, delay)
     end
+
+    def route(args = {})
+      twoway = if args[:twoway] || args[:twoway] == :true
+                 true
+               else
+                 false
+               end
+      @model.routes << HLModel::Route.new(args[:from], args[:to], args[:via], twoway)
+    end
   end
 
   class NodeDSL
