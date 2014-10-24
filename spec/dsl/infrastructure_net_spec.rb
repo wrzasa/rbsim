@@ -17,19 +17,19 @@ describe 'RBSim#dsl' do
     end
 
     it "has net called :net01" do
-      expect(model.nets[:net01]).not_to be_nil
+      expect(model.nets.first.name).to eq :net01
     end
     context "net called :net01" do
-      subject { model.nets[:net01] }
+      subject { model.nets.first }
       its(:bw) { should eq(100) }
       its(:delay) { should eq(10) }
     end
 
     it "has net called :net02" do
-      expect(model.nets[:net02]).not_to be_nil
+      expect(model.nets[1].name).to eq :net02
     end
     context "net called :net02" do
-      subject { model.nets[:net02] }
+      subject { model.nets[1] }
       its(:bw) { should eq(1000) }
       its(:delay) { should eq(20) }
     end

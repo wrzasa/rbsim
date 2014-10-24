@@ -3,7 +3,6 @@ module RBSim
     Model = Struct.new :nodes, :nets, :routes do
       def initialize(*)
         super
-        self.nets = {} if self.nets.nil?
         self.each_pair do |attr, val|
           if val.nil?
             self.send "#{attr}=".to_sym, []
@@ -18,6 +17,7 @@ module RBSim
     end
 
     Net = Struct.new :name, :bw, :delay
+
     Route = Struct.new :from, :to, :via, :twoway do
       def initialize(*)
         super

@@ -14,7 +14,7 @@ module RBSim
     def net(name, args = {})
       bw = args[:bw] || 0
       delay = args[:delay] || 0
-      @model.nets[name] = HLModel::Net.new(:name, bw, delay)
+      @model.nets << HLModel::Net.new(name, bw, delay)
     end
   end
 
