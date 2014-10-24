@@ -10,6 +10,11 @@ describe RBSim::HLModel::Process do
 
   its(:node){ should eq :test_node }
 
+  context "with program name given" do
+    subject { RBSim::HLModel::Process.new(:test_node, :apache_webserver) }
+    its(:program){ should eq :apache_webserver }
+  end
+
   describe "#with_event" do
     it "registers new event handler" do
       expect {

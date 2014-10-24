@@ -4,13 +4,15 @@ module RBSim
     class Process
       NoHandlerForUserEvent = Class.new RuntimeError
 
-      attr_reader :node
+      attr_reader :node, :program
 
       # +node+: name of node where this process runs
-      def initialize(node)
+      # +program+: name of program running in this process (if any name was given); this is just for information
+      def initialize(node, program = nil)
         @event_handlers = {}
         @event_queue = []
         @node = node
+        @program = program
       end
 
       # define event handler
