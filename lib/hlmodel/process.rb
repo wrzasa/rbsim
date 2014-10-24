@@ -89,7 +89,7 @@ module RBSim
       # handlers for system events must be implemented
       # in simulator!
       def system_event_names
-        [ :cpu,  :delay_for, :send_data, :new_process ]
+        [ :cpu,  :delay_for, :send_data, :new_process, :register_event ]
       end
     end
 
