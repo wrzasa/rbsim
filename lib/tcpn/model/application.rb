@@ -7,8 +7,8 @@ page 'application' do
     output process do |binding, clock|
       process = binding[:process][:val]
       event = process.serve_system_event :delay_for
-      time = clock + event[:args][:time]
-      { val: process, ts: clock + time }
+      ts = clock + event[:args][:time]
+      { val: process, ts: ts }
     end
 
     guard do |binding, clock|
