@@ -1,27 +1,8 @@
 require 'hlmodel'
 require 'tcpn'
 
-module TokenMethods
-  def self.included(base)
-    base.class_eval do
-      include TCPN::TokenValue
-    end
-    base.token_value_only :__token_id__
-  end
-  attr_reader :__token_id__
-
-  def initialize(*)
-    super
-    @__token_id__ = object_id
-  end
-
-  def token_id
-    @__token_id__
-  end
-end
-
 class ProcessToken < RBSim::HLModel::Process
-  include TokenMethods
+  include TCPN::TokenMethods
 end
 
 model = TCPN.read 'lib/tcpn/model/application.rb'
