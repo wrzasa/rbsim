@@ -37,6 +37,19 @@ describe RBSim::HLModel::Process do
       to eq({ name: sysevent2, args: { time: 1000 } })
   end
 
+  describe "#id" do
+    it "is unique" do
+      p1 = RBSim::HLModel::Process.new(:test_node)
+      p2 = RBSim::HLModel::Process.new(:test_node)
+      expect(p1.id).not_to eq p2.id
+    end
+    it "is not changed by cloning" do
+      p1 = RBSim::HLModel::Process.new(:test_node)
+      p2 = p1.clone
+      expect(p1.id).to eq p2.id
+    end
+  end
+
   context "with program name given" do
     subject { RBSim::HLModel::Process.new(:test_node, :apache_webserver) }
     its(:program){ should eq :apache_webserver }

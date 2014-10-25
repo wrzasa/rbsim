@@ -5,7 +5,7 @@ module RBSim
       NoHandlerForUserEvent = Class.new RuntimeError
       InvalidEventType = Class.new RuntimeError
 
-      attr_reader :node, :program
+      attr_reader :node, :program, :id
 
       # +node+: name of node where this process runs
       # +program+: name of program running in this process (if any name was given); this is just for information
@@ -14,6 +14,7 @@ module RBSim
         @event_queue = []
         @node = node
         @program = program
+        @id = self.object_id # used to identify process in TCPN, uniqe, not chaged by cloning!
       end
 
       # define event handler
