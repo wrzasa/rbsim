@@ -1,23 +1,43 @@
 require 'hlmodel'
 require 'tcpn'
 
-class RBSim::HLModel::Process
-  include TCPN::TokenValue
-  token_value_only :id
+module TokenMethods
+  def self.included(base)
+    base.class_eval do
+      include TCPN::TokenValue
+    end
+    base.token_value_only :__token_id__
+  end
+  attr_reader :__token_id__
+
+  def initialize(*)
+    super
+    @__token_id__ = object_id
+  end
+
+  def token_id
+    @__token_id__
+  end
+end
+
+class ProcessToken < RBSim::HLModel::Process
+  include TokenMethods
 end
 
 model = TCPN.read 'lib/tcpn/model/application.rb'
 
-process = RBSim::HLModel::Process.new(:node01)
-10.times { process.register_event(:delay_for, time: 10) }
-process.register_event(:delay_for, time: 100)
+processes = (1..2).map do
+  process = ProcessToken.new(:node01)
+  10.times { process.register_event(:delay_for, time: 10) }
+  process.register_event(:delay_for, time: 100)
+  model.add_marking_for 'process', process
+end
 
-model.set_marking_for 'process', process
 
 sim = TCPN.sim model
 
 sim.cb_for :transition, :after do |t, e|
-  puts "#{e.transition} #{e.binding.map { |k, v| "#{k}: #{v.timestamp}"}.join ',' }"
+  puts "#{e.transition} #{e.binding.map { |k, v| "#{k}: #{v}"}.join ',' }"
   #puts model.marking
 end
 
