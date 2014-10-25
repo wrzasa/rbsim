@@ -31,9 +31,9 @@ describe RBSim::HLModel::Process do
     sysevent2 = subject.system_event_names[1]
     subject.register_event sysevent1, block: block, param2: 123
     subject.register_event sysevent2, time: 1000
-    expect(subject.serve_system_event).
+    expect(subject.serve_system_event sysevent1).
       to eq({ name: sysevent1, args: { block: block, param2: 123 } })
-    expect(subject.serve_system_event).
+    expect(subject.serve_system_event sysevent2).
       to eq({ name: sysevent2, args: { time: 1000 } })
   end
 
@@ -109,17 +109,22 @@ describe RBSim::HLModel::Process do
     let(:sysevent2){ subject.system_event_names[1] }
     it "serves first event from queue" do
       subject.register_event sysevent1, param1: 123, param2: 345
-      expect(subject.serve_system_event).to eq({name: sysevent1, args: { param1: 123, param2: 345 } })
+      expect(subject.serve_system_event sysevent1).to eq({name: sysevent1, args: { param1: 123, param2: 345 } })
     end
     it "removes served event from queue" do
       subject.register_event sysevent1
-      expect{ subject.serve_system_event }.to change(subject, :event_queue_size).by(-1)
+      expect{ subject.serve_system_event sysevent1 }.to change(subject, :event_queue_size).by(-1)
     end
     it "refuses to serve user event" do
       subject.with_event :user_event do
       end
       subject.register_event :user_event
-      expect { subject.serve_system_event }.to raise_error RuntimeError
+      expect { subject.serve_system_event :user_event}.to raise_error RuntimeError
+    end
+    it "raises error when event names do not match" do
+      subject.register_event sysevent1
+      subject.register_event sysevent2
+      expect{ subject.serve_system_event sysevent2 }.to raise_error RuntimeError
     end
 
   end
