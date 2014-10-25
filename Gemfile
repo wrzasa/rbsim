@@ -4,3 +4,5 @@ gem 'rspec'
 gem 'rspec-its'
 gem 'docile'
 gem 'pry'
+
+gem "tcpn", path: '/home/wrzasa/rbsim/cpndsl'
