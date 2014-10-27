@@ -20,19 +20,30 @@ page 'application' do
     input process, :process
     input cpu, :cpu
 
-    def processing_delay(binding)
-      process = binding[:process][:val]
-      cpu = binding[:cpu][:val]
-      event = process.serve_system_event :cpu
-      event[:args][:block].call cpu
+    class ProcessDelay
+      attr_reader :process, :cpu, :event, :delay
+      def initialize(binding)
+        @process = binding[:process][:val]
+        @cpu = binding[:cpu][:val]
+        @event = @process.serve_system_event :cpu
+        @delay = @event[:args][:block].call @cpu
+      end
+
+      def process_token(clock)
+        { val: @process, ts: clock + @delay }
+      end
+
+      def cpu_token(clock)
+        { val: @cpu, ts: clock + @delay }
+      end
     end
 
     output process do |binding, clock|
-      { val: process, ts: clock + processing_delay(binding) }
+      ProcessDelay.new(binding).process_token clock
     end
 
     output cpu do |binding, clock|
-      { val: cpu, ts: clock + processing_delay(binding) }
+      ProcessDelay.new(binding).cpu_token clock
     end
 
     guard do |binding, clock|
@@ -41,6 +52,20 @@ page 'application' do
         true
       else
         false
+      end
+    end
+
+    transition 'event::serve_user' do
+      input process, :process
+
+      output process do |binding, clock|
+        process = binding[:process][:val]
+        process.serve_user_event
+        process
+      end
+
+      guard do |binding, clock|
+        binding[:process][:val].has_user_event?
       end
     end
   end

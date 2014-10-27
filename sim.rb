@@ -31,7 +31,7 @@ model = TCPN.read 'lib/tcpn/model/application.rb'
 process = ProcessToken.new(:node01)
 process.with_event :data do
   puts "*"*80
-  puts "* GOT EVENT DATA"
+  puts "* GOT data EVENT"
   puts "*"*80
 end
 #handler = Handler.new
@@ -41,6 +41,8 @@ handler = Proc.new { |cpu| 1000/cpu.performance } # java error if handler is set
 #  1000/cpu.performance
 #end
 process.register_event(:cpu, block: handler )
+process.register_event(:cpu, block: handler )
+process.register_event(:data, data_id: 123321 )
 #process.register_event(:delay_for, time: 100)
 model.add_marking_for 'process', process
 
