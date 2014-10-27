@@ -29,10 +29,15 @@ end
 model = TCPN.read 'lib/tcpn/model/application.rb'
 
 process = ProcessToken.new(:node01)
-process.with_event :data do
-  puts "*"*80
-  puts "* GOT data EVENT"
-  puts "*"*80
+process.with_event :data do |process, args|
+  handler = proc do |cpu|
+    4000 * args[:volume]/cpu.performance
+  end
+  process.register_event :cpu, block: handler
+  process.register_event :delay_for, time: 300
+  if args[:volume] > 10
+    process.register_event :data, volume: args[:volume]/10
+  end
 end
 #handler = Handler.new
 handler = Proc.new { |cpu| 1000/cpu.performance } # java error if handler is set to Proc or lambda...
@@ -42,7 +47,7 @@ handler = Proc.new { |cpu| 1000/cpu.performance } # java error if handler is set
 #end
 process.register_event(:cpu, block: handler )
 process.register_event(:cpu, block: handler )
-process.register_event(:data, data_id: 123321 )
+process.register_event(:data, volume: 1000)
 #process.register_event(:delay_for, time: 100)
 model.add_marking_for 'process', process
 
