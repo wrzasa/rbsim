@@ -5,6 +5,7 @@ module RBSim
       NoHandlerForUserEvent = Class.new RuntimeError
       InvalidEventType = Class.new RuntimeError
       InvalidSystemEventPassed = Class.new RuntimeError
+      NoEventToServe = Class.new RuntimeError
 
       attr_reader :node, :program, :id
 
@@ -48,11 +49,14 @@ module RBSim
 
       # serve first event if it is a system event
       def serve_system_event(name)
-        if has_user_event?
-          raise InvalidEventType.new("#{@event_queue.first[:name]} is not a system event!")
+        unless has_event?
+          raise NoEventToServe.new
         end
         unless has_event? name
           raise InvalidSystemEventPassed.new("You tried to serve: #{name}, but first in queue is: #{@event_queue.first[:name]}")
+        end
+        if has_user_event?
+          raise InvalidEventType.new("#{@event_queue.first[:name]} is not a system event!")
         end
         event = @event_queue.shift
         { name: event[:name], args: event[:args] }
