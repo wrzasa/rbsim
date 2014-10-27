@@ -1,7 +1,7 @@
 PATH
   remote: /home/wrzasa/rbsim/cpndsl
   specs:
-    tcpn (0.0.12.pre-java)
+    tcpn (0.0.15.pre1-java)
       docile (~> 1.1.0)
 
 GEM
