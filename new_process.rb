@@ -2,6 +2,8 @@ require 'rbsim'
 
 # new_process statement example usage
 # use this to create specs!
+# This will be a kind of integration specs for dsl and hlmodel:
+# Test behavior of hlmodel defined by the DSL statements
 
 model = RBSim.dsl do
   new_process :worker do
