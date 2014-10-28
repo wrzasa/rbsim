@@ -100,6 +100,13 @@ module RBSim
       def system_event_names
         [ :cpu,  :delay_for, :send_data, :new_process, :register_event ]
       end
+
+      # Start new process on the same node
+      # used when creating new process during simulation
+      def new(program = nil)
+        self.class.new @node, program
+      end
+
     end
 
   end
