@@ -38,7 +38,7 @@ module RBSim
 
     def with_event(event, &block)
       handler = proc do |args|
-        Docile.dsl_eval(self, args, &block)
+        Docile.dsl_eval(self, args, &block).process
       end
       @process.with_event(event, &handler)
     end
