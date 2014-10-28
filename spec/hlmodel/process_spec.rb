@@ -6,9 +6,31 @@ describe RBSim::HLModel::Process do
       end
   end
 
-  subject { RBSim::HLModel::Process.new(:test_node) }
+  subject do
+    process = RBSim::HLModel::Process.new(:test_process)
+    process.node = :node01
+    process
+  end
 
-  its(:node){ should eq :test_node }
+  its(:name){ should eq :test_process }
+
+
+  context "not assigned to node" do
+    subject do
+      process = RBSim::HLModel::Process.new(:not_assigned_process)
+      process
+    end
+    it "raises error and does not serve system events" do
+      subject.register_event :delay_for, 100
+      expect { subject.serve_system_event :delay_for }.to raise_error RuntimeError
+    end
+    it "raises error and does not serve user events" do
+      subject.with_event :data do
+      end
+      subject.register_event :data
+      expect { subject.serve_user_event }.to raise_error RuntimeError
+    end
+  end
 
   # Here is basic usage example
   it "serves user events in order" do
@@ -37,21 +59,8 @@ describe RBSim::HLModel::Process do
       to eq({ name: sysevent2, args: { time: 1000 } })
   end
 
-  describe "#id" do
-    it "is unique" do
-      p1 = RBSim::HLModel::Process.new(:test_node)
-      p2 = RBSim::HLModel::Process.new(:test_node)
-      expect(p1.id).not_to eq p2.id
-    end
-    it "is not changed by cloning" do
-      p1 = RBSim::HLModel::Process.new(:test_node)
-      p2 = p1.clone
-      expect(p1.id).to eq p2.id
-    end
-  end
-
   context "with program name given" do
-    subject { RBSim::HLModel::Process.new(:test_node, :apache_webserver) }
+    subject { RBSim::HLModel::Process.new(:test_process, :apache_webserver) }
     its(:program){ should eq :apache_webserver }
   end
 

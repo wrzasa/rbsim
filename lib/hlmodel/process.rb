@@ -6,17 +6,18 @@ module RBSim
       InvalidEventType = Class.new RuntimeError
       InvalidSystemEventPassed = Class.new RuntimeError
       NoEventToServe = Class.new RuntimeError
+      NotAssignedToNode = Class.new RuntimeError
 
-      attr_reader :node, :program, :id
+      attr_reader :name, :program
+      attr_accessor :node
 
-      # +node+: name of node where this process runs
+      # +name+: name of this process used to assign it to a node
       # +program+: name of program running in this process (if any name was given); this is just for information
-      def initialize(node, program = nil)
+      def initialize(name, program = nil)
         @event_handlers = {}
         @event_queue = []
-        @node = node
+        @name = name
         @program = program
-        @id = self.object_id # used to identify process in TCPN, uniqe, not chaged by cloning!
       end
 
       # define event handler
@@ -40,6 +41,7 @@ module RBSim
 
       # serve first event if it is a user event
       def serve_user_event
+        check_if_assigned!
         if has_system_event?
           raise InvalidEventType.new("#{@event_queue.first[:name]} is not a user event!")
         end
@@ -49,6 +51,7 @@ module RBSim
 
       # serve first event if it is a system event
       def serve_system_event(name)
+        check_if_assigned!
         unless has_event?
           raise NoEventToServe.new
         end
@@ -107,6 +110,12 @@ module RBSim
         self.class.new @node, program
       end
 
+      private
+      def check_if_assigned!
+        if @node.nil?
+          raise NotAssignedToNode.new("process #{@name} will not serve events until assigned to a node!")
+        end
+      end
     end
 
   end

@@ -9,7 +9,7 @@ describe 'RBSim#dsl' do
     end
 
     it "has process :sender1" do
-      expect(model.process[:sender]).not_to be_nil
+      expect(model.processes[:sender1]).not_to be_nil
     end
   end
 
