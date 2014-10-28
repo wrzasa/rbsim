@@ -3,13 +3,24 @@ page 'application' do
   cpu = place 'CPU'
   data_to_send = place 'data to send'
 
+  # Delay process execution for specified time.
+  # args: { time: time for which we should wait }
+  class EventDelayFor
+    def initialize(binding)
+      @process = binding[:process][:val]
+      @event = @process.serve_system_event :delay_for
+    end
+
+    def process_token(clock)
+      ts = clock + @event[:args][:time]
+      { val: @process, ts: ts }
+    end
+  end
+
   transition 'event::delay_for' do
     input process, :process
     output process do |binding, clock|
-      process = binding[:process][:val]
-      event = process.serve_system_event :delay_for
-      ts = clock + event[:args][:time]
-      { val: process, ts: ts }
+      EventDelayFor.new(binding).process_token(clock)
     end
 
     guard do |binding, clock|
@@ -21,7 +32,9 @@ page 'application' do
     input process, :process
     input cpu, :cpu
 
-    class ProcessDelay
+    # Processing data on CPU.
+    # args: { block: a Proc that will receive a cpu object as argument and returns computation time on this CPU }
+    class EventCPU
       attr_reader :process, :cpu, :event, :delay
       def initialize(binding)
         @process = binding[:process][:val]
@@ -40,11 +53,11 @@ page 'application' do
     end
 
     output process do |binding, clock|
-      ProcessDelay.new(binding).process_token clock
+      EventCPU.new(binding).process_token clock
     end
 
     output cpu do |binding, clock|
-      ProcessDelay.new(binding).cpu_token clock
+      EventCPU.new(binding).cpu_token clock
     end
 
     guard do |binding, clock|
@@ -73,15 +86,22 @@ page 'application' do
     transition 'event::send_data' do
       input process, :process
 
-      class ProcessSendData
+      # Sending data to anothe node.
+      # args: { volume: volume of send data,
+      #         type: type of send data (to use in HLModel),
+      #         content: content of send data (to use in HLModel),
+      #         src: TODO (source of data),
+      #         dst: TODO (destination of data) }
+      #
+      # FIXME: We should return an object representing data token instead of Hash!
+      # FIXME: From/src and To/dst addresses on data! Solve process <-> node address translation!
+      class EventSendData
         def initialize(binding)
           @process = binding[:process][:val]
           @event = @process.serve_system_event :send_data
         end
 
         def data_token(clock)
-          # FIXME: Here return an object representing data token instead of Hash!
-          # FIXME: From and To addresses on data! Solve process <-> node address translation!
           data_attributes = [ :volume, :type, :content ]
           data = @event[:args].select { |attr| data_attributes.include? attr }
           { val: data, ts: clock }
@@ -93,11 +113,11 @@ page 'application' do
       end
 
       output process do |binding, clock|
-        ProcessSendData.new(binding).process_token clock
+        EventSendData.new(binding).process_token clock
       end
 
       output data_to_send do |binding, clock|
-        ProcessSendData.new(binding).data_token clock
+        EventSendData.new(binding).data_token clock
       end
 
       guard do |binding, clock|
@@ -112,7 +132,7 @@ page 'application' do
       # args: { program: program name for new process (optional),
       #         constructor: block called as constructor of new process (adds initial events),
       #         constructor_args: args passed to the constructor }
-      class NewProcess
+      class EventNewProcess
         def initialize(binding)
           @process = binding[:process][:val]
           @event = @process.serve_system_event :new_process
@@ -126,7 +146,7 @@ page 'application' do
       end
 
       output process do |binding, clock|
-        NewProcess.new(binding).process_tokens(clock)
+        EventNewProcess.new(binding).process_tokens(clock)
       end
 
       guard do |binding, clock|
