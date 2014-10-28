@@ -1,6 +1,7 @@
 page 'application' do
   process = place 'process'
   cpu = place 'CPU'
+  data_to_send = place 'data to send'
 
   transition 'event::delay_for' do
     input process, :process
@@ -68,5 +69,41 @@ page 'application' do
         binding[:process][:val].has_user_event?
       end
     end
+
+    transition 'event::send_data' do
+      input process, :process
+
+      class ProcessSendData
+        def initialize(binding)
+          @process = binding[:process][:val]
+          @event = @process.serve_system_event :send_data
+        end
+
+        def data_token(clock)
+          # FIXME: Here return an object representing data token instead of Hash!
+          # FIXME: From and To addresses on data! Solve process <-> node address translation!
+          data_attributes = [ :volume, :type, :content ]
+          data = @event[:args].select { |attr| data_attributes.include? attr }
+          { val: data, ts: clock }
+        end
+
+        def process_token(clock)
+          { val: @process, ts: clock }
+        end
+      end
+
+      output process do |binding, clock|
+        ProcessSendData.new(binding).process_token clock
+      end
+
+      output data_to_send do |binding, clock|
+        ProcessSendData.new(binding).data_token clock
+      end
+
+      guard do |binding, clock|
+        binding[:process][:val].has_event? :send_data
+      end
+    end
+
   end
 end

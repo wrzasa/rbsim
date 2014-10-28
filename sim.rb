@@ -38,6 +38,7 @@ process.with_event :data do |process, args|
   if args[:volume] > 10
     process.register_event :data, volume: args[:volume]/10
   end
+  process.register_event :send_data, volume: args[:volume], type: :response
 end
 #handler = Handler.new
 handler = Proc.new { |cpu| 1000/cpu.performance } # java error if handler is set to Proc or lambda...
