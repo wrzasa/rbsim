@@ -105,5 +105,34 @@ page 'application' do
       end
     end
 
+    transition 'event::new_process' do
+      input process, :process
+
+      # Creating new process on the same node
+      # args: { program: program name for new process (optional),
+      #         constructor: block called as constructor of new process (adds initial events),
+      #         constructor_args: args passed to the constructor }
+      class NewProcess
+        def initialize(binding)
+          @process = binding[:process][:val]
+          @event = @process.serve_system_event :new_process
+          @new_process = @process.new @event[:args][:program]
+          @event[:args][:constructor].call @new_process, @event[:args][:constructor_args]
+        end
+
+        def process_tokens(clock)
+          [ { ts: clock, val: @process }, { ts: clock, val: @new_process } ]
+        end
+      end
+
+      output process do |binding, clock|
+        NewProcess.new(binding).process_tokens(clock)
+      end
+
+      guard do |binding, clock|
+        binding[:process][:val].has_event? :new_process
+      end
+    end
+
   end
 end

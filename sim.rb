@@ -37,9 +37,18 @@ process.with_event :data do |process, args|
   process.register_event :delay_for, time: 300
   if args[:volume] > 10
     process.register_event :data, volume: args[:volume]/10
+  else
+    constructor = proc do |process, args|
+      puts "===> FORKED <=="
+      process.register_event :delay_for, time: args
+      process.register_event :send_data, volume: args, type: :HTTP_REQUEST
+    end
+    process.register_event :new_process, program: :curl, constructor: constructor, constructor_args: 5000
   end
   process.register_event :send_data, volume: args[:volume], type: :response
 end
+
+
 #handler = Handler.new
 handler = Proc.new { |cpu| 1000/cpu.performance } # java error if handler is set to Proc or lambda...
 #handler = Proc.new { |cpu| 1000 } # java error if handler is set to Proc or lambda...
