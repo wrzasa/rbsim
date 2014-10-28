@@ -1,5 +1,6 @@
 require 'docile'
 require 'dsl/infrastructure.rb'
+require 'dsl/program.rb'
 
 module RBSim
 

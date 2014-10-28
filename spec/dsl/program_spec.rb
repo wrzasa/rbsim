@@ -29,7 +29,7 @@ describe 'RBSim#dsl' do
     end
 
     it "has program called :volume" do
-      expect(model.programs[:volume]).not_to be_nil
+      expect(model.programs[:worker]).not_to be_nil
     end
 
   end
