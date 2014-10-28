@@ -42,6 +42,6 @@ puts "cpu: #{e.inspect} computed CPU delay: #{e[:args][:block].call cpu}"
 
 puts "-"*60
 puts "Process after serving user event :data (note event_queue modified by this event)"
-p.serve_user_event
+p.serve_user_event # returns process object (self)!
 puts p.inspect
 
