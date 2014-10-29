@@ -11,6 +11,10 @@ describe 'RBSim#dsl' do
     it "has process :sender1" do
       expect(model.processes[:sender1]).not_to be_nil
     end
+
+    it "has 2 events in event_queue" do
+      expect(model.processes[:sender1].event_queue_size).to eq(2)
+    end
   end
 
   context "with processes defined by block" do
