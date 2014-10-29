@@ -12,4 +12,6 @@ module RBSim
     @model
   end
 
+  # TODO: after implementing marking TCPN from the HLModel, update spec/integration/new_process_spec.rb!
+
 end
