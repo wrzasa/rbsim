@@ -1,7 +1,7 @@
 require 'rbsim'
 require 'tcpn'
 
-# Use this example to create integration spec for DSL, HLModel and TCPN model
+# DONE: Use this example to create integration spec for DSL, HLModel and TCPN model
 # of application process
 #
 # TODO: test if new_process inside a process works well with and without TCPN
