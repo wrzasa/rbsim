@@ -34,10 +34,10 @@ describe RBSim::HLModel::Process do
 
   # Here is basic usage example
   it "serves user events in order" do
-    subject.with_event :be_glad do |who|
+    subject.with_event :be_glad do |process, who|
       "I am glad #{who}"
     end
-    subject.with_event :be_happy do |who|
+    subject.with_event :be_happy do |process, who|
       "I am happy #{who}"
     end
     subject.register_event :be_happy, "Jack"
@@ -98,7 +98,7 @@ describe RBSim::HLModel::Process do
       subject.with_event :example_event, &block
     end
     it "serves first event from queue calling event handler" do
-      expect(block).to receive(:call).with(param1: 123, param2: 345)
+      expect(block).to receive(:call).with(subject, { param1: 123, param2: 345 })
       subject.register_event :example_event, param1: 123, param2: 345
       subject.serve_user_event
     end

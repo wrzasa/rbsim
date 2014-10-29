@@ -1,4 +1,5 @@
 require 'docile'
+require 'tcpn/tokens'
 require 'dsl/infrastructure.rb'
 require 'dsl/program.rb'
 require 'dsl/process.rb'

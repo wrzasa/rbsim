@@ -46,7 +46,7 @@ module RBSim
           raise InvalidEventType.new("#{@event_queue.first[:name]} is not a user event!")
         end
         event = @event_queue.shift
-        event[:block].call event[:args]
+        event[:block].call self, event[:args]
       end
 
       # serve first event if it is a system event

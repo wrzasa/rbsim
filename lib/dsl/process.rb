@@ -29,16 +29,21 @@ module RBSim
       model.processes[name] = process
     end
 
-    def initialize(model, name, program)
+    def initialize(model, name, program, process = nil)
       @name = name
       @model = model
       @program = program
-      @process = HLModel::Process.new(@name, @program)
+      @process = process
+      #@process = HLModel::Process.new(@name, @program)
+      @process = ProcessToken.new(@name, @program) if @process.nil?
     end
 
     def with_event(event, &block)
-      handler = proc do |args|
-        Docile.dsl_eval(self, args, &block).process
+      # Cannot use self as eval context and
+      # must pass process because after clonning in TCPN it will be 
+      # completely different process object then it is now!
+      handler = proc do |process, args|
+        Docile.dsl_eval(ProcessDSL.new(@model, @name, @program, process), args, &block).process
       end
       @process.with_event(event, &handler)
     end
