@@ -47,16 +47,16 @@ tcpn.add_marking_for 'process', process_token
 
 sim = TCPN.sim tcpn
 
+transitions = []
 sim.cb_for :transition, :after do |t, e|
+  transitions << e.transition
   puts "==> FIRING: #{e.transition} #{e.binding.map { |k, v| "#{k}: #{v}"}.join ',' }"
   #puts model.marking
 end
 
-sim.cb_for :clock, :after do |t, e|
-  puts e.clock #if (tick += 1) % 100 == 0
-end
-
 sim.run
+
+p transitions
 
 puts " MARKING ".center(70, '=')
 tcpn.marking.each do |p, m|
