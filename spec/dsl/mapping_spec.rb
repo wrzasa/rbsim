@@ -7,7 +7,7 @@ describe 'RBSim#dsl' do
     let(:model) do
       RBSim.dsl do
 
-        put :clinet, on: :node01
+        put :client, on: :node01
         put process: :worker1, on: :node01
         put on: :node02, process: :worker2
 
