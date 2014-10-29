@@ -23,6 +23,12 @@ describe "Process activity" do
           cpu do |c|
             12/c.performance
           end
+          new_process :child do
+            delay_for 500
+            cpu do |c|
+              450/c.performance
+            end
+          end
         end
         delay_for 100
         cpu do |cpu|
@@ -60,7 +66,15 @@ describe "Process activity" do
 
     simulator.run
 
-    expect(transitions).to eq ["event::delay_for", "event::cpu", "event::serve_user", "event::delay_for", "event::cpu"]
+    expect(transitions).to eq ["event::delay_for",
+                               "event::cpu",
+                               "event::serve_user",
+                               "event::delay_for",
+                               "event::cpu",
+                               "event::new_process",
+                               "event::delay_for",
+                               "event::cpu"
+                              ]
   end
 
 end
