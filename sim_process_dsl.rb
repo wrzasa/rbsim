@@ -1,6 +1,12 @@
 require 'rbsim'
 require 'tcpn'
 
+# Use this example to create integration spec for DSL, HLModel and TCPN model
+# of application process
+#
+# TODO: test if new_process inside a process works well with and without TCPN
+# (see: spec/dsl_and_hlmodel/new_process_spec.rb -- there is no such test there!
+
 class CPU
   attr_accessor :node, :performance
   def initialize(node, performance)
