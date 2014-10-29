@@ -116,6 +116,7 @@ module RBSim
           raise NotAssignedToNode.new("process #{@name} will not serve events until assigned to a node!")
         end
       end
+
     end
 
   end

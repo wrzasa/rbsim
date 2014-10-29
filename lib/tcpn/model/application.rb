@@ -136,8 +136,7 @@ page 'application' do
         def initialize(binding)
           @process = binding[:process][:val]
           @event = @process.serve_system_event :new_process
-          @new_process = @process.new @event[:args][:program]
-          @event[:args][:constructor].call @new_process, @event[:args][:constructor_args]
+          @new_process = @event[:args][:constructor].call @event[:args][:constructor_args]
         end
 
         def process_tokens(clock)

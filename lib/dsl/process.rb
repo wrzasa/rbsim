@@ -68,7 +68,12 @@ module RBSim
     end
 
     def new_process(name, args = nil, &block)
-      self.class.new_process(@model, name, args, &block)
+      constructor = proc do |args|
+        new_process = self.class.new_process(@model, name, args, &block)
+        new_process.node = @process.node
+        new_process
+      end
+      @process.register_event(:new_process, constructor_args: args, constructor: constructor)
     end
 
   end
