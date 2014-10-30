@@ -20,10 +20,10 @@ describe "RBSim#dsl" do
     describe "has first route" do
       subject { model.routes.first }
       it "from :node01" do
-        expect(subject.from).to eq :node01
+        expect(subject.src).to eq :node01
       end
       it "to :node02" do
-        expect(subject.to).to eq :node02
+        expect(subject.dst).to eq :node02
       end
       it "via net01 and net02" do
         expect(subject.via).to eq [:net01, :net02]
@@ -33,10 +33,10 @@ describe "RBSim#dsl" do
     describe "has second route" do
       subject { model.routes[1] }
       it "from node04" do
-        expect(subject.from).to eq :node04
+        expect(subject.src).to eq :node04
       end
       it "to node05" do
-        expect(subject.to).to eq :node05
+        expect(subject.dst).to eq :node05
       end
       it "via net07 and net01" do
         expect(subject.via).to eq [:net07, :net01]
