@@ -27,4 +27,18 @@ describe "HLModel::Routes" do
     end
   end
 
+  describe "multiple routes for same endpoints" do
+    let(:oneway_alternative) { RBSim::HLModel::Route.new :node01, :node02, [ :net05, :net06 ] }
+    subject do
+      routes.add oneway
+      routes.add oneway_alternative
+      routes
+    end
+
+    # FIXME: how to test that it is random?
+    it "finds one of alternative routes" do
+      expect([oneway, oneway_alternative]).to include(subject.find :node01, :node02)
+    end
+  end
+
 end

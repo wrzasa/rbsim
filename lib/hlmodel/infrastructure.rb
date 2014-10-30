@@ -15,15 +15,23 @@ module RBSim
 
       def add(route)
         key = [route.src, route.dst]
-        @routes[key] = route
+        @routes[key] ||= []
+        @routes[key] << route
         if route.twoway?
-          @routes[key.reverse] = route
+          @routes[key.reverse] ||= []
+          @routes[key.reverse] << route
         end
       end
+      alias << add
 
       def find(src, dst)
-        route = @routes[[src, dst]]
-        return nil if route.nil?
+        routes = @routes[[src, dst]]
+        return nil if routes.nil?
+        route = if routes.size == 1
+                  routes.first
+                else
+                  routes[rand(routes.size)]
+                end
         if route.src == src
           route
         else
