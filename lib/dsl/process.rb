@@ -34,8 +34,7 @@ module RBSim
       @model = model
       @program = program
       @process = process
-      #@process = HLModel::Process.new(@name, @program)
-      @process = ProcessToken.new(@name, @program) if @process.nil?
+      @process = Tokens::ProcessToken.new(@name, @program) if @process.nil?
     end
 
     def with_event(event, &block)
