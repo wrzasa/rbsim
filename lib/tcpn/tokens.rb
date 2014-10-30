@@ -28,6 +28,13 @@ module RBSim
           raise IncompleteDataDefinition.new("Must define destination of data package!");
         end
       end
+
+      def to_s
+        v = [:src, :dst, :src_node, :size, :type, :content].map do |k|
+          "#{k}: #{self.send(k).inspect}"
+        end.join ', '
+        "{#{v}}"
+      end
     end
 
     class DataToken < Data
