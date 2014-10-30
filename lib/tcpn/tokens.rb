@@ -14,12 +14,12 @@ module RBSim
       attr_reader :src, :dst, :src_node, :size, :type, :content
       attr_accessor :dst_node
 
-      def initialize(node, process, hsh = {})
+      def initialize(node, process, opts)
         @src_node = node
         @src = process
-        @dst = hsh[:to]
+        @dst = opts[:to]
         [ :size, :type, :content].each do |a|
-          self.instance_variable_set "@#{a}".to_sym, hsh[a]
+          self.instance_variable_set "@#{a}".to_sym, opts[a]
         end
         if @size.nil?
           raise IncompleteDataDefinition.new("Must define size of data package!");
