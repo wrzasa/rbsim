@@ -21,6 +21,7 @@ describe "HLModel::Process created with DSL#new_process" do
           delay_for 400
         end
         register_event :data, 1000
+        send_data to: :child, size: 1024, type: :hello, content: "Hello!"
       end
     end
   end
@@ -62,11 +63,20 @@ describe "HLModel::Process created with DSL#new_process" do
 
 
     # old process again
+    # user event registered, its handler will be run in the
+    # future when time comes
     p = process.serve_user_event
     expect(p).to eq(process) # returns modified process
-    expect(process.event_queue_size).to eq(2)
+    expect(process.event_queue_size).to eq(3)
 
-    # Events created by the above user event follow:
+    # send_data
+    event = process.serve_system_event :send_data
+    expect(event[:name]).to eq(:send_data)
+    # CPU time computed for specified CPU
+    expect(event[:args]).to eq(to: :child, size: 1024, type: :hello, content: "Hello!")
+
+
+    # Events created by serving the the :data user event above follow:
 
     event = process.serve_system_event :delay_for
     expect(event).to eq({name: :delay_for, args: { time: 200 }})
@@ -75,6 +85,7 @@ describe "HLModel::Process created with DSL#new_process" do
     expect(event[:name]).to eq(:cpu)
     # CPU time computed for specified CPU
     expect(event[:args][:block].call NewProcessSpec::CPU.new).to eq(1)
+
 
   end
 

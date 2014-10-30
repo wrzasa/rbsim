@@ -88,24 +88,19 @@ page 'application' do
       input process, :process
 
       # Sending data to anothe node.
-      # args: { volume: volume of send data,
+      # args: { to: destination process name,
+      #         size: volume of send data,
       #         type: type of send data (to use in HLModel),
-      #         content: content of send data (to use in HLModel),
-      #         src: TODO (source of data),
-      #         dst: TODO (destination of data) }
-      #
-      # FIXME: We should return an object representing data token instead of Hash!
-      # FIXME: From/src and To/dst addresses on data! Solve process <-> node address translation!
+      #         content: content of send data (to use in HLModel) }
       class EventSendData
         def initialize(binding)
           @process = binding[:process][:val]
           @event = @process.serve_system_event :send_data
+          @data = RBSim::Tokens::DataToken.new(@process.node, @process.name, @event[:args])
         end
 
         def data_token(clock)
-          data_attributes = [ :volume, :type, :content ]
-          data = @event[:args].select { |attr| data_attributes.include? attr }
-          { val: data, ts: clock }
+          { val: @data, ts: clock }
         end
 
         def process_token(clock)

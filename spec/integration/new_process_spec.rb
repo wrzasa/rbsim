@@ -29,6 +29,7 @@ describe "Process activity" do
             cpu do |c|
               450/c.performance
             end
+            send_data to: :worker, size: 1024, type: :hi, content: 'hello!'
           end
         end
         delay_for 100
@@ -61,7 +62,7 @@ describe "Process activity" do
     TCPN.sim tcpn
   end
 
-  it "produces correct transition firing sequence" do
+  it "produces correct transition firing sequence and final TCPN marking" do
     transitions = []
     simulator.cb_for :transition, :after do |t, e|
       transitions << e.transition
@@ -76,12 +77,17 @@ describe "Process activity" do
                                "event::cpu",
                                "event::new_process",
                                "event::delay_for",
-                               "event::cpu"
+                               "event::cpu",
+                               "event::send_data"
                               ]
     # mapping token should be updated after new
     # process is created
     mapping = tcpn.marking_for('mapping').first[:val]
     expect(mapping[:child]).to eq(:node01)
+
+    # do we have data to send token in proper place?
+    data = tcpn.marking_for('data to send').first[:val]
+    expect(data.dst).to eq(:worker)
   end
 
 end
