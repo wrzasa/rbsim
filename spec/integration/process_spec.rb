@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "Process activity" do
+describe "Application process activity" do
 
   module ProcessActivitySpec
     class CPU
