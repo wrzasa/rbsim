@@ -3,7 +3,7 @@ module RBSim
     IncorrectMapping = Class.new RuntimeError
 
     def put(process_name, opts = nil)
-      if !process_name.instance_of?(Hash) && opts.nil? 
+      if !process_name.instance_of?(Hash) && opts.nil?
         raise IncorrectMapping.new("Does not define node for proces #{process_name}")
       end
 

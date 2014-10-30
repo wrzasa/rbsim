@@ -2,6 +2,7 @@ page 'application' do
   process = place 'process'
   cpu = place 'CPU'
   data_to_send = place 'data to send'
+  mapping = place 'mapping'
 
   # Delay process execution for specified time.
   # args: { time: time for which we should wait }
@@ -127,6 +128,7 @@ page 'application' do
 
     transition 'event::new_process' do
       input process, :process
+      input mapping, :mapping
 
       # Creating new process on the same node
       # args: { program: program name for new process (optional),
@@ -137,15 +139,25 @@ page 'application' do
           @process = binding[:process][:val]
           @event = @process.serve_system_event :new_process
           @new_process = @event[:args][:constructor].call @event[:args][:constructor_args]
+          @mapping = binding[:mapping][:val]
+          @mapping[@new_process.name] = @new_process.node
         end
 
         def process_tokens(clock)
           [ { ts: clock, val: @process }, { ts: clock, val: @new_process } ]
         end
+
+        def mapping_token(clock)
+          { ts: clock, val: @mapping }
+        end
       end
 
       output process do |binding, clock|
         EventNewProcess.new(binding).process_tokens(clock)
+      end
+
+      output mapping do |binding, clock|
+        EventNewProcess.new(binding).mapping_token(clock)
       end
 
       guard do |binding, clock|

@@ -13,6 +13,7 @@ describe "Process activity" do
     class CPUToken < CPU
       include TCPN::TokenMethods
     end
+
   end
 
   let :hlmodel do
@@ -45,12 +46,14 @@ describe "Process activity" do
     process_token = hlmodel.processes[:worker]
     process_token.node = :node01
     cpu_token = ProcessActivitySpec::CPUToken.new(:node01, 10)
+    mapping_token = { process_token.name => process_token.node }
 
 
     tcpn = TCPN.read 'lib/tcpn/model/application.rb'
 
     tcpn.add_marking_for 'CPU', cpu_token
     tcpn.add_marking_for 'process', process_token
+    tcpn.add_marking_for 'mapping', { ts: 0, val: mapping_token }
     tcpn
   end
 
@@ -75,6 +78,10 @@ describe "Process activity" do
                                "event::delay_for",
                                "event::cpu"
                               ]
+    # mapping token should be updated after new
+    # process is created
+    mapping = tcpn.marking_for('mapping').first[:val]
+    expect(mapping[:child]).to eq(:node01)
   end
 
 end
