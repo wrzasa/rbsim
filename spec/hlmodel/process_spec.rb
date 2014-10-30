@@ -59,6 +59,13 @@ describe RBSim::HLModel::Process do
       to eq({ name: sysevent2, args: { time: 1000 } })
   end
 
+  it "has generic event handler for :data_received event" do
+    data = "for this test anything representing received data"
+    subject.register_event :data_received, data
+    expect(subject.has_event? :data_received).to be true
+    expect{ subject.serve_user_event }.not_to raise_error
+  end
+
   context "with program name given" do
     subject { RBSim::HLModel::Process.new(:test_process, :apache_webserver) }
     its(:program){ should eq :apache_webserver }

@@ -14,7 +14,7 @@ module RBSim
       # +name+: name of this process used to assign it to a node
       # +program+: name of program running in this process (if any name was given); this is just for information
       def initialize(name, program = nil)
-        @event_handlers = {}
+        @event_handlers = { data_received: generic_data_received_handler }
         @event_queue = []
         @name = name
         @program = program
@@ -114,6 +114,12 @@ module RBSim
       def check_if_assigned!
         if @node.nil?
           raise NotAssignedToNode.new("process #{@name} will not serve events until assigned to a node!")
+        end
+      end
+
+      def generic_data_received_handler
+        proc do |process, data|
+          STDERR.puts "WARNING! Process #{process.name} on node #{process.node} received data, but has no handler defined! Define handler for event :data_received! Data packege will be dropped! Received data: #{data}"
         end
       end
 
