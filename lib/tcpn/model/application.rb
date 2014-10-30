@@ -3,6 +3,7 @@ page 'application' do
   cpu = place 'CPU'
   data_to_send = place 'data to send'
   mapping = place 'mapping'
+  data_to_receive = place 'data to receive'
 
   # Delay process execution for specified time.
   # args: { time: time for which we should wait }
@@ -157,6 +158,33 @@ page 'application' do
 
       guard do |binding, clock|
         binding[:process][:val].has_event? :new_process
+      end
+    end
+
+    transition 'event::data_received' do
+      input process, :process
+      input data_to_receive, :data
+
+      class EventDataReceived
+        def initialize(binding)
+          @process = binding[:process][:val]
+          @data = binding[:data][:val]
+          @process.register_event :data_received, @data
+        end
+
+        def process_token(clock)
+          { ts: clock, val: @process }
+        end
+      end
+
+      output process do |binding, clock|
+        EventDataReceived.new(binding).process_token(clock)
+      end
+
+      guard do |binding, clock|
+        process = binding[:process][:val]
+        data = binding[:data][:val]
+        process.name == data.dst
       end
     end
 

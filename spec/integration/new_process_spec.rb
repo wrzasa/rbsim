@@ -90,4 +90,22 @@ describe "Process activity" do
     expect(data.dst).to eq(:worker)
   end
 
+  it "receives data" do
+    data_token = RBSim::Tokens::DataToken.new(:node01, :process01, to: :child, size: 1234)
+    tcpn.add_marking_for 'data to receive', data_token
+    received_data = false
+    transitions = []
+    simulator.cb_for :transition, :before do |t, e|
+      transitions << e.transition
+      if e.transition == 'event::serve_user' && e.binding[:process][:val].has_event?(:data_received)
+        received_data = true
+      end
+    end
+
+    simulator.run
+
+    expect(transitions).to include("event::data_received")
+    expect(received_data).to be true
+  end
+
 end
