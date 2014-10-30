@@ -8,11 +8,14 @@ module RBSim
       include TCPN::TokenMethods
     end
 
+    class RoutesToken < HLModel::Routes
+      include TCPN::TokenMethods
+    end
 
     class Data
       IncompleteDataDefinition = Class.new RuntimeError
       attr_reader :src, :dst, :src_node, :size, :type, :content
-      attr_accessor :dst_node
+      attr_accessor :dst_node, :route
 
       def initialize(node, process, opts)
         @src_node = node
