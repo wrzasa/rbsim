@@ -18,6 +18,7 @@ page 'add route' do
       data.route = route
       { ts: clock, val: data }
     end
+
   end
 end
 

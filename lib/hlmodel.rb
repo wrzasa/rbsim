@@ -11,7 +11,7 @@ module RBSim
         self.programs = {}
         self.processes = {}
         self.mapping = Mapping.new
-        self.routes = Routes.new
+        self.routes = Tokens::RoutesToken.new
         self.each_pair do |attr, val|
           if val.nil?
             self.send "#{attr}=".to_sym, []

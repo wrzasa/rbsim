@@ -1,4 +1,4 @@
-require 'rbsim.rb'
+require 'rbsim'
 require 'rspec/its'
 
 

@@ -1,2 +1,4 @@
-require 'dsl.rb'
-require 'hlmodel.rb'
+require 'tcpn'
+require 'dsl'
+require 'hlmodel'
+require 'simulator'

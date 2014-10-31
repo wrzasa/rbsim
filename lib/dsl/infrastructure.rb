@@ -14,7 +14,7 @@ module RBSim
     def net(name, args = {})
       bw = args[:bw]
       delay = args[:delay]
-      @model.nets << HLModel::Net.new(name, bw, delay)
+      @model.nets << Tokens::NetToken.new(name, bw, delay)
     end
 
     def route(args = {})
@@ -34,7 +34,7 @@ module RBSim
     end
 
     def cpu(performance)
-      @cpus << HLModel::Node::CPU.new(performance)
+      @cpus << Tokens::CPUToken.new(performance)
     end
 
     def build

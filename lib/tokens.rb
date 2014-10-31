@@ -1,5 +1,4 @@
 require 'hlmodel'
-require 'tcpn'
 
 module RBSim
   module Tokens
@@ -13,6 +12,10 @@ module RBSim
     end
 
     class NetToken < HLModel::Net
+      include TCPN::TokenMethods
+    end
+
+    class CPUToken < HLModel::Node::CPU
       include TCPN::TokenMethods
     end
 

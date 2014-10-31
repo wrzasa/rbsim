@@ -3,7 +3,7 @@ module RBSim
 
     Node = Struct.new :name, :cpus
     class Node
-      CPU = Struct.new :performance
+      CPU = Struct.new :performance, :node
     end
 
     Net = Struct.new :name, :bw, :delay
