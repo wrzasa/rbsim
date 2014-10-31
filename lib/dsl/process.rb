@@ -47,7 +47,7 @@ module RBSim
       @process.with_event(event, &handler)
     end
 
-    def register_event(event, args)
+    def register_event(event, args = nil)
       @process.register_event(event, args)
     end
 
