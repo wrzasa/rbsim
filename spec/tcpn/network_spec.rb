@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe "TCPN model" do
 
-  describe "page 'network'", focus:true do
+  describe "page 'network'" do
 
     let :route do
       RBSim::HLModel::Route.new :node01, :node02, [ :net01, :net02, :net03 ]
