@@ -3,26 +3,26 @@ require 'rbsim'
 model = RBSim.model do
 
   program :wget do |target|
-    10.times do
-      send_data to: target, size: 1024, type: :request
-      delay_for 1000
+    10.times do |i|
+      send_data to: target, size: 1024, type: :request, content: i
+      log "Sent data in process #{process.name} #{i}"
+      delay_for 100
     end
 
     with_event :data_received do |data|
-      # FIXME: chciałbym to mieć dostęp do parametrów progamu/procesu,
-      # np. process.name
-      # A może mam?
-      puts "Got data #{data}"
+      log "Got data #{data} in process #{process.name}"
     end
   end
 
   program :apache do
     with_event :data_received do |data|
+      log "Got #{data.type} from: #{data.src}, size: #{data.size}, content: #{data.content}"
       cpu do |cpu|
         data.size / cpu.performance
       end
       delay_for 750
-      send_data to: data.src, size: data.size * 10, type: :response
+      send_data to: data.src, size: data.size * 10, type: :response, content: data.content
+      log "Responded to #{data.content}"
     end
   end
 
@@ -48,16 +48,17 @@ model = RBSim.model do
 
 end
 
+# TODO: use this proof-of-concept to embedd logger into RBSim!
 model.simulator.cb_for :transition, :after do |t, e|
-  puts e.transition
+  if e.transition == 'event::log'
+    message = e.binding[:process][:val].serve_system_event(:log)[:args]
+    puts "#{e.clock} #{message}"
+  end
 end
 
-p model.tcpn.places.map { |place| place.name }
-p model.tcpn.transitions.map { |t| t.name }
+#model.simulator.cb_for :clock, :after do |t, e|
+#  puts e.clock
+#end
+
 
 model.run
-model.tcpn.marking.each do |place, marking|
-  puts "="*80
-  puts place
-  puts marking
-end

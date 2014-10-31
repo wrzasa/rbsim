@@ -188,5 +188,30 @@ page 'application' do
       end
     end
 
+  transition 'event::log' do
+    input process, :process
+
+    # Log message from process
+    # args: log message
+    class EventLog
+      def initialize(binding)
+        @process = binding[:process][:val]
+        @event = @process.serve_system_event :log
+      end
+
+      def process_token(clock)
+        { val: @process, ts: clock }
+      end
+    end
+
+    output process do |binding, clock|
+      EventLog.new(binding).process_token(clock)
+    end
+
+    guard do |binding, clock|
+      binding[:process][:val].has_event? :log
+    end
+  end
+
   end
 end

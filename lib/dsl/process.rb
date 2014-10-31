@@ -66,6 +66,10 @@ module RBSim
       @process.register_event(:send_data, args)
     end
 
+    def log(message)
+      @process.register_event(:log, message)
+    end
+
     def new_process(name, args = nil, &block)
       constructor = proc do |args|
         new_process = self.class.new_process(@model, name, args, &block)

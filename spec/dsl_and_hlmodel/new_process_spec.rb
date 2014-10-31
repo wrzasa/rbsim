@@ -22,6 +22,7 @@ describe "HLModel::Process created with DSL#new_process" do
         end
         register_event :data, 1000
         send_data to: :child, size: 1024, type: :hello, content: "Hello!"
+        log "finished main, will serve events"
       end
     end
   end
@@ -67,13 +68,18 @@ describe "HLModel::Process created with DSL#new_process" do
     # future when time comes
     p = process.serve_user_event
     expect(p).to eq(process) # returns modified process
-    expect(process.event_queue_size).to eq(3)
+    expect(process.event_queue_size).to eq(4)
 
     # send_data
     event = process.serve_system_event :send_data
     expect(event[:name]).to eq(:send_data)
     # CPU time computed for specified CPU
     expect(event[:args]).to eq(to: :child, size: 1024, type: :hello, content: "Hello!")
+
+    # log
+    event = process.serve_system_event :log
+    expect(event[:name]).to eq(:log)
+    expect(event[:args]).to eq("finished main, will serve events")
 
 
     # Events created by serving the the :data user event above follow:
