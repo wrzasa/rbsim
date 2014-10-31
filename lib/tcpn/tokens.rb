@@ -12,6 +12,10 @@ module RBSim
       include TCPN::TokenMethods
     end
 
+    class NetToken < HLModel::Net
+      include TCPN::TokenMethods
+    end
+
     class Data
       IncompleteDataDefinition = Class.new RuntimeError
       attr_reader :src, :dst, :src_node, :size, :type, :content
