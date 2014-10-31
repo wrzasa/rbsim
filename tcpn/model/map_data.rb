@@ -1,6 +1,7 @@
 # map data to proper destination nodes
 # before network transmission
 page 'map data' do
+
   mapping = place 'mapping'
   data_to_send = place 'data to send'
   data_for_network = place 'data for network'
@@ -12,11 +13,16 @@ page 'map data' do
     output mapping, :mapping
 
     class TCPNMapDataDestination
+      ProcessNotMappedToNode = Class.new RuntimeError
+
       def initialize(binding)
         @data = binding[:data][:val]
         @dst = @data.dst
         @mapping = binding[:mapping][:val]
         @dst_node = @mapping[@dst]
+        if @dst_node.nil?
+          raise ProcessNotMappedToNode.new(@dst)
+        end
         @data.dst_node = @dst_node
       end
 
