@@ -13,7 +13,7 @@ describe "TCPN model" do
     end
 
     let :tcpn do
-      tcpn = TCPN.read 'lib/tcpn/model/map_data.rb'
+      tcpn = TCPN.read 'tcpn/model/map_data.rb'
 
       tcpn.add_marking_for 'data to send', data_token
       tcpn.add_marking_for 'mapping', mapping_token

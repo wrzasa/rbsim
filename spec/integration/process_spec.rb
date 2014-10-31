@@ -50,7 +50,7 @@ describe "Application process activity" do
     mapping_token = { ts: 0, val: { process_token.name => process_token.node } }
 
 
-    tcpn = TCPN.read 'lib/tcpn/model/application.rb'
+    tcpn = TCPN.read 'tcpn/model/application.rb'
 
     tcpn.add_marking_for 'CPU', cpu_token
     tcpn.add_marking_for 'process', process_token

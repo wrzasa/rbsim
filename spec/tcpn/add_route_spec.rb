@@ -31,7 +31,7 @@ describe "TCPN model" do
     end
 
     let :tcpn do
-      tcpn = TCPN.read 'lib/tcpn/model/add_route.rb'
+      tcpn = TCPN.read 'tcpn/model/add_route.rb'
 
       tcpn.add_marking_for 'data for network', data_token
       tcpn.add_marking_for 'routes', routes_token

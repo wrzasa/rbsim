@@ -16,7 +16,7 @@ describe "TCPN model" do
     end
 
     let :tcpn do
-      tcpn = TCPN.read 'lib/tcpn/model/network.rb'
+      tcpn = TCPN.read 'tcpn/model/network.rb'
 
       tcpn.add_marking_for 'data with route', data_token
       bw = 50
