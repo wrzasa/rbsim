@@ -1,4 +1,4 @@
-require 'spec_helper'
+ 'spec_helper'
 
 # Test behavior of HLModel::Process created with
 # DSL new_process statement
@@ -7,6 +7,7 @@ describe "HLModel::Process created with DSL#new_process" do
   let :model do
     RBSim.dsl do
       new_process :worker do
+        stats_start :work
         on_event :data do |volume|
           delay_for 200
           cpu do |c|
@@ -14,6 +15,8 @@ describe "HLModel::Process created with DSL#new_process" do
           end
         end
         delay_for 100
+        stats_stop :work
+        stats :doing_something
         cpu do |cpu|
           100/cpu.performance
         end
@@ -44,8 +47,17 @@ describe "HLModel::Process created with DSL#new_process" do
   it "has correct behavior" do
     expect(model.processes.size).to eq(1)
 
+    event = process.serve_system_event :stats_start
+    expect(event).to eq({name: :stats_start, args: { tag: :work, clock: 0 }})
+
     event = process.serve_system_event :delay_for
     expect(event).to eq({name: :delay_for, args: { time: 100 }})
+
+    event = process.serve_system_event :stats_stop
+    expect(event).to eq({name: :stats_stop, args: { tag: :work, clock: 100 }})
+
+    event = process.serve_system_event :stats_hit
+    expect(event).to eq({name: :stats_hit, args: { tag: :doing_something, clock: 100 }})
 
     event = process.serve_system_event :cpu
     expect(event[:name]).to eq(:cpu)
