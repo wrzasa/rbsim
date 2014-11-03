@@ -7,7 +7,7 @@ describe "TCPN model" do
     let :process_token do
       process = RBSim::Tokens::ProcessToken.new(:test_process)
       process.node = :node01
-      process.register_event stats_event, stats_tag
+      process.register_event stats_event, { tag: stats_tag, name: stats_name }
       process
     end
 
@@ -21,6 +21,8 @@ describe "TCPN model" do
     let :sim do
       TCPN.sim(tcpn)
     end
+
+    let(:stats_name) { 'apache' }
 
     describe ":stats event" do
       let(:stats_event) { :stats }
@@ -39,7 +41,7 @@ describe "TCPN model" do
         sim.run
 
         expect(served).to be true
-        expect(args).to eq(stats_tag)
+        expect(args).to eq({tag: stats_tag, name: stats_name})
 
       end
     end
@@ -61,7 +63,7 @@ describe "TCPN model" do
         sim.run
 
         expect(served).to be true
-        expect(args).to eq(stats_tag)
+        expect(args).to eq({tag: stats_tag, name: stats_name})
 
       end
     end
@@ -83,7 +85,7 @@ describe "TCPN model" do
         sim.run
 
         expect(served).to be true
-        expect(args).to eq(stats_tag)
+        expect(args).to eq({tag: stats_tag, name: stats_name})
 
       end
     end

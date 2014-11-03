@@ -17,7 +17,7 @@ model = RBSim.model do
 
     on_event :data_received do |data|
       log "Got data #{data} in process #{process.name}"
-      stats :request_served
+      stats :request_served, process.name
     end
 
     register_event :send
@@ -36,7 +36,7 @@ model = RBSim.model do
 
   program :apache_php do |name|
     on_event :data_received do |data|
-      stats_start name
+      stats_start :working, name
       log "#{name} start #{data.type} #{data.src} #{data.content}"
       if data.type == :request
         cpu do |cpu|
@@ -50,18 +50,18 @@ model = RBSim.model do
         send_data to: data.content[:client], size: data.size*2, type: :sql, content: data.content[:content]
       end
       log "#{name} finished #{data.type} #{data.src} #{data.content}"
-      stats_stop name
+      stats_stop :working, name
     end
   end
 
   program :mysql do
     on_event :data_received do |data|
-      stats_start :mysql
+      stats_start :query, :mysql
       log "DB start #{data.src} #{data.content}"
       delay_for (data.size * rand).to_i
       send_data to: data.src, size: data.size*1000, type: :db_response, content: data.content
       log "DB finish #{data.src} #{data.content}"
-      stats_stop :mysql
+      stats_stop :query, :mysql
     end
   end
 
@@ -82,8 +82,8 @@ model = RBSim.model do
     cpu 500
   end
 
-  new_process :client1, program: :wget, args: { target: :server1, count: 10 }
-  new_process :client2, program: :wget, args: { target: :server2, count: 10 }
+  new_process :client1, program: :wget, args: { target: :server1, count: 3 }
+  new_process :client2, program: :wget, args: { target: :server2, count: 3 }
 
   new_process :server1, program: :apache_php, args: 'apache1'
   new_process :server2, program: :apache_php, args: 'apache2'
@@ -132,6 +132,4 @@ end
 
 model.run
 
-p model.stats.summary
-
-puts "Clock: #{model.clock}"
+model.stats.print

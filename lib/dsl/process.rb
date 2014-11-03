@@ -70,16 +70,19 @@ module RBSim
       @process.register_event(:log, message)
     end
 
-    def stats_start(tag)
-      @process.register_event(:stats_start, tag)
+    def stats_start(tag, name = nil)
+      params = stats_event_params(tag, name)
+      @process.register_event(:stats_start, params)
     end
 
-    def stats_stop(tag)
-      @process.register_event(:stats_stop, tag)
+    def stats_stop(tag, name = nil)
+      params = stats_event_params(tag, name)
+      @process.register_event(:stats_stop, params)
     end
 
-    def stats(tag)
-      @process.register_event(:stats, tag)
+    def stats(tag, name = nil)
+      params = stats_event_params(tag, name)
+      @process.register_event(:stats, params)
     end
 
     def new_process(name, args = nil, &block)
@@ -91,6 +94,14 @@ module RBSim
       @process.register_event(:new_process, constructor_args: args, constructor: constructor)
     end
 
+
+    private
+
+    def stats_event_params(tag, name)
+      params = { tag: tag }
+      params[:name] = name unless name.nil?
+      params
+    end
   end
 end
 

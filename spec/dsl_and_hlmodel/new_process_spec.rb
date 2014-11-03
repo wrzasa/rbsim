@@ -7,7 +7,7 @@ describe "HLModel::Process created with DSL#new_process" do
   let :model do
     RBSim.dsl do
       new_process :worker do
-        stats_start :work
+        stats_start :work, 'worker1'
         on_event :data do |volume|
           delay_for 200
           cpu do |c|
@@ -15,8 +15,8 @@ describe "HLModel::Process created with DSL#new_process" do
           end
         end
         delay_for 100
-        stats_stop :work
-        stats :doing_something
+        stats_stop :work, 'worker1'
+        stats :doing_something, 'worker1'
         cpu do |cpu|
           100/cpu.performance
         end
@@ -48,16 +48,16 @@ describe "HLModel::Process created with DSL#new_process" do
     expect(model.processes.size).to eq(1)
 
     event = process.serve_system_event :stats_start
-    expect(event).to eq({name: :stats_start, args: :work })
+    expect(event).to eq({name: :stats_start, args: { tag: :work, name: 'worker1'} })
 
     event = process.serve_system_event :delay_for
     expect(event).to eq({name: :delay_for, args: { time: 100 }})
 
     event = process.serve_system_event :stats_stop
-    expect(event).to eq({name: :stats_stop, args: :work })
+    expect(event).to eq({name: :stats_stop, args: { tag: :work, name: 'worker1' } })
 
     event = process.serve_system_event :stats
-    expect(event).to eq({name: :stats, args: :doing_something })
+    expect(event).to eq({name: :stats, args: { tag: :doing_something, name: 'worker1' } })
 
     event = process.serve_system_event :cpu
     expect(event[:name]).to eq(:cpu)

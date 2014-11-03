@@ -3,50 +3,87 @@ module RBSim
     attr_accessor :clock
 
     def initialize
-      @freq_events = {}
+      @counter_events = {}
       @duration_events = {}
       @clock = 0
     end
 
-    def event(type, tag, time)
+    def event(type, params, time)
+      tag = params[:tag]
+      name = params[:name] || ''
       if type == :stats
-        @freq_events[tag] ||= []
-        @freq_events[tag] << time
+        @counter_events[name] ||= {}
+        @counter_events[name][tag] ||= []
+        @counter_events[name][tag] << time
       else
-        @duration_events[tag] ||= []
-        @duration_events[tag] << { type => time }
+        @duration_events[name] ||= {}
+        @duration_events[name][tag] ||= []
+        @duration_events[name][tag] << { type => time }
       end
     end
 
-    def freq
+    def counters
       result = {}
-      @freq_events.each do |tag, events|
-        result[tag] = events.count.to_f / @clock
-      end
-      result
-    end
-
-    def duration
-      result = {}
-      @duration_events.each do |tag, events|
-        duration = 0
-        start = nil
-        events.each do |event, time|
-          if !event[:start].nil? && start.nil?
-            start = event[:start]
-          elsif !event[:stop].nil? && !start.nil?
-            duration += (event[:stop] - start)
-            start = nil
-          end
+      @counter_events.each do |name, events|
+        events.each do |tag, time_list|
+          result[name] ||= {}
+          result[name][tag] = time_list.count
         end
-        result[tag] = duration.to_f / @clock
       end
       result
     end
 
-    def summary
-      { frequencies: freq, durations: duration }
+    def durations
+      result = {}
+      @duration_events.each do |name, events|
+        events.each do |tag, events|
+          duration = 0
+          start = nil
+          events.each do |event, time|
+            if !event[:start].nil? && start.nil?
+              start = event[:start]
+            elsif !event[:stop].nil? && !start.nil?
+              duration += (event[:stop] - start)
+              start = nil
+            end
+          end
+          result[name] ||= {}
+          result[name][tag] = duration
+        end
+      end
+      result
     end
+
+    def hash
+      { counters: counters, durations: durations }
+    end
+
+    def print
+      puts
+      puts "="*80
+      puts "STATISTICS:\n\n"
+      puts "Time: #{@clock}"
+      puts "-"*80
+      puts "Counters (in relation to time)"
+      print_stats counters
+      puts "-"*80
+      puts "Durations"
+      print_stats durations
+      puts "="*80
+    end
+
+    private 
+
+    def print_stats(result)
+      result.each do |name, stats|
+        puts "\t#{name}"
+        stats.each do |tag, value|
+          puts "\t\t#{tag}\t:\t#{value} (%.4f%%)" % (value.to_f / @clock * 100)
+        end
+      end
+    end
+
+
 
   end
 end

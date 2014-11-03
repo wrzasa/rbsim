@@ -5,13 +5,13 @@ describe RBSim::Simulator do
     let :model do
       RBSim.model do
         new_process :worker do
-          stats_start :work
+          stats_start :work, 'worker'
           delay_for 200
-          stats_stop :work
+          stats_stop :work, 'worker'
           delay_for 100
-          stats :wait
+          stats :wait, 'worker'
           delay_for 100
-          stats :wait
+          stats :wait, 'worker'
         end
 
         node :n1 do
@@ -24,10 +24,10 @@ describe RBSim::Simulator do
     end
 
     it "registers events in Statistisc" do
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:start, :work, 0).once
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stop, :work, 200)
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, :wait, 300)
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, :wait, 400)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:start, {tag: :work, name: 'worker'}, 0).once
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stop, {tag: :work, name: 'worker'}, 200)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, name: 'worker'}, 300)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, name: 'worker'}, 400)
       model.run
     end
 

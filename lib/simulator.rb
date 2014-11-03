@@ -97,8 +97,8 @@ module RBSim
       @simulator.cb_for :transition, :after do |t, e|
         [ :stats, :stats_start, :stats_stop ].each do |event|
           if e.transition == "event::#{event}"
-            tag = e.binding[:process][:val].serve_system_event(event)[:args]
-            @stats_collector.send :event, event.to_s.sub(/^stats_/,'').to_sym, tag, e.clock
+            params = e.binding[:process][:val].serve_system_event(event)[:args]
+            @stats_collector.send :event, event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
           end
         end
       end
