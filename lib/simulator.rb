@@ -6,7 +6,8 @@ module RBSim
     def initialize(&block)
       @block = block
       @logger = default_logger
-      @stats_collector = default_stats_collector
+      @stats_collector = Statistics.new
+      @resource_stats_collector = Statistics.new
       @clock = 0
     end
 
@@ -68,8 +69,31 @@ module RBSim
       @logger = block
     end
 
-    def stats
-      @stats_collector
+    def stats_summary
+      { application: @stats_collector.hash, resources: @resource_stats_collector.hash }
+    end
+
+    def stats_data
+      { application: @stats_collector, resources: @resource_stats_collector }
+    end
+
+    def stats_print
+      puts
+      puts "="*80
+      puts "STATISTICS:\n\n"
+      puts "Time: #{@clock}"
+
+      puts
+      puts "APPLICATION"
+      puts "-"*80
+      @stats_collector.print
+
+      puts
+      puts "RESURCES"
+      puts "-"*80
+      @resource_stats_collector.print
+      puts "="*80
+
     end
 
     private
@@ -78,10 +102,6 @@ module RBSim
       proc do |clock, message|
         puts "#{clock}: #{message}"
       end
-    end
-
-    def default_stats_collector
-      Statistics.new
     end
 
     def set_logger_callbacks
@@ -101,14 +121,41 @@ module RBSim
             @stats_collector.send :event, event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
           end
         end
+
+        if e.transition == "event::cpu"
+          node = e.binding[:cpu][:val].node
+          @resource_stats_collector.event :start, { name: 'CPU', tag: node }, e.clock
+        elsif e.transition == "event::cpu_finished"
+          node = e.binding[:cpu_and_process][:val][:cpu].node
+          @resource_stats_collector.event :stop, { name: 'CPU', tag: node }, e.clock
+        end
+      end
+
+      @simulator.cb_for :place, :remove do |t, e|
+        if e.place == 'net'
+          net = e.tokens.first[:val]
+          @resource_stats_collector.event :start, { name: 'NET', tag: net.name }, e.clock
+        end
+      end
+      @simulator.cb_for :place, :add do |t, e|
+        if e.place == 'net'
+          net = e.tokens.first[:val]
+          ts = e.tokens.first[:ts]
+          @resource_stats_collector.event :stop, { name: 'NET', tag: net.name }, ts
+        end
       end
     end
 
     def set_clock_callbacks
       @simulator.cb_for :clock, :after do |t, e|
-        @clock = e.clock
-        @stats_collector.clock = clock
+        self.clock = e.clock
       end
+    end
+
+    def clock=(clock)
+      @clock = clock
+      @stats_collector.clock = clock
+      @resource_stats_collector.clock = clock
     end
 
   end

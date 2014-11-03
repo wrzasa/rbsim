@@ -59,17 +59,12 @@ module RBSim
     end
 
     def print
-      puts
-      puts "="*80
-      puts "STATISTICS:\n\n"
-      puts "Time: #{@clock}"
-      puts "-"*80
       puts "Counters (in relation to time)"
+      puts "------------------------------"
       print_stats counters
-      puts "-"*80
       puts "Durations"
+      puts "------------------------------"
       print_stats durations
-      puts "="*80
     end
 
     private 

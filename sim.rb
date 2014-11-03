@@ -132,4 +132,8 @@ end
 
 model.run
 
-model.stats.print
+p model.stats_summary
+p model.stats_data
+
+model.stats_print
+
