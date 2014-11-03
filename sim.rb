@@ -17,6 +17,7 @@ model = RBSim.model do
 
     on_event :data_received do |data|
       log "Got data #{data} in process #{process.name}"
+      stats :request_served
     end
 
     register_event :send
@@ -33,9 +34,10 @@ model = RBSim.model do
     end
   end
 
-  program :apache_php do
+  program :apache_php do |name|
     on_event :data_received do |data|
-      log "APACHE start #{data.type} #{data.src} #{data.content}"
+      stats_start name
+      log "#{name} start #{data.type} #{data.src} #{data.content}"
       if data.type == :request
         cpu do |cpu|
           100*data.size / cpu.performance
@@ -47,16 +49,19 @@ model = RBSim.model do
         end
         send_data to: data.content[:client], size: data.size*2, type: :sql, content: data.content[:content]
       end
-      log "APACHE finished #{data.type} #{data.src} #{data.content}"
+      log "#{name} finished #{data.type} #{data.src} #{data.content}"
+      stats_stop name
     end
   end
 
   program :mysql do
     on_event :data_received do |data|
+      stats_start :mysql
       log "DB start #{data.src} #{data.content}"
       delay_for (data.size * rand).to_i
       send_data to: data.src, size: data.size*1000, type: :db_response, content: data.content
       log "DB finish #{data.src} #{data.content}"
+      stats_stop :mysql
     end
   end
 
@@ -80,8 +85,8 @@ model = RBSim.model do
   new_process :client1, program: :wget, args: { target: :server1, count: 10 }
   new_process :client2, program: :wget, args: { target: :server2, count: 10 }
 
-  new_process :server1, program: :apache_php
-  new_process :server2, program: :apache_php
+  new_process :server1, program: :apache_php, args: 'apache1'
+  new_process :server2, program: :apache_php, args: 'apache2'
   new_process :db, program: :mysql
 
   net :net01, bw: 1024
@@ -104,8 +109,8 @@ end
 # TODO: modify CPU load event handling, to enable random CPU load time!
 # TODO: potrzebne gotowe narzędzie generujące raport obciążenia poszczególnych zasobów
 
-=begin
 # TODO: use this proof-of-concept to embedd logger into RBSim!
+=begin
 model.simulator.cb_for :transition, :after do |t, e|
 #  puts ">> #{e.clock} #{e.transition}"##{e.binding.map {|k, v| "#{k}: #{v}" }}" #if e.clock > 90000
   if e.transition == 'event::log'
@@ -119,10 +124,14 @@ end
 #  puts e.clock
 #end
 
-
-# TODO: działa, trzeba testy!
+=begin
 model.logger do |clock, message|
   puts "MY LOGGER: #{clock} #{message}"
 end
+=end
 
 model.run
+
+p model.stats
+
+puts "Clock: #{model.clock}"

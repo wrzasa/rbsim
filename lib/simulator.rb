@@ -1,10 +1,13 @@
 module RBSim
 
   class Simulator
+    attr_reader :clock
+
     def initialize(&block)
       @block = block
       @logger = default_logger
       @stats_collector = default_stats_collector
+      @clock = 0
     end
 
     def run
@@ -55,6 +58,7 @@ module RBSim
 
         set_logger_callbacks
         set_stats_collector_callbacks
+        set_clock_callbacks
 
       end
       @simulator
@@ -62,6 +66,10 @@ module RBSim
 
     def logger(&block)
       @logger = block
+    end
+
+    def stats
+      @stats_collector
     end
 
     private
@@ -93,6 +101,13 @@ module RBSim
             @stats_collector.send :event, event.to_s.sub(/^stats_/,'').to_sym, tag, e.clock
           end
         end
+      end
+    end
+
+    def set_clock_callbacks
+      @simulator.cb_for :clock, :after do |t, e|
+        @clock = e.clock
+        @stats_collector.clock = clock
       end
     end
 
