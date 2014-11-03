@@ -48,16 +48,16 @@ describe "HLModel::Process created with DSL#new_process" do
     expect(model.processes.size).to eq(1)
 
     event = process.serve_system_event :stats_start
-    expect(event).to eq({name: :stats_start, args: { tag: :work, clock: 0 }})
+    expect(event).to eq({name: :stats_start, args: :work })
 
     event = process.serve_system_event :delay_for
     expect(event).to eq({name: :delay_for, args: { time: 100 }})
 
     event = process.serve_system_event :stats_stop
-    expect(event).to eq({name: :stats_stop, args: { tag: :work, clock: 100 }})
+    expect(event).to eq({name: :stats_stop, args: :work })
 
-    event = process.serve_system_event :stats_hit
-    expect(event).to eq({name: :stats_hit, args: { tag: :doing_something, clock: 100 }})
+    event = process.serve_system_event :stats
+    expect(event).to eq({name: :stats, args: :doing_something })
 
     event = process.serve_system_event :cpu
     expect(event[:name]).to eq(:cpu)

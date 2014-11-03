@@ -7,6 +7,9 @@ page 'application' do
   # model of CPU load by application logic 
   sub_page "cpu.rb"
 
+  # statistics
+  sub_page "stats.rb"
+
   # Delay process execution for specified time.
   # args: { time: time for which we should wait }
   class EventDelayFor

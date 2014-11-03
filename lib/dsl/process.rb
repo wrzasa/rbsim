@@ -70,6 +70,18 @@ module RBSim
       @process.register_event(:log, message)
     end
 
+    def stats_start(tag)
+      @process.register_event(:stats_start, tag)
+    end
+
+    def stats_stop(tag)
+      @process.register_event(:stats_stop, tag)
+    end
+
+    def stats(tag)
+      @process.register_event(:stats, tag)
+    end
+
     def new_process(name, args = nil, &block)
       constructor = proc do |args|
         new_process = self.class.new_process(@model, name, args, &block)
