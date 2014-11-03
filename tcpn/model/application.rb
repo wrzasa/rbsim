@@ -70,123 +70,124 @@ page 'application' do
         false
       end
     end
+  end
 
-    transition 'event::serve_user' do
-      input process, :process
+  transition 'event::serve_user' do
+    input process, :process
 
-      output process do |binding, clock|
-        process = binding[:process][:val]
-        process.serve_user_event
-        process
+    output process do |binding, clock|
+      process = binding[:process][:val]
+      process.serve_user_event
+      process
+    end
+
+    guard do |binding, clock|
+      binding[:process][:val].has_user_event?
+    end
+  end
+
+  transition 'event::send_data' do
+    input process, :process
+
+    # Sending data to anothe node.
+    # args: { to: destination process name,
+    #         size: volume of send data,
+    #         type: type of send data (to use in HLModel),
+    #         content: content of send data (to use in HLModel) }
+    class EventSendData
+      def initialize(binding)
+        @process = binding[:process][:val]
+        @event = @process.serve_system_event :send_data
+        @data = RBSim::Tokens::DataToken.new(@process.node, @process.name, @event[:args])
       end
 
-      guard do |binding, clock|
-        binding[:process][:val].has_user_event?
+      def data_token(clock)
+        { val: @data, ts: clock }
+      end
+
+      def process_token(clock)
+        { val: @process, ts: clock }
       end
     end
 
-    transition 'event::send_data' do
-      input process, :process
+    output process do |binding, clock|
+      EventSendData.new(binding).process_token clock
+    end
 
-      # Sending data to anothe node.
-      # args: { to: destination process name,
-      #         size: volume of send data,
-      #         type: type of send data (to use in HLModel),
-      #         content: content of send data (to use in HLModel) }
-      class EventSendData
-        def initialize(binding)
-          @process = binding[:process][:val]
-          @event = @process.serve_system_event :send_data
-          @data = RBSim::Tokens::DataToken.new(@process.node, @process.name, @event[:args])
-        end
+    output data_to_send do |binding, clock|
+      EventSendData.new(binding).data_token clock
+    end
 
-        def data_token(clock)
-          { val: @data, ts: clock }
-        end
+    guard do |binding, clock|
+      binding[:process][:val].has_event? :send_data
+    end
+  end
 
-        def process_token(clock)
-          { val: @process, ts: clock }
-        end
+  transition 'event::new_process' do
+    input process, :process
+    input mapping, :mapping
+
+    # Creating new process on the same node
+    # args: { program: program name for new process (optional),
+    #         constructor: block called as constructor of new process (adds initial events),
+    #         constructor_args: args passed to the constructor }
+    class EventNewProcess
+      def initialize(binding)
+        @process = binding[:process][:val]
+        @event = @process.serve_system_event :new_process
+        @new_process = @event[:args][:constructor].call @event[:args][:constructor_args]
+        @mapping = binding[:mapping][:val]
+        @mapping[@new_process.name] = @new_process.node
       end
 
-      output process do |binding, clock|
-        EventSendData.new(binding).process_token clock
+      def process_tokens(clock)
+        [ { ts: clock, val: @process }, { ts: clock, val: @new_process } ]
       end
 
-      output data_to_send do |binding, clock|
-        EventSendData.new(binding).data_token clock
-      end
-
-      guard do |binding, clock|
-        binding[:process][:val].has_event? :send_data
+      def mapping_token(clock)
+        { ts: clock, val: @mapping }
       end
     end
 
-    transition 'event::new_process' do
-      input process, :process
-      input mapping, :mapping
+    output process do |binding, clock|
+      EventNewProcess.new(binding).process_tokens(clock)
+    end
 
-      # Creating new process on the same node
-      # args: { program: program name for new process (optional),
-      #         constructor: block called as constructor of new process (adds initial events),
-      #         constructor_args: args passed to the constructor }
-      class EventNewProcess
-        def initialize(binding)
-          @process = binding[:process][:val]
-          @event = @process.serve_system_event :new_process
-          @new_process = @event[:args][:constructor].call @event[:args][:constructor_args]
-          @mapping = binding[:mapping][:val]
-          @mapping[@new_process.name] = @new_process.node
-        end
+    output mapping do |binding, clock|
+      EventNewProcess.new(binding).mapping_token(clock)
+    end
 
-        def process_tokens(clock)
-          [ { ts: clock, val: @process }, { ts: clock, val: @new_process } ]
-        end
+    guard do |binding, clock|
+      binding[:process][:val].has_event? :new_process
+    end
+  end
 
-        def mapping_token(clock)
-          { ts: clock, val: @mapping }
-        end
+  transition 'event::data_received' do
+    input process, :process
+    input data_to_receive, :data
+
+    class EventDataReceived
+      def initialize(binding)
+        @process = binding[:process][:val]
+        @data = binding[:data][:val]
+        @process.register_event :data_received, @data
       end
 
-      output process do |binding, clock|
-        EventNewProcess.new(binding).process_tokens(clock)
-      end
-
-      output mapping do |binding, clock|
-        EventNewProcess.new(binding).mapping_token(clock)
-      end
-
-      guard do |binding, clock|
-        binding[:process][:val].has_event? :new_process
+      def process_token(clock)
+        { ts: clock, val: @process }
       end
     end
 
-    transition 'event::data_received' do
-      input process, :process
-      input data_to_receive, :data
-
-      class EventDataReceived
-        def initialize(binding)
-          @process = binding[:process][:val]
-          @data = binding[:data][:val]
-          @process.register_event :data_received, @data
-        end
-
-        def process_token(clock)
-          { ts: clock, val: @process }
-        end
-      end
-
-      output process do |binding, clock|
-        EventDataReceived.new(binding).process_token(clock)
-      end
-
-      guard do |binding, clock|
-        process = binding[:process][:val]
-        data = binding[:data][:val]
-        process.name == data.dst
-      end
+    output process do |binding, clock|
+      EventDataReceived.new(binding).process_token(clock)
     end
+
+    guard do |binding, clock|
+      process = binding[:process][:val]
+      data = binding[:data][:val]
+      process.name == data.dst
+    end
+  end
 
   transition 'event::log' do
     input process, :process
@@ -213,5 +214,4 @@ page 'application' do
     end
   end
 
-  end
 end
