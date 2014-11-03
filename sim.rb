@@ -104,6 +104,7 @@ end
 # TODO: modify CPU load event handling, to enable random CPU load time!
 # TODO: potrzebne gotowe narzędzie generujące raport obciążenia poszczególnych zasobów
 
+=begin
 # TODO: use this proof-of-concept to embedd logger into RBSim!
 model.simulator.cb_for :transition, :after do |t, e|
 #  puts ">> #{e.clock} #{e.transition}"##{e.binding.map {|k, v| "#{k}: #{v}" }}" #if e.clock > 90000
@@ -112,10 +113,16 @@ model.simulator.cb_for :transition, :after do |t, e|
     puts "#{e.clock} #{message}"
   end
 end
+=end
 
 #model.simulator.cb_for :clock, :after do |t, e|
 #  puts e.clock
 #end
 
+
+# TODO: działa, trzeba testy!
+model.logger do |clock, message|
+  puts "MY LOGGER: #{clock} #{message}"
+end
 
 model.run

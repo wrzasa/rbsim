@@ -3,6 +3,7 @@ module RBSim
   class Simulator
     def initialize(&block)
       @block = block
+      @logger = default_logger
     end
 
     def run
@@ -41,15 +42,36 @@ module RBSim
         @tcpn.add_marking_for 'mapping', hlmodel.mapping
 
         @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new
+
       end
 
       @tcpn
     end
 
     def simulator
-      @simulator ||= TCPN.sim(tcpn)
+      if @simulator.nil?
+        @simulator = TCPN.sim(tcpn)
+        @simulator.cb_for :transition, :after do |t, e|
+          if e.transition == 'event::log'
+            message = e.binding[:process][:val].serve_system_event(:log)[:args]
+            @logger.call e.clock, message
+          end
+        end
+      end
+      @simulator
     end
 
+    def logger(&block)
+      @logger = block
+    end
+
+    private
+
+    def default_logger
+      proc do |clock, message|
+        puts "#{clock}: #{message}"
+      end
+    end
   end
 
 end
