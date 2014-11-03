@@ -89,7 +89,7 @@ module RBSim
       @stats_collector.print
 
       puts
-      puts "RESURCES"
+      puts "RESOURCES"
       puts "-"*80
       @resource_stats_collector.print
       puts "="*80
