@@ -12,13 +12,18 @@ page "cpu" do
     def initialize(binding)
       @process = binding[:process][:val]
       @cpu = binding[:cpu][:val]
-      @event = @process.serve_system_event :cpu
-      @delay = @event[:args][:block].call @cpu
     end
 
     def cpu_and_process_token(clock)
       hsh = { cpu: @cpu, process: @process }
-      { ts: clock + @delay, val: hsh }
+      { ts: clock + delay, val: hsh }
+    end
+
+    private
+
+    def delay
+      event = @process.serve_system_event :cpu
+      event[:args][:block].call @cpu
     end
   end
 
