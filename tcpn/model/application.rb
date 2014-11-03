@@ -124,17 +124,22 @@ page 'application' do
 
   transition 'event::data_received' do
     input process, :process
-    input data_to_receive, :data
+    input data_to_receive, :queue
 
     class EventDataReceived
       def initialize(binding)
         @process = binding[:process][:val]
-        @data = binding[:data][:val]
+        @queue = binding[:queue][:val]
+        @data = @queue.get
         @process.register_event :data_received, @data
       end
 
       def process_token(clock)
         { ts: clock, val: @process }
+      end
+
+      def queue_token(clock)
+        { ts: clock, val: @queue }
       end
     end
 
@@ -142,10 +147,14 @@ page 'application' do
       EventDataReceived.new(binding).process_token(clock)
     end
 
+    output data_to_receive do |binding, clock|
+      EventDataReceived.new(binding).queue_token(clock)
+    end
+
     guard do |binding, clock|
       process = binding[:process][:val]
-      data = binding[:data][:val]
-      process.name == data.dst
+      data = binding[:queue][:val].get
+      !data.nil? && process.name == data.dst
     end
   end
 

@@ -59,7 +59,15 @@ page 'network' do
 
   transition 'transmitted' do
     input data_after_net, :data
-    output data_to_receive, :data
+    input data_to_receive, :queue
+    #output data_to_receive, :data
+
+    output data_to_receive do |binding, clock|
+      queue = binding[:queue][:val]
+      data = binding[:data][:val]
+      queue.put data
+      { ts: clock, val: queue }
+    end
 
     guard do |binding, clock|
       data = binding[:data][:val]

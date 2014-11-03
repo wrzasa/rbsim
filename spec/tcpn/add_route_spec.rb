@@ -35,6 +35,7 @@ describe "TCPN model" do
 
       tcpn.add_marking_for 'data for network', data_token
       tcpn.add_marking_for 'routes', routes_token
+      tcpn.add_marking_for 'data to receive', RBSim::Tokens::DataQueueToken.new
       tcpn
     end
 

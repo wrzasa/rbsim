@@ -18,6 +18,7 @@ describe "TCPN model" do
     let :tcpn do
       tcpn = TCPN.read 'tcpn/model/network.rb'
 
+      tcpn.add_marking_for 'data to receive', RBSim::Tokens::DataQueueToken.new
       tcpn.add_marking_for 'data with route', data_token
       bw = 50
       [ :net01, :net02, :net03, :net04, :net05 ].each do |name|
@@ -34,7 +35,7 @@ describe "TCPN model" do
 
     it "puts data token with correct timestamp in 'data to receive' place" do
       TCPN.sim(tcpn).run
-      expect(tcpn.marking_for('data to receive').first[:val]).to eq data_token
+      expect(tcpn.marking_for('data to receive').first[:val].get).to eq data_token
       time = 7.0*data_token.size/200
       expect(tcpn.marking_for('data to receive').first[:ts]).to eq time
     end

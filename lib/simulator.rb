@@ -39,6 +39,8 @@ module RBSim
 
         @tcpn.add_marking_for 'routes', hlmodel.routes
         @tcpn.add_marking_for 'mapping', hlmodel.mapping
+
+        @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new
       end
 
       @tcpn

@@ -42,6 +42,10 @@ describe "Application process activity" do
     end
   end
 
+  let :data_queue do
+    RBSim::Tokens::DataQueueToken.new
+  end
+
 
   # FIXME: marking for TCPN should be set by DSL!
   let :tcpn do
@@ -56,6 +60,7 @@ describe "Application process activity" do
     tcpn.add_marking_for 'CPU', cpu_token
     tcpn.add_marking_for 'process', process_token
     tcpn.add_marking_for 'mapping', mapping_token
+    tcpn.add_marking_for 'data to receive', data_queue
     tcpn
   end
 
@@ -96,8 +101,7 @@ describe "Application process activity" do
   end
 
   it "receives data" do
-    data_token = RBSim::Tokens::DataToken.new(:node01, :process01, to: :child, size: 1234)
-    tcpn.add_marking_for 'data to receive', data_token
+    data_queue.put RBSim::Tokens::DataToken.new(:node01, :process01, to: :child, size: 1234)
     received_data = false
     transitions = []
     simulator.cb_for :transition, :before do |t, e|
