@@ -50,5 +50,24 @@ module RBSim
     class DataToken < Data
       include TCPN::TokenMethods
     end
+
+    class DataQueue
+      def initialize
+        @queue = []
+      end
+
+      def put(o)
+        @queue << o
+      end
+
+      def get
+        @queue.shift
+      end
+    end
+
+    class DataQueueToken < DataQueue
+      include TCPN::TokenMethods
+    end
+
   end
 end
