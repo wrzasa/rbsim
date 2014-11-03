@@ -75,9 +75,11 @@ module RBSim
     private 
 
     def print_stats(result)
-      result.each do |name, stats|
+      result.keys.sort{ |a,b| a.to_s <=> b.to_s}.each do |name|
+        stats = result[name]
         puts "\t#{name}"
-        stats.each do |tag, value|
+        stats.keys.sort{ |a,b| a.to_s <=> b.to_s}.each do |tag|
+          value = stats[tag]
           puts "\t\t#{tag}\t:\t#{value} (%.4f%%)" % (value.to_f / @clock * 100)
         end
       end

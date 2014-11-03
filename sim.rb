@@ -74,8 +74,8 @@ model = RBSim.model do
   end
 
   node :gandalf do
-    cpu 14000
-    cpu 14000
+    cpu 140000
+    cpu 140000
   end
 
   node :dbserver do
