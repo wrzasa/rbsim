@@ -27,10 +27,8 @@ page 'add route' do
     def to_self_token(clock)
       if to_self?
         @queue.put @data
-        { ts: clock, val: @queue }
-      else
-        nil
       end
+      { ts: clock, val: @queue }
     end
 
     private

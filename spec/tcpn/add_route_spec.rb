@@ -45,6 +45,7 @@ describe "TCPN model" do
       new_data = tcpn.marking_for('data with route').first[:val]
       expect(new_data.route.src).to eq data_token.src_node
       expect(new_data.route.dst).to eq data_token.dst_node
+      expect(tcpn.marking_for('data to receive')).not_to be_empty
     end
 
   end
