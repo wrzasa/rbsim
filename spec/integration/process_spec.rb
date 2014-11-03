@@ -73,13 +73,16 @@ describe "Application process activity" do
 
     expect(transitions).to eq ["event::delay_for",
                                "event::cpu",
+                               "event::cpu_finished",
                                "event::serve_user",
                                "event::log",
                                "event::delay_for",
                                "event::cpu",
+                               "event::cpu_finished",
                                "event::new_process",
                                "event::delay_for",
                                "event::cpu",
+                               "event::cpu_finished",
                                "event::send_data"
                               ]
     # mapping token should be updated after new
