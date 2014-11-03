@@ -90,7 +90,7 @@ module RBSim
         [ :stats, :stats_start, :stats_stop ].each do |event|
           if e.transition == "event::#{event}"
             tag = e.binding[:process][:val].serve_system_event(event)[:args]
-            @stats_collector.send :event, event, tag, e.clock
+            @stats_collector.send :event, event.to_s.sub(/^stats_/,'').to_sym, tag, e.clock
           end
         end
       end
