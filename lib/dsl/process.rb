@@ -37,14 +37,14 @@ module RBSim
       @process = Tokens::ProcessToken.new(@name, @program) if @process.nil?
     end
 
-    def with_event(event, &block)
+    def on_event(event, &block)
       # Cannot use self as eval context and
       # must pass process because after clonning in TCPN it will be 
       # completely different process object then it is now!
       handler = proc do |process, args|
         Docile.dsl_eval(ProcessDSL.new(@model, @name, @program, process), args, &block).process
       end
-      @process.with_event(event, &handler)
+      @process.on_event(event, &handler)
     end
 
     def register_event(event, args = nil)

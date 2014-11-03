@@ -21,7 +21,7 @@ module RBSim
       end
 
       # define event handler
-      def with_event(event, &block)
+      def on_event(event, &block)
         @event_handlers[event] = block
       end
 

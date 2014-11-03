@@ -25,7 +25,7 @@ describe RBSim::HLModel::Process do
       expect { subject.serve_system_event :delay_for }.to raise_error RuntimeError
     end
     it "raises error and does not serve user events" do
-      subject.with_event :data do
+      subject.on_event :data do
       end
       subject.register_event :data
       expect { subject.serve_user_event }.to raise_error RuntimeError
@@ -34,10 +34,10 @@ describe RBSim::HLModel::Process do
 
   # Here is basic usage example
   it "serves user events in order" do
-    subject.with_event :be_glad do |process, who|
+    subject.on_event :be_glad do |process, who|
       "I am glad #{who}"
     end
-    subject.with_event :be_happy do |process, who|
+    subject.on_event :be_happy do |process, who|
       "I am happy #{who}"
     end
     subject.register_event :be_happy, "Jack"
@@ -71,17 +71,17 @@ describe RBSim::HLModel::Process do
     its(:program){ should eq :apache_webserver }
   end
 
-  describe "#with_event" do
+  describe "#on_event" do
     it "registers new event handler" do
       expect {
-        subject.with_event :example_event, &block
+        subject.on_event :example_event, &block
       }.to change(subject, :handlers_size).by(1)
     end
   end
 
   describe "#register_event" do
     it "puts user event in event queue" do
-      subject.with_event :example_event, &block
+      subject.on_event :example_event, &block
       expect {
         subject.register_event :example_event, param1: 123, param2: 345
       }.to change(subject, :event_queue_size).by(1)
@@ -102,7 +102,7 @@ describe RBSim::HLModel::Process do
 
   describe "#serve_user_event" do
     before :each do
-      subject.with_event :example_event, &block
+      subject.on_event :example_event, &block
     end
     it "serves first event from queue calling event handler" do
       expect(block).to receive(:call).with(subject, { param1: 123, param2: 345 })
@@ -132,7 +132,7 @@ describe RBSim::HLModel::Process do
       expect{ subject.serve_system_event sysevent1 }.to change(subject, :event_queue_size).by(-1)
     end
     it "refuses to serve user event" do
-      subject.with_event :user_event do
+      subject.on_event :user_event do
       end
       subject.register_event :user_event
       expect { subject.serve_system_event :user_event}.to raise_error RuntimeError
@@ -147,7 +147,7 @@ describe RBSim::HLModel::Process do
 
   describe "#has_event?" do
     before :each do
-      subject.with_event :example_event, &block
+      subject.on_event :example_event, &block
     end
 
     context "without event name" do
@@ -199,7 +199,7 @@ describe RBSim::HLModel::Process do
 
   describe "#has_user_event?" do
     before :each do
-      subject.with_event :example_event, &block
+      subject.on_event :example_event, &block
     end
 
     it "is true if user event is first in event queue" do
@@ -220,7 +220,7 @@ describe RBSim::HLModel::Process do
 
   describe "#has_system_event?" do
     before :each do
-      subject.with_event :example_event, &block
+      subject.on_event :example_event, &block
     end
 
     it "is false if user event is first in event queue" do

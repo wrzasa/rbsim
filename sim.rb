@@ -4,7 +4,7 @@ model = RBSim.model do
 
   program :wget do |opts|
     sent = 0
-    with_event :send do
+    on_event :send do
       cpu do |cpu|
         150/cpu.performance
       end
@@ -15,7 +15,7 @@ model = RBSim.model do
       register_event :send if sent < opts[:count]
     end
 
-    with_event :data_received do |data|
+    on_event :data_received do |data|
       log "Got data #{data} in process #{process.name}"
     end
 
@@ -23,7 +23,7 @@ model = RBSim.model do
   end
 
   program :apache_static do
-    with_event :data_received do |data|
+    on_event :data_received do |data|
       log "Got #{data.type} from: #{data.src}, size: #{data.size}, content: #{data.content}"
       cpu do |cpu|
         100*data.size / cpu.performance
@@ -34,7 +34,7 @@ model = RBSim.model do
   end
 
   program :apache_php do
-    with_event :data_received do |data|
+    on_event :data_received do |data|
       log "APACHE start #{data.type} #{data.src} #{data.content}"
       if data.type == :request
         cpu do |cpu|
@@ -52,7 +52,7 @@ model = RBSim.model do
   end
 
   program :mysql do
-    with_event :data_received do |data|
+    on_event :data_received do |data|
       log "DB start #{data.src} #{data.content}"
       delay_for (data.size * rand).to_i
       send_data to: data.src, size: data.size*1000, type: :db_response, content: data.content

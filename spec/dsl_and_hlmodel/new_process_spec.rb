@@ -7,7 +7,7 @@ describe "HLModel::Process created with DSL#new_process" do
   let :model do
     RBSim.dsl do
       new_process :worker do
-        with_event :data do |volume|
+        on_event :data do |volume|
           delay_for 200
           cpu do |c|
             20/c.performance

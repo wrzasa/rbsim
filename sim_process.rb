@@ -29,7 +29,7 @@ end
 model = TCPN.read 'lib/tcpn/model/application.rb'
 
 process = ProcessToken.new(:node01)
-process.with_event :data do |process, args|
+process.on_event :data do |process, args|
   handler = proc do |cpu|
     4000 * args[:volume]/cpu.performance
   end

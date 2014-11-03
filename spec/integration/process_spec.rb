@@ -19,7 +19,7 @@ describe "Application process activity" do
   let :hlmodel do
     RBSim.dsl do
       new_process :worker do
-        with_event :data do |volume|
+        on_event :data do |volume|
           delay_for 100
           cpu do |c|
             12/c.performance
