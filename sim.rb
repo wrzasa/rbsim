@@ -132,6 +132,6 @@ end
 
 model.run
 
-p model.stats
+p model.stats.summary
 
 puts "Clock: #{model.clock}"
