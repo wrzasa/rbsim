@@ -4,6 +4,7 @@ module RBSim
     def initialize(&block)
       @block = block
       @logger = default_logger
+      @stats_collector = default_stats_collector
     end
 
     def run
@@ -51,12 +52,10 @@ module RBSim
     def simulator
       if @simulator.nil?
         @simulator = TCPN.sim(tcpn)
-        @simulator.cb_for :transition, :after do |t, e|
-          if e.transition == 'event::log'
-            message = e.binding[:process][:val].serve_system_event(:log)[:args]
-            @logger.call e.clock, message
-          end
-        end
+
+        set_logger_callbacks
+        set_stats_collector_callbacks
+
       end
       @simulator
     end
@@ -72,6 +71,31 @@ module RBSim
         puts "#{clock}: #{message}"
       end
     end
+
+    def default_stats_collector
+      Statistics.new
+    end
+
+    def set_logger_callbacks
+      @simulator.cb_for :transition, :after do |t, e|
+        if e.transition == 'event::log'
+          message = e.binding[:process][:val].serve_system_event(:log)[:args]
+          @logger.call e.clock, message
+        end
+      end
+    end
+
+    def set_stats_collector_callbacks
+      @simulator.cb_for :transition, :after do |t, e|
+        [ :stats, :stats_start, :stats_stop ].each do |event|
+          if e.transition == "event::#{event}"
+            tag = e.binding[:process][:val].serve_system_event(event)[:args]
+            @stats_collector.send :event, event, tag, e.clock
+          end
+        end
+      end
+    end
+
   end
 
 end
