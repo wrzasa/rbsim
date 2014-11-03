@@ -22,7 +22,7 @@ describe "TCPN model" do
       TCPN.sim(tcpn)
     end
 
-    describe ":stats event", focus:true do
+    describe ":stats event" do
       let(:stats_event) { :stats }
       let(:stats_tag) { :work }
 
@@ -44,7 +44,7 @@ describe "TCPN model" do
       end
     end
 
-    describe ":stats_start event", focus:true do
+    describe ":stats_start event" do
       let(:stats_event) { :stats_start }
       let(:stats_tag) { :doing }
 
@@ -66,7 +66,7 @@ describe "TCPN model" do
       end
     end
 
-    describe ":stats_stop event", focus:true do
+    describe ":stats_stop event" do
       let(:stats_event) { :stats_stop }
       let(:stats_tag) { :doing }
 
