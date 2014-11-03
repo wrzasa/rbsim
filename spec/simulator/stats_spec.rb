@@ -34,7 +34,7 @@ describe RBSim::Simulator do
     end
 
     it "sends hit_event message to Statistisc" do
-      expect_any_instance_of(RBSim::Statistics).to receive(:hit_event).with(:work)
+      expect_any_instance_of(RBSim::Statistics).to receive(:hit_event).with(:wait).twice
       model.run
     end
 
