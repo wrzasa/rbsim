@@ -38,8 +38,8 @@ describe "TCPN model" do
       it "adds correct route to data" do
         TCPN.sim(tcpn).run
 
-        expect(tcpn.marking_for('data with route')).to eq(nil)
-        expect(tcpn.marking_for('data to receive')).to eq(data_token)
+        expect(tcpn.marking_for('data with route')).to eq([])
+        expect(tcpn.marking_for('data to receive').first[:val]).to eq(data_token)
       end
 
     end
