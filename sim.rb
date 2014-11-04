@@ -11,7 +11,7 @@ model = RBSim.model do
       send_data to: opts[:target], size: 1024, type: :request, content: sent
       log "Sent data in process #{process.name} #{sent}"
       sent += 1
-      delay_for 50
+      delay_for 5
       register_event :send if sent < opts[:count]
     end
 
@@ -37,7 +37,7 @@ model = RBSim.model do
   program :apache_php do |name|
     on_event :data_received do |data|
       stats_start :working, name
-      log "#{name} start #{data.type} #{data.src} #{data.content}"
+      log "#{name} start #{data.type} from #{data.src} #{data.content}"
       if data.type == :request
         cpu do |cpu|
           100*data.size / cpu.performance
@@ -47,9 +47,9 @@ model = RBSim.model do
         cpu do |cpu|
           500*data.size / cpu.performance
         end
-        send_data to: data.content[:client], size: data.size*2, type: :sql, content: data.content[:content]
+        send_data to: data.content[:client], size: data.size*2, type: :response, content: data.content[:content]
       end
-      log "#{name} finished #{data.type} #{data.src} #{data.content}"
+      log "#{name} finished #{data.type} from #{data.src} #{data.content}"
       stats_stop :working, name
     end
   end
@@ -59,6 +59,9 @@ model = RBSim.model do
       stats_start :query, :mysql
       log "DB start #{data.src} #{data.content}"
       delay_for (data.size * rand).to_i
+      cpu do |cpu|
+        (data.size/10 * rand).to_i
+      end
       send_data to: data.src, size: data.size*1000, type: :db_response, content: data.content
       log "DB finish #{data.src} #{data.content}"
       stats_stop :query, :mysql
@@ -82,15 +85,15 @@ model = RBSim.model do
     cpu 500
   end
 
-  new_process :client1, program: :wget, args: { target: :server1, count: 3 }
-  new_process :client2, program: :wget, args: { target: :server2, count: 3 }
+  new_process :client1, program: :wget, args: { target: :server1, count: 10 }
+  new_process :client2, program: :wget, args: { target: :server2, count: 10 }
 
   new_process :server1, program: :apache_php, args: 'apache1'
   new_process :server2, program: :apache_php, args: 'apache2'
   new_process :db, program: :mysql
 
   net :net01, bw: 1024
-  net :net02, bw: 512
+  net :net02, bw: 768
   net :lan, bw: 10240
 
   route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
@@ -132,8 +135,8 @@ end
 
 model.run
 
-p model.stats_summary
-p model.stats_data
+#p model.stats_summary
+#p model.stats_data
 
 model.stats_print
 
