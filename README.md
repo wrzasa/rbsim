@@ -7,9 +7,27 @@ using convenient Ruby-based DSL. Simulation is based on Timed
 Colored Petri nets designed by K. Jensen, thus ensuring reliable
 analysis. Basic statistics module is included.
 
+## Usage
+
+1. Define your model using `RBSim.model` method.
+    model = RBSim.model do
+
+      # define your model here
+
+    end
+1. Run simulator:
+    model.run
+1. Collect statistics:
+    model.stats_print
+
+To collect statistics you can also use
+* `model.stats_summary` to get Hash of summary
+* `model.stats_data` to get Hash with objects holding complete
+  data collected from simulation
+
 ## Model
 
-Use RBSim#model to load model described by DSL. The model is a
+Use `RBSim.model` to load model described by DSL. The model is a
 set of `process`es that are `put` on `nodes` and communicate over
 `net`s. Processes can be defined by `programs` or directly by
 blocks, `route`s define sequence of `net`s that should be
@@ -185,13 +203,95 @@ parameter of the `:worker` process will be set to 2000.
 
 ### Resources
 
-TODO
+Resources are described in terms of `node`s equipped with `cpu`s
+of given performance and `net`s with given `name` bandwidth
+(`bw`). Routes between `node`s are defined using `route`
+statement.
+
+#### Nodes
+
+Nodes are defined using `node` statement, cpus inside nodes using
+`cpu` statement with performance as parameter.
+
+    node :laptop do
+      cpu 1000
+      cpu 1000
+      cpu 1000
+    end
+
+The performance defined here, can be used in `cpu` statement in
+process description.
+
+
+#### Nets
+
+Nets used in communication are defined with `net` statement with
+name as parameter and a Hash definind other parameters of the
+segment, currently only bandwidth.
+
+    net :lan, bw: 1024
+    net :subnet1, bw: 20480
+
+#### Routes
+
+Routes are used to define which `net` segments should be traversed
+by data transmitted between two given `node`s. Routes can be
+one-way (default) or two-way.
+
+        route from: :laptop, to: :node02, via: [ :net01, :net02 ]
+        route from: :node04, to: :node05, via: [ :net07, :net01 ], twoway: true
+        route from: :node06, to: :node07, via: [ :net07, :net01 ], twoway: :true
+
+Communication between processes located on different nodes
+requires a route defined between the nodes. If there is more then
+one route between nodes, random one is selected.  A node can
+communicate with itself without any route defined and without
+travesrsing any `net` segemtns
 
 ### Mapping of Application to Resources
 
-TODO
+When application is defined as a set of processes and resources
+are defined as nodes connected with net segments, the application
+can be mapped to the nodes. Mapping is defined using `put`
+statement.
+
+    put :wget, on: :laptop
+    put :server1, on: :gandalf
+
+First parameter is process name, second (after `on:`) is node
+name.
+
+Thus application logic and topology does not depent in any way on
+topology of resources. The sam application can be mapped to
+different resources in different way. The same resource set can
+be used for different applications.
 
 ### Example
+
+Below is a simble but complete example model of wto applications:
+`wget` sending subsequent requests to specified process and
+`apache` responding to received requests. 
+
+The `wget` program accepts parameters describing its target
+(destination of requests) -- `opts[:target]` and count of
+requests to send `opts[:count]`. The paremeters are defined when
+new process is defined using this program.  The `apache` program
+takes no additional parameters.
+
+Two client processes are started using program `wget`: `client1`
+and `client2`. Using `apache` program one server is started:
+`server`. Application uses two nodes: `desktop` with one slower
+processor and `gandalf` with one faterr CPU. The nodes are
+connected by two nets and ne two-way route.  Both clients are
+assigned to the `desktop` node while server is run on `gandalf`.
+
+Logs are print to STDOUT and statistics are collected. Apache
+`stats` definitions allow to observe time taken by serving
+requests. Client `stats` count served requests and allow to
+verify if aresponses were received for all sent requests.
+
+
+The clients are mapped to 
 
     require 'rbsim'
 
@@ -238,7 +338,7 @@ TODO
 
       new_process :client1, program: :wget, args: { target: :server, count: 10 }
       new_process :client2, program: :wget, args: { target: :server, count: 10 }
-      new_process :server, program: :apache, args: 'apache1'
+      new_process :server, program: :apache
 
       net :net01, bw: 1024
       net :net02, bw: 510
@@ -251,3 +351,10 @@ TODO
 
     end
 
+## Custom Logger 
+
+TODO
+
+## Custom Statistics Collector
+
+TODO
