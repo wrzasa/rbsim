@@ -56,7 +56,7 @@ module RBSim
     end
 
     def delay_for(args)
-      if args.instance_of? Fixnum
+      if args.kind_of? Numeric
         args = { time: args }
       end
       @process.register_event(:delay_for, args)

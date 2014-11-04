@@ -23,7 +23,7 @@ page "cpu" do
 
     def delay
       event = @process.serve_system_event :cpu
-      event[:args][:block].call @cpu
+      event[:args][:block].call(@cpu).to_i
     end
   end
 

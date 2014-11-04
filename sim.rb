@@ -58,9 +58,9 @@ model = RBSim.model do
     on_event :data_received do |data|
       stats_start :query, :mysql
       log "DB start #{data.src} #{data.content}"
-      delay_for (data.size * rand).to_i
+      delay_for data.size * rand
       cpu do |cpu|
-        (data.size/10 * rand).to_i
+        data.size/10 * rand
       end
       send_data to: data.src, size: data.size*1000, type: :db_response, content: data.content
       log "DB finish #{data.src} #{data.content}"

@@ -13,7 +13,7 @@ describe "Basic simulation example" do
           end
           send_data to: opts[:target], size: 1024, type: :request, content: sent
           sent += 1
-          delay_for 5
+          delay_for 5*rand
           register_event :send if sent < opts[:count]
         end
 
@@ -30,7 +30,7 @@ describe "Basic simulation example" do
         on_event :data_received do |data|
           stats_start :apache, process.name
           cpu do |cpu|
-            100*data.size / cpu.performance
+            100*data.size*rand / cpu.performance
           end
           send_data to: data.src, size: data.size * 10, type: :response, content: data.content
           stats_stop :apache, process.name

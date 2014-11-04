@@ -19,7 +19,7 @@ page 'application' do
     end
 
     def process_token(clock)
-      ts = clock + @event[:args][:time]
+      ts = clock + @event[:args][:time].to_i
       { val: @process, ts: ts }
     end
   end
