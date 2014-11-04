@@ -94,6 +94,15 @@ event.
           end
         end
 
+The parameter passed to the event handler (`data` in the example
+above) contains a Hash describing received data.
+
+  { src: :source_process_name,
+    dst: :destination_process_name,
+    size: data_size,
+    type: 'a value_given_by_sender',
+    content: 'a value given by sender' }
+
 The complete example of wget -- sending requests and receiving
 responses can look like this:
 
