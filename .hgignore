@@ -1,3 +1,4 @@
 syntax: glob
 .bundle/*
 coverage
+doc

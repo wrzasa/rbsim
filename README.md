@@ -9,21 +9,25 @@ analysis. Basic statistics module is included.
 
 ## Usage
 
-1. Define your model using `RBSim.model` method.
-    model = RBSim.model do
+Define your model using `RBSim.model` method.
 
-      # define your model here
+      model = RBSim.model do
+        # define your model here
+      end
 
-    end
-1. Run simulator:
+Run simulator:
+
     model.run
-1. Collect statistics:
+
+Collect statistics:
+
     model.stats_print
 
 To collect statistics you can also use
-* `model.stats_summary` to get Hash of summary
-* `model.stats_data` to get Hash with objects holding complete
-  data collected from simulation
+
+ - `model.stats_summary` to get Hash of summary
+ - `model.stats_data` to get Hash with objects holding complete
+   data collected from simulation
 
 ## Model
 
@@ -70,19 +74,19 @@ using `register_event` statement. This is recommended method of
 describing processes behavior, also recurring behaviors. The
 following example will repeat sending data 10 times.
 
-  new_process :wget do
-    sent = 0
-    on_event :send do
-      cpu do |cpu|
-        150/cpu.performance
+    new_process :wget do
+      sent = 0
+      on_event :send do
+        cpu do |cpu|
+          150/cpu.performance
+        end
+        sent += 1
+        delay_for 5
+        register_event :send if sent < 10
       end
-      sent += 1
-      delay_for 5
-      register_event :send if sent < 10
-    end
 
-    register_event :send
-  end
+      register_event :send
+    end
 
 
 #### Communication
@@ -115,34 +119,34 @@ event.
 The parameter passed to the event handler (`data` in the example
 above) contains a Hash describing received data.
 
-  { src: :source_process_name,
-    dst: :destination_process_name,
-    size: data_size,
-    type: 'a value_given_by_sender',
-    content: 'a value given by sender' }
+    { src: :source_process_name,
+      dst: :destination_process_name,
+      size: data_size,
+      type: 'a value_given_by_sender',
+      content: 'a value given by sender' }
 
 The complete example of wget -- sending requests and receiving
 responses can look like this:
 
-  new_process :wget do
-    sent = 0
-    on_event :send do
-      cpu do |cpu|
-        150/cpu.performance
+    new_process :wget do
+      sent = 0
+      on_event :send do
+        cpu do |cpu|
+          150/cpu.performance
+        end
+        send_data to: opts[:target], size: 1024, type: :request, content: sent
+        sent += 1
+        delay_for 5
+        register_event :send if sent < 10
       end
-      send_data to: opts[:target], size: 1024, type: :request, content: sent
-      sent += 1
-      delay_for 5
-      register_event :send if sent < 10
-    end
 
-    on_event :data_received do |data|
-      log "Got data #{data} in process #{process.name}"
-      stats :request_served, process.name
-    end
+      on_event :data_received do |data|
+        log "Got data #{data} in process #{process.name}"
+        stats :request_served, process.name
+      end
 
-    register_event :send
-  end
+      register_event :send
+    end
 
 ##### Logs and statistics
 
@@ -151,10 +155,10 @@ send a message to logs (by default to STDOUT).
 
 The `stats` statements can be used to collect running statistics.
 
-* `stats_start tag [, group_name]` marks start of an activity
-* `stats_stop tag [, group_name]` marks start of an activity
-* `stats tag [, group_name]` marks that a counter marked by `tag`
-  should be increased
+ * `stats_start tag [, group_name]` marks start of an activity
+ * `stats_stop tag [, group_name]` marks start of an activity
+ * `stats tag [, group_name]` marks that a counter marked by `tag`
+   should be increased
 
 The optional `group_name` parameter allows one to group
 statistics by additional name, e.g. name of specific process
