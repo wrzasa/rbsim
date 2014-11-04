@@ -1,3 +1,6 @@
+require 'simplecov'
+SimpleCov.start
+
 require 'rbsim'
 require 'rspec/its'
 
