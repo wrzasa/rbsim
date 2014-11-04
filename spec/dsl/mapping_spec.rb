@@ -27,4 +27,44 @@ describe 'RBSim#dsl' do
     end
 
   end
+
+  context "with mapping without node" do
+    it "raises error" do
+      expect do
+        RBSim.dsl do
+          put :client
+        end
+      end.to raise_error RuntimeError
+    end
+  end
+
+  context "with mapping without process" do
+    it "raises error" do
+      expect do
+        RBSim.dsl do
+          put nil, on: :node01
+        end
+      end.to raise_error RuntimeError
+    end
+  end
+
+  context "with mapping defined by Hash without process" do
+    it "raises error" do
+      expect do
+        RBSim.dsl do
+          put on: :node01
+        end
+      end.to raise_error RuntimeError
+    end
+  end
+
+  context "with mapping defined by Hash without node" do
+    it "raises error" do
+      expect do
+        RBSim.dsl do
+          put process: :client
+        end
+      end.to raise_error RuntimeError
+    end
+  end
 end
