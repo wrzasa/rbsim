@@ -1,19 +1,19 @@
 RBSim
 =====
 
-RBSim is a simulation tools designed for analysis of concurrent
-and distributed applications. Application should be descibed
-using convenient Ruby-based DSL. Simulation is based on Timed
-Colored Petri nets designed by K. Jensen, thus ensuring reliable
-analysis. Basic statistics module is included.
+RBSim is a simulation tools designed for analysis of architecture of
+concurrent and distributed applications. Application should be descibed
+using convenient Ruby-based DSL. Simulation is based on Timed Colored
+Petri nets designed by K. Jensen, thus ensuring reliable analysis. Basic
+statistics module is included.
 
 ## Usage
 
 Define your model using `RBSim.model` method.
 
-      model = RBSim.model do
-        # define your model here
-      end
+    model = RBSim.model do
+      # define your model here
+    end
 
 Run simulator:
 
@@ -43,12 +43,12 @@ terms of events.
 
 Processes are defined by `new_process` statement.
 
-        new_process :sender1 do
-          delay_for time: 100
-          cpu do |cpu|
-            10000/cpu.performance
-          end
-        end
+    new_process :sender1 do
+      delay_for time: 100
+      cpu do |cpu|
+        10000/cpu.performance
+      end
+    end
 
 #### Delay and CPU Load
 
@@ -96,9 +96,9 @@ following example will repeat sending data 10 times.
 A process can send data to another process using its name as
 destination address.
 
-      new_process :sender1 do
-        send_data to: :receiver, size: 1024, type: :request, content: 'anything useful for your model'
-      end
+    new_process :sender1 do
+      send_data to: :receiver, size: 1024, type: :request, content: 'anything useful for your model'
+    end
 
 Data will be sent to process called `:receiver`, size will be
 1024. `type` and `content` of the data can be set to anything useful.
@@ -110,11 +110,11 @@ data will be dropped and a warning issued. To process received
 data, process must define event handler for `:data_received`
 event.
 
-        on_event :data_received do |data|
-          cpu do |cpu|
-            data.size / cpu.performance
-          end
-        end
+    on_event :data_received do |data|
+      cpu do |cpu|
+        data.size / cpu.performance
+      end
+    end
 
 The parameter passed to the event handler (`data` in the example
 above) contains a Hash describing received data.
@@ -185,15 +185,15 @@ Programs can be used to define the same logic used in a numebr of
 processes. Their names can be the used to define processes
 
 
-        program :waiter do |time|
-          delay_for time: time
-        end
+    program :waiter do |time|
+      delay_for time: time
+    end
 
-        program :worker do |volume|
-          cpu do |cpu|
-            volume * volume / cpu.performance
-          end
-        end
+    program :worker do |volume|
+      cpu do |cpu|
+        volume * volume / cpu.performance
+      end
+    end
 
 These two programs can be used to define processes:
 
@@ -242,9 +242,9 @@ Routes are used to define which `net` segments should be traversed
 by data transmitted between two given `node`s. Routes can be
 one-way (default) or two-way.
 
-        route from: :laptop, to: :node02, via: [ :net01, :net02 ]
-        route from: :node04, to: :node05, via: [ :net07, :net01 ], twoway: true
-        route from: :node06, to: :node07, via: [ :net07, :net01 ], twoway: :true
+    route from: :laptop, to: :node02, via: [ :net01, :net02 ]
+    route from: :node04, to: :node05, via: [ :net07, :net01 ], twoway: true
+    route from: :node06, to: :node07, via: [ :net07, :net01 ], twoway: :true
 
 Communication between processes located on different nodes
 requires a route defined between the nodes. If there is more then
