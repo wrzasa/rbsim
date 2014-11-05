@@ -1,4 +1,4 @@
-class Fixnum
+class Numeric
 
   #
   # Time units
