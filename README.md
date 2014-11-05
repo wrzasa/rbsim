@@ -33,11 +33,24 @@ To collect statistics you can also use
 
 Use `RBSim.model` to load model described by DSL. The model is a
 set of `process`es that are `put` on `nodes` and communicate over
-`net`s. Processes can be defined by `programs` or directly by
+`net`s. Processes can be defined by `program`s or directly by
 blocks, `route`s define sequence of `net`s that should be
 traversed by data while communication between `node`s.
 Application logic implemented in `process`es is described in
 terms of events.
+
+So to summarize, the most important parts of the model are:
+
+ - Application described as a set of `processes`
+ - Resources described as
+   - `nodes` (computers)
+   - `nets` (network segemtns)
+   - `routes` (from one node to another, over the `net` segments
+ - Mapping of application `processes` to `nodes`
+
+The application can be modeled independently, resources can be
+modeled separately and at the end, the application can be mapped
+to the resources.
 
 ### Processes
 
@@ -50,18 +63,30 @@ Processes are defined by `new_process` statement.
       end
     end
 
+First parameter of the statement is the process name which must
+be unique in the whole model. The block defines behavior of the process
+using statements described below.
+
 #### Delay and CPU Load
 
-First parameter of the statement is the process name which must
-be unique in the whole model.
+A process can do nothing for some time. This is specified with
+`delay_for` statement.
 
-A process can no nothing for some time -- `delay_for.
+    delay_for 100
+or
 
-It can alos load node's CPU for specified time. This is defined
-by `cpu` statement. Load time is defined by results of block
+    delay_for time: 100
+
+It can also load node's CPU for specified time. This is defined
+with `cpu` statement. CPU load time is defined by results of block
 passed to the statement. The parameter passed to the block
-represents CPU to which this work is assigner. Performance of
+represents CPU to which this work is assigned. Performance of
 this CPU can be checked using `cpu.performance`.
+
+    cpu do |cpu|
+      10000/cpu.performance
+    end
+
 
 Time values defined by `delay_for` and returned by the `cpu` block
 can be random.
@@ -69,10 +94,11 @@ can be random.
 #### Events and Handlers
 
 Defining process one can use `on_event` statement, to define
-process behavior for an event. Process can also register events
-using `register_event` statement. This is recommended method of
-describing processes behavior, also recurring behaviors. The
-following example will repeat sending data 10 times.
+process behavior when an event occurs. Process can also register
+event's occurence using `register_event` statement. This is
+recommended method of describing processes behavior, also
+recurring behaviors. The following example will repeat sending
+data 10 times.
 
     new_process :wget do
       sent = 0
@@ -88,6 +114,9 @@ following example will repeat sending data 10 times.
       register_event :send
     end
 
+All statements that can be used to describe processe's behavior
+can also be used inside `on_event` statement. In fact the event
+handlers are preferred place to describe behavior of a process.
 
 #### Communication
 
@@ -101,7 +130,8 @@ destination address.
     end
 
 Data will be sent to process called `:receiver`, size will be
-1024. `type` and `content` of the data can be set to anything useful.
+1024, `type` and `content` of the data can be set to anything
+considered useful.
 
 ##### Receiving data
 
@@ -164,12 +194,23 @@ The optional `group_name` parameter allows one to group
 statistics by additional name, e.g. name of specific process
 (apache1, apache2, apache2, ...) in which they were collected.
 
+Simulator automatically collects statistics for resource usage
+(subsequent CPUs and net segments).
+
+The statistics collected by `stats` statements can be obtained
+after simulation with one of the following methods mentioned at
+the beginning:
+
+    model.stats_print
+    model.stats_summary
+    model.stats_data
+
 ##### Variabeles, Conditions, Loops
 
-As shown in examples above, variables can be used to steer
-behavior of a process. Their visibility should be intuitive.
-Don't use Ruby's instance variables -- `@something` -- didn't
-test it, but no guarantee given!
+As shown in examples above (see model of wget), variables can be
+used to steer behavior of a process. Their visibility should be
+intuitive.  Don't use Ruby's instance variables -- `@something`
+-- didn't test it, but no guarantee given!
 
 You can also get name of current process from `process.name`.
 
@@ -182,7 +223,9 @@ wget model.
 ### Programs
 
 Programs can be used to define the same logic used in a numebr of
-processes. Their names can be the used to define processes
+processes. Their names can be the used to define processes.
+Behavior of programs ca be described using the same statemets
+that are used to describe processes.
 
 
     program :waiter do |time|
@@ -248,9 +291,9 @@ one-way (default) or two-way.
 
 Communication between processes located on different nodes
 requires a route defined between the nodes. If there is more then
-one route between nodes, random one is selected.  A node can
-communicate with itself without any route defined and without
-travesrsing any `net` segemtns
+one route between a pair of nodes, random one is selected.  A
+node can communicate with itself without any route defined and
+without traversing any `net` segemtns
 
 ### Mapping of Application to Resources
 
@@ -266,36 +309,38 @@ First parameter is process name, second (after `on:`) is node
 name.
 
 Thus application logic and topology does not depent in any way on
-topology of resources. The sam application can be mapped to
-different resources in different way. The same resource set can
+topology of resources. The same application can be mapped to
+different resources in different ways. The same resource set can
 be used for different applications.
 
 ### Example
 
-Below is a simble but complete example model of wto applications:
+Below is a simble but complete example model of two applications:
 `wget` sending subsequent requests to specified process and
 `apache` responding to received requests. 
 
 The `wget` program accepts parameters describing its target
 (destination of requests) -- `opts[:target]` and count of
-requests to send `opts[:count]`. The paremeters are defined when
-new process is defined using this program.  The `apache` program
-takes no additional parameters.
+requests to send -- `opts[:count]`. The paremeters are defined
+when new process is defined using this program.  The `apache`
+program takes no additional parameters.
 
 Two client processes are started using program `wget`: `client1`
 and `client2`. Using `apache` program one server is started:
 `server`. Application uses two nodes: `desktop` with one slower
-processor and `gandalf` with one faterr CPU. The nodes are
-connected by two nets and ne two-way route.  Both clients are
+processor and `gandalf` with one faster CPU. The nodes are
+connected by two nets and one two-way route.  Both clients are
 assigned to the `desktop` node while server is run on `gandalf`.
 
-Logs are print to STDOUT and statistics are collected. Apache
+The clients are mapped to the `desktop` node and the server is
+assigned to `gandalf`.
+
+Logs are printed to STDOUT and statistics are collected. Apache
 `stats` definitions allow to observe time taken by serving
 requests. Client `stats` count served requests and allow to
 verify if aresponses were received for all sent requests.
 
-
-The clients are mapped to 
+The created model is run and its statistics are printed.
 
     require 'rbsim'
 
@@ -354,6 +399,47 @@ The clients are mapped to
       put :client2, on: :desktop
 
     end
+
+    model.run
+
+    model.stats_print
+
+This model will print the following statistics for application
+and its resources:
+
+
+      ================================================================================
+      STATISTICS:
+
+      Time: 1494
+
+      APPLICATION
+      --------------------------------------------------------------------------------
+      Counters (in relation to time)
+      ------------------------------
+        client1
+          request_served	:	10 (0.6693%)
+        client2
+          request_served	:	10 (0.6693%)
+      Durations
+      ------------------------------
+        server
+          apache	:	1460 (97.7242%)
+
+      RESOURCES
+      --------------------------------------------------------------------------------
+      Counters (in relation to time)
+      ------------------------------
+      Durations
+      ------------------------------
+        CPU
+          desktop	:	20 (1.3387%)
+          gandalf	:	1460 (97.7242%)
+        NET
+          net01	:	220 (14.7256%)
+          net02	:	440 (29.4511%)
+      ================================================================================
+
 
 ## Custom Logger 
 
