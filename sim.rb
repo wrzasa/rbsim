@@ -6,12 +6,12 @@ model = RBSim.model do
     sent = 0
     on_event :send do
       cpu do |cpu|
-        150/cpu.performance
+        (150 / cpu.performance).miliseconds
       end
-      send_data to: opts[:target], size: 1024, type: :request, content: sent
+      send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
       log "Sent data in process #{process.name} #{sent}"
       sent += 1
-      delay_for 5
+      delay_for 5.miliseconds
       register_event :send if sent < opts[:count]
     end
 
@@ -27,7 +27,7 @@ model = RBSim.model do
     on_event :data_received do |data|
       log "Got #{data.type} from: #{data.src}, size: #{data.size}, content: #{data.content}"
       cpu do |cpu|
-        100*data.size / cpu.performance
+        (100 * data.size.in_bytes / cpu.performance).miliseconds
       end
       send_data to: data.src, size: data.size * 10, type: :response, content: data.content
       log "Responded to: #{data.src} with content: #{data.content}"
@@ -40,12 +40,12 @@ model = RBSim.model do
       log "#{name} start #{data.type} from #{data.src} #{data.content}"
       if data.type == :request
         cpu do |cpu|
-          100*data.size / cpu.performance
+          (100 * data.size.in_bytes / cpu.performance).miliseconds
         end
         send_data to: :db, size: data.size/10, type: :sql, content: { client: data.src, content: data.content }
       else
         cpu do |cpu|
-          500*data.size / cpu.performance
+          (500*data.size / cpu.performance).miliseconds
         end
         send_data to: data.content[:client], size: data.size*2, type: :response, content: data.content[:content]
       end
@@ -58,9 +58,9 @@ model = RBSim.model do
     on_event :data_received do |data|
       stats_start :query, :mysql
       log "DB start #{data.src} #{data.content}"
-      delay_for data.size * rand
+      delay_for (data.size.in_bytes * rand).miliseconds
       cpu do |cpu|
-        data.size/10 * rand
+        (data.size / 10 * rand).miliseconds
       end
       send_data to: data.src, size: data.size*1000, type: :db_response, content: data.content
       log "DB finish #{data.src} #{data.content}"
@@ -92,9 +92,9 @@ model = RBSim.model do
   new_process :server2, program: :apache_php, args: 'apache2'
   new_process :db, program: :mysql
 
-  net :net01, bw: 1024
-  net :net02, bw: 768
-  net :lan, bw: 10240
+  net :net01, bw: 1024.bps
+  net :net02, bw: 768.bps
+  net :lan, bw: 10240.bps
 
   route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
   route from: :laptop, to: :gandalf, via: [ :net01, :net02 ], twoway: true

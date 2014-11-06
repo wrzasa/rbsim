@@ -6,11 +6,11 @@ model = RBSim.model do
     sent = 0
     on_event :send do
       cpu do |cpu|
-        150/cpu.performance
+        (150 / cpu.performance).miliseconds
       end
-      send_data to: opts[:target], size: 1024, type: :request, content: sent
+      send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
       sent += 1
-      delay_for 5
+      delay_for 5.miliseconds
       register_event :send if sent < opts[:count]
     end
 
@@ -26,7 +26,7 @@ model = RBSim.model do
     on_event :data_received do |data|
       stats_start :apache, process.name
       cpu do |cpu|
-        100*data.size / cpu.performance
+        (100 * data.size.in_bytes / cpu.performance).miliseconds
       end
       send_data to: data.src, size: data.size * 10, type: :response, content: data.content
       stats_stop :apache, process.name
@@ -45,8 +45,8 @@ model = RBSim.model do
   new_process :client2, program: :wget, args: { target: :server, count: 10 }
   new_process :server, program: :apache, args: 'apache1'
 
-  net :net01, bw: 1024
-  net :net02, bw: 510
+  net :net01, bw: 1024.bps
+  net :net02, bw: 510.bps
 
   route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
 
