@@ -81,7 +81,7 @@ module RBSim
       puts
       puts "="*80
       puts "STATISTICS:\n\n"
-      puts "Time: #{@clock}"
+      puts "Time: %.6fs" % @clock.to_f.in_seconds
 
       puts
       puts "APPLICATION"
@@ -100,7 +100,7 @@ module RBSim
 
     def default_logger
       proc do |clock, message|
-        puts "#{clock}: #{message}"
+        puts "%.3f: #{message}" % (clock.to_f.in_seconds)
       end
     end
 

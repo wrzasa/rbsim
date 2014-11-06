@@ -59,12 +59,16 @@ module RBSim
     end
 
     def print
-      puts "Counters (in relation to time)"
+      puts "Counters"
       puts "------------------------------"
-      print_stats counters
+      print_stats counters do |value|
+        value
+      end
       puts "Durations"
       puts "------------------------------"
-      print_stats durations
+      print_stats durations do |value|
+        "%6.3fs (%7.4f%%)" % [ (value.to_f.in_seconds), (value.to_f / @clock * 100) ]
+      end
     end
 
     private 
@@ -75,7 +79,7 @@ module RBSim
         puts "\t#{name}"
         stats.keys.sort{ |a,b| a.to_s <=> b.to_s}.each do |tag|
           value = stats[tag]
-          puts "\t\t#{tag}\t:\t#{value} (%.4f%%)" % (value.to_f / @clock * 100)
+          puts "\t\t#{tag}\t: #{yield value}"
         end
       end
     end
