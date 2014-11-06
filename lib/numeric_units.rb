@@ -3,11 +3,15 @@
 # used in RBSim to desciribe units of time,
 # data volume and network speed.
 #
+# Native data volume unit is one bit
+# Native network speed unit is one bit per second
+# Time unit is one jiffie, defined by Numric::RBSIM_JIFFIES_PER_SECOND
 class Numeric
 
   #
   # Time units
   #
+
 
   # Defines unit of time -- jiffie is the smallest
   # time unit that can be accounted by simulator
