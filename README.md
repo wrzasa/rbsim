@@ -59,7 +59,7 @@ Processes are defined by `new_process` statement.
     new_process :sender1 do
       delay_for time: 100
       cpu do |cpu|
-        10000/cpu.performance
+        (10000 / cpu.performance).miliseconds
       end
     end
 
@@ -72,10 +72,10 @@ using statements described below.
 A process can do nothing for some time. This is specified with
 `delay_for` statement.
 
-    delay_for 100
+    delay_for 100.seconds
 or
 
-    delay_for time: 100
+    delay_for time: 100.seconds
 
 It can also load node's CPU for specified time. This is defined
 with `cpu` statement. CPU load time is defined by results of block
@@ -84,7 +84,7 @@ represents CPU to which this work is assigned. Performance of
 this CPU can be checked using `cpu.performance`.
 
     cpu do |cpu|
-      10000/cpu.performance
+      (10000 / cpu.performance).miliseconds
     end
 
 
@@ -104,10 +104,10 @@ data 10 times.
       sent = 0
       on_event :send do
         cpu do |cpu|
-          150/cpu.performance
+          (150 / cpu.performance).miliseconds
         end
         sent += 1
-        delay_for 5
+        delay_for 5.seconds
         register_event :send if sent < 10
       end
 
@@ -126,11 +126,11 @@ A process can send data to another process using its name as
 destination address.
 
     new_process :sender1 do
-      send_data to: :receiver, size: 1024, type: :request, content: 'anything useful for your model'
+      send_data to: :receiver, size: 1024.bytes, type: :request, content: 'anything useful for your model'
     end
 
 Data will be sent to process called `:receiver`, size will be
-1024, `type` and `content` of the data can be set to anything
+1024 bytes, `type` and `content` of the data can be set to anything
 considered useful.
 
 ##### Receiving data
@@ -142,7 +142,7 @@ event.
 
     on_event :data_received do |data|
       cpu do |cpu|
-        data.size / cpu.performance
+        (data.size / cpu.performance).miliseconds
       end
     end
 
@@ -162,11 +162,11 @@ responses can look like this:
       sent = 0
       on_event :send do
         cpu do |cpu|
-          150/cpu.performance
+          (150 / cpu.performance).miliseconds
         end
-        send_data to: opts[:target], size: 1024, type: :request, content: sent
+        send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
         sent += 1
-        delay_for 5
+        delay_for 5.seconds
         register_event :send if sent < 10
       end
 
@@ -234,14 +234,14 @@ that are used to describe processes.
 
     program :worker do |volume|
       cpu do |cpu|
-        volume * volume / cpu.performance
+        ( (volume * volume).in_bytes / cpu.performance ).miliseconds
       end
     end
 
 These two programs can be used to define processes:
 
-    new_process program: waiter, args: 100
-    new_process program: worker, args: 2000
+    new_process program: waiter, args: 100.miliseconds
+    new_process program: worker, args: 2000.bytes
 
 `args` passed to the `new_process` statement will be passed to
 the block defining program. So in the example above `time`
@@ -276,8 +276,8 @@ Nets used in communication are defined with `net` statement with
 name as parameter and a Hash definind other parameters of the
 segment, currently only bandwidth.
 
-    net :lan, bw: 1024
-    net :subnet1, bw: 20480
+    net :lan, bw: 1024.bps
+    net :subnet1, bw: 20480.bps
 
 #### Routes
 
@@ -313,11 +313,68 @@ topology of resources. The same application can be mapped to
 different resources in different ways. The same resource set can
 be used for different applications.
 
+### Units
+
+Simulator operates on three kinds of values:
+
+ * data volume
+ * network bandwidth
+ * time
+
+For each value one can use specific measurement units:
+
+  * for data volume
+    * bits
+    * bytes
+  * for network bandwidth
+    * bps (bits per second)
+    * Bps (bytes per second)
+  * for time:
+    * microseconds
+    * miliseconds
+    * seconds
+    * minutes
+    * hours
+    * days (24 hours)
+
+In every place where data volume should be given, it can be
+defined using expressions like
+
+    1024.bytes
+    128.bits
+
+Similarly network bandwidth can be defined using
+
+    128.Bps
+    1024.bps
+
+Finally, if time should be given, one should use a unit, to
+ensure correct value, e.g.
+
+    10.seconds
+    100.microseconds
+    2.hours
+
+For values returned from simulator, to ensure value in correct
+units use `in_*` methods, e.g.
+
+    data.in_bytes
+    time.in_seconds
+
+So to define that CPU load time in miliseconds should be equal to
+10 * data volume in bytes, use:
+
+    cpu do |cpu|
+      (data.size.in_bytes * 10).miliseconds
+    end
+
+Every measurement unit has its equivalent `in_*` method.
+
 ### Example
 
-Below is a simble but complete example model of two applications:
-`wget` sending subsequent requests to specified process and
-`apache` responding to received requests. 
+Below thete is a simble but complete example model of two
+applications: `wget` sending subsequent requests to specified
+process and `apache` responding to received requests. 
 
 The `wget` program accepts parameters describing its target
 (destination of requests) -- `opts[:target]` and count of
@@ -350,11 +407,11 @@ The created model is run and its statistics are printed.
         sent = 0
         on_event :send do
           cpu do |cpu|
-            150/cpu.performance
+            (150 / cpu.performance).miliseconds
           end
-          send_data to: opts[:target], size: 1024, type: :request, content: sent
+          send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
           sent += 1
-          delay_for 5
+          delay_for 5.seconds
           register_event :send if sent < opts[:count]
         end
 
@@ -370,7 +427,7 @@ The created model is run and its statistics are printed.
         on_event :data_received do |data|
           stats_start :apache, process.name
           cpu do |cpu|
-            100*data.size / cpu.performance
+            (100 * data.size.in_bytes / cpu.performance).miliseconds
           end
           send_data to: data.src, size: data.size * 10, type: :response, content: data.content
           stats_stop :apache, process.name
@@ -389,8 +446,8 @@ The created model is run and its statistics are printed.
       new_process :client2, program: :wget, args: { target: :server, count: 10 }
       new_process :server, program: :apache
 
-      net :net01, bw: 1024
-      net :net02, bw: 510
+      net :net01, bw: 1024.bps
+      net :net02, bw: 510.bps
 
       route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
 
@@ -408,37 +465,38 @@ This model will print the following statistics for application
 and its resources:
 
 
-      ================================================================================
-      STATISTICS:
 
-      Time: 1494
+    ================================================================================
+    STATISTICS:
 
-      APPLICATION
-      --------------------------------------------------------------------------------
-      Counters (in relation to time)
-      ------------------------------
-        client1
-          request_served	:	10 (0.6693%)
-        client2
-          request_served	:	10 (0.6693%)
-      Durations
-      ------------------------------
-        server
-          apache	:	1460 (97.7242%)
+    Time: 1.461264s
 
-      RESOURCES
-      --------------------------------------------------------------------------------
-      Counters (in relation to time)
-      ------------------------------
-      Durations
-      ------------------------------
-        CPU
-          desktop	:	20 (1.3387%)
-          gandalf	:	1460 (97.7242%)
-        NET
-          net01	:	220 (14.7256%)
-          net02	:	440 (29.4511%)
-      ================================================================================
+    APPLICATION
+    --------------------------------------------------------------------------------
+    Counters
+    ------------------------------
+      client1
+        request_served	: 10
+      client2
+        request_served	: 10
+    Durations
+    ------------------------------
+      server
+        apache	:  1.460s (99.9135%)
+
+    RESOURCES
+    --------------------------------------------------------------------------------
+    Counters
+    ------------------------------
+    Durations
+    ------------------------------
+      CPU
+        desktop	:  0.020s ( 1.3687%)
+        gandalf	:  1.460s (99.9135%)
+      NET
+        net01	:  0.002s ( 0.1204%)
+        net02	:  0.004s ( 0.2409%)
+    ================================================================================
 
 
 ## Custom Logger 
