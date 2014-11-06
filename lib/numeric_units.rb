@@ -1,16 +1,28 @@
+#
+# This file extends Ruby Numeric class by methods
+# used in RBSim to desciribe units of time,
+# data volume and network speed.
+#
 class Numeric
 
   #
   # Time units
   #
 
+  # Defines unit of time -- jiffie is the smallest
+  # time unit that can be accounted by simulator
   RBSIM_JIFFIES_PER_SECOND = 1000000
+
   def seconds
     self * RBSIM_JIFFIES_PER_SECOND
   end
 
   def miliseconds
-    (self.seconds / 1000).to_i
+    self.seconds / 1000
+  end
+
+  def microseconds
+    self.miliseconds / 1000
   end
 
   def minutes
@@ -30,7 +42,11 @@ class Numeric
   end
 
   def in_miliseconds
-    self.in_seconds / 1000
+    self.in_seconds * 1000
+  end
+
+  def in_microseconds
+    self.in_miliseconds * 1000
   end
 
   def in_minutes
