@@ -18,7 +18,6 @@ describe "Numeric units" do
       its(:in_Bps)  { should eq subject / 8 }
 
       # time units
-      subject { 1.5 }
       its(:seconds)         { should eq subject * jiffies }
       its(:miliseconds)     { should eq subject * jiffies / 1000 }
       its(:microseconds)    { should eq subject * jiffies / 1000000 }
@@ -39,6 +38,10 @@ describe "Numeric units" do
   end
 
   describe 1.5 do
+    include_examples 'has correct units'
+  end
+
+  describe 50000, focus:true do
     include_examples 'has correct units'
   end
 
