@@ -46,11 +46,11 @@ class Numeric
   end
 
   def in_miliseconds
-    self.in_seconds * 1000
+    self * 1000 / RBSIM_JIFFIES_PER_SECOND
   end
 
   def in_microseconds
-    self.in_miliseconds * 1000
+    self * 1000 * 1000 / RBSIM_JIFFIES_PER_SECOND
   end
 
   def in_minutes

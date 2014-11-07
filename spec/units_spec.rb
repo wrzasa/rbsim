@@ -41,7 +41,7 @@ describe "Numeric units" do
     include_examples 'has correct units'
   end
 
-  describe 50000, focus:true do
+  describe 50000 do
     include_examples 'has correct units'
   end
 
