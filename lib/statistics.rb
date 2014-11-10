@@ -1,5 +1,6 @@
 module RBSim
   class Statistics
+    UnknownStatsType = Class.new RuntimeError
     attr_accessor :clock
 
     def initialize
@@ -16,9 +17,11 @@ module RBSim
         @counter_events[group_name][tag] ||= []
         @counter_events[group_name][tag] << time
       else
+        raise UnknownStatsType.new(type) unless [:start, :stop].include? type
         @duration_events[group_name] ||= {}
-        @duration_events[group_name][tag] ||= []
-        @duration_events[group_name][tag] << { type => time }
+        @duration_events[group_name][tag] ||= {}
+        @duration_events[group_name][tag][type] ||= []
+        @duration_events[group_name][tag][type] << time
       end
     end
 
@@ -36,16 +39,11 @@ module RBSim
     def durations
       result = {}
       @duration_events.each do |group_name, events|
-        events.each do |tag, events|
+        events.each do |tag, times|
           duration = 0
-          start = nil
-          events.each do |event, time|
-            if !event[:start].nil? && start.nil?
-              start = event[:start]
-            elsif !event[:stop].nil? && !start.nil?
-              duration += (event[:stop] - start)
-              start = nil
-            end
+          times[:start].each_with_index do |start, i|
+            stop = times[:stop][i]
+            duration += stop - start unless stop.nil?
           end
           result[group_name] ||= {}
           result[group_name][tag] = duration

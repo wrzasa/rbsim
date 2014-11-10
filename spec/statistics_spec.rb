@@ -23,7 +23,8 @@ describe RBSim::Statistics do
     end
   end
 
-  # TODO: a warning in this case?
+  # compute from first :start fo first :stop,
+  # from second :start to second :stop and so on...
   it "for incorrect data" do
       subject.event :start, { tag: :working, group_name: 'apache' }, 100
       subject.event :start, { tag: :working, group_name: 'apache' }, 150
@@ -34,7 +35,7 @@ describe RBSim::Statistics do
       subject.event :start, { tag: :working, group_name: 'apache' }, 600
       subject.event :stop, { tag: :working, group_name: 'apache' }, 700
       subject.clock = 1000
-      expect(subject.durations['apache'][:working]).to eq(300)
+      expect(subject.durations['apache'][:working]).to eq(400)
   end
 
 end
