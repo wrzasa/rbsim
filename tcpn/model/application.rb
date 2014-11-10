@@ -134,7 +134,7 @@ page 'application' do
         @process = binding[:process][:val]
         @queue = binding[:queue][:val]
         @data = @queue.get
-        @process.register_event :data_received, @data
+        @process.enqueue_event :data_received, @data
       end
 
       def process_token(clock)

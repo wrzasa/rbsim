@@ -7,7 +7,7 @@ describe "TCPN model" do
     let :process_token do
       process = RBSim::Tokens::ProcessToken.new(:test_process)
       process.node = :node01
-      process.register_event stats_event, { tag: stats_tag, name: stats_name }
+      process.enqueue_event stats_event, { tag: stats_tag, name: stats_name }
       process
     end
 

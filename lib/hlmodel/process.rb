@@ -26,7 +26,7 @@ module RBSim
       end
 
       # event just happened
-      def register_event(event, args = nil)
+      def enqueue_event(event, args = nil)
         handler = nil # system event has no handling code defined here
                       # it must be handled by somethig external, like
                       # TCPN transition!

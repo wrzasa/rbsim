@@ -48,41 +48,41 @@ module RBSim
     end
 
     def register_event(event, args = nil)
-      @process.register_event(event, args)
+      @process.enqueue_event(event, args)
     end
 
     def cpu(&block)
-      @process.register_event(:cpu, block: block)
+      @process.enqueue_event(:cpu, block: block)
     end
 
     def delay_for(args)
       if args.kind_of? Numeric
         args = { time: args }
       end
-      @process.register_event(:delay_for, args)
+      @process.enqueue_event(:delay_for, args)
     end
 
     def send_data(args)
-      @process.register_event(:send_data, args)
+      @process.enqueue_event(:send_data, args)
     end
 
     def log(message)
-      @process.register_event(:log, message)
+      @process.enqueue_event(:log, message)
     end
 
     def stats_start(tag, name = nil)
       params = stats_event_params(tag, name)
-      @process.register_event(:stats_start, params)
+      @process.enqueue_event(:stats_start, params)
     end
 
     def stats_stop(tag, name = nil)
       params = stats_event_params(tag, name)
-      @process.register_event(:stats_stop, params)
+      @process.enqueue_event(:stats_stop, params)
     end
 
     def stats(tag, name = nil)
       params = stats_event_params(tag, name)
-      @process.register_event(:stats, params)
+      @process.enqueue_event(:stats, params)
     end
 
     def new_process(name, args = nil, &block)
@@ -91,7 +91,7 @@ module RBSim
         new_process.node = @process.node
         new_process
       end
-      @process.register_event(:new_process, constructor_args: args, constructor: constructor)
+      @process.enqueue_event(:new_process, constructor_args: args, constructor: constructor)
     end
 
 

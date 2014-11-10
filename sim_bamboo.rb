@@ -1,5 +1,16 @@
 require 'rbsim'
 
+client_no = 1
+router_no = 1
+server_no = 1
+request_per_client = 10
+request_gap = 600.miliseconds
+long_prob = 0.0
+REQUEST_TIMES = {
+  long: 5000.miliseconds,
+  short: 50.miliseconds
+}
+
 model = RBSim.model do
 
   # gets array of server names and assigns
@@ -34,13 +45,13 @@ model = RBSim.model do
   program :webserver do
     on_event :data_received do |data|
       if data.type == :request
-        tag = "request_#{data.content[:content][:length].in_miliseconds}".to_sym
+        tag = "request_#{data.content[:content][:length]}".to_sym
         stats tag, process.name
         stats :request, process.name
-        log "#{process.name} got request #{data.content[:content][:length].in_miliseconds}"
+        log "#{process.name} got request #{data.content[:content][:number]} from #{data.content[:from]} #{data.content[:content][:length]}"
         cpu do |cpu|
           # request holds information about its processing time
-          data.content[:content][:length] / cpu.performance
+          REQUEST_TIMES[data.content[:content][:length]] / cpu.performance
         end
         data.content[:content].merge!({ server: process.name })
         send_data to: data.src, size: data.size * 10, type: :response, content: data.content
@@ -55,18 +66,20 @@ model = RBSim.model do
     sent = 0
     on_event :send do
       length = if rand < opts[:long_prob]
-                  stats :requests_long, process.name
-                  stats_start :requests_long, process.name
-                  5000.miliseconds
+                  stats :requests_long#, process.name
+                  stats_start :requests_long#, process.name
+                  :long
                 else
-                  stats :requests_short, process.name
-                  stats_start :requests_short, process.name
-                  50.miliseconds
+                  stats :requests_short#, process.name
+                  stats_start :requests_short#, process.name
+                  :short
                 end
       content = { number: sent, length: length }
-      send_data to: opts[:target], size: 1024.bytes, type: :request, content: content
-      log "#{process.name} sent data #{sent} #{length.in_miliseconds}"
+      target = opts[:targets][rand opts[:targets].length]
+      send_data to: target, size: 1024.bytes, type: :request, content: content
+      log "#{process.name} sent request #{sent} #{length}"
       stats_start :request, process.name
+      stats_start "request_#{sent}".to_sym, process.name
       sent += 1
       delay_for opts[:delay]
       register_event :send if sent < opts[:count]
@@ -74,13 +87,10 @@ model = RBSim.model do
 
     on_event :data_received do |data|
       stats_stop :request, process.name
-      if data.content[:length] == 50.miliseconds
-        stats_stop :requests_short, process.name
-      else
-        stats_stop :requests_long, process.name
-      end
-      log "#{process.name} got data #{data.content[:number]} #{data.content[:server]} #{data.content[:length].in_miliseconds}"
+      stats_stop "requests_#{data.content[:length]}".to_sym#, process.name
+      log "#{process.name} got response #{data.content[:number]} #{data.content[:server]} #{data.content[:length]}"
       stats :request_served, process.name
+      stats_stop "request_#{data.content[:number]}".to_sym, process.name
     end
 
     register_event :send
@@ -90,10 +100,9 @@ model = RBSim.model do
 
 
 
-  servers = (0..10).map { |i| "thin#{i}".to_sym }
-  routers = (0..10).map { |i| "router#{i}".to_sym }
-  requests = 100
-  long_prob = 0.1
+  clients = (0..client_no - 1).map { |i| "client#{i}".to_sym }
+  routers = (0..router_no - 1).map { |i| "router#{i}".to_sym }
+  servers = (0..server_no - 1).map { |i| "thin#{i}".to_sym }
 
   servers.each do |s|
     node s do
@@ -110,15 +119,18 @@ model = RBSim.model do
       cpu 1
     end
     put r, on: r
+  end
 
-    c = "client#{i}".to_sym
-    new_process c, program: :wget, args: { count: requests, delay: 600.miliseconds, target: r, long_prob: long_prob }
+  clients.each do |c|
+    new_process c, program: :wget, args: { count: request_per_client, delay: request_gap, targets: routers, long_prob: long_prob }
     node c do
       cpu 1
     end
     put c, on: c
 
-    route from: c, to: r, via: [ :wan ], twoway: true
+    routers.each do |r|
+      route from: c, to: r, via: [ :wan ], twoway: true
+    end
   end
 
   net :wan, bw: 102400.bps
@@ -136,3 +148,28 @@ end
 model.run
 
 model.stats_print
+p model.stats_summary
+
+puts "Clients\t\t: #{client_no}"
+puts "Routers\t\t: #{router_no}"
+puts "Servers\t\t: #{server_no}"
+puts "Requests\t: #{request_per_client}"
+puts "Request gap\t: #{request_gap.in_miliseconds}ms"
+puts "Long req. prob.\t: #{long_prob}"
+puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t}"}.join ', '}"
+puts
+
+long_time = (model.stats_summary[:application][:durations][""][:requests_long] || 0).to_f
+short_time = (model.stats_summary[:application][:durations][""][:requests_short] || 0).to_f
+long_count = (model.stats_summary[:application][:counters][""][:requests_long] || 0).to_f
+short_count = (model.stats_summary[:application][:counters][""][:requests_short] || 0).to_f
+
+if short_count > 0
+  short_req_avg = short_time / short_count
+  puts "Short req. avg\t: #{short_req_avg.in_miliseconds}ms"
+end
+
+if long_count > 0
+  long_req_avg = long_time / long_count
+  puts "Long req. avg\t: #{long_req_avg.in_miliseconds}ms"
+end
