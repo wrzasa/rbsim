@@ -76,11 +76,20 @@ describe "HLModel::Process created with DSL#new_process" do
 
 
     # old process again
-    # user event registered, its handler will be run in the
-    # future when time comes
-    p = process.serve_user_event
-    expect(p).to eq(process) # returns modified process
-    expect(process.event_queue_size).to eq(4)
+    # user register_event
+    expect {
+      e = process.serve_system_event :register_event
+      event = e[:args][:event]
+      delay = e[:args][:delay]
+      args = e[:args][:event_args]
+      expect(e[:name]).to eq(:register_event)
+      expect(event).to eq(:data)
+      expect(delay).to eq(0)
+      expect(args).to eq(1000)
+      process.enqueue_event(event, args)
+      #expect(process.event_queue_size).to eq(4)
+    }.not_to change(process, :event_queue_size) # register_event dequeued, new event enqueued
+
 
     # send_data
     event = process.serve_system_event :send_data
@@ -94,8 +103,13 @@ describe "HLModel::Process created with DSL#new_process" do
     expect(event[:args]).to eq("finished main, will serve events")
 
 
-    # Events created by serving the the :data user event above follow:
 
+    # user event :data registered by :register_event, its handler will be run
+    # in the future when time comes
+    p = process.serve_user_event
+    expect(p).to eq(process) # returns modified process
+
+    # Events created by serving the the :data user event above follow:
     event = process.serve_system_event :delay_for
     expect(event).to eq({name: :delay_for, args: { time: 200 }})
 

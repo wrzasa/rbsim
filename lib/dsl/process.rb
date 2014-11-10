@@ -51,7 +51,7 @@ module RBSim
     def register_event(event, opts = {})
       args = opts[:args]
       delay = opts[:delay] || 0
-      @process.enqueue_event(event, args)
+      @process.enqueue_event(:register_event, event: event, delay: delay, event_args: args)
     end
 
     def cpu(&block)
