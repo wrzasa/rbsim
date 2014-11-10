@@ -10,8 +10,8 @@ model = RBSim.model do
       end
       send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
       sent += 1
-      delay_for 5.miliseconds
-      register_event :send if sent < opts[:count]
+      # delay_for 5.miliseconds
+      register_event :send, delay: 5.miliseconds if sent < opts[:count]
     end
 
     on_event :data_received do |data|

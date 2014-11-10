@@ -77,6 +77,12 @@ or
 
     delay_for time: 100.seconds
 
+Using `delay_for` causes process to stop for specified time. It
+will not occupy resources, but it will not serve any incoming
+event either! If you need to put a delay between recurring
+events, you should use `delay` option of `register_event`
+statement.
+
 It can also load node's CPU for specified time. This is defined
 with `cpu` statement. CPU load time is defined by results of block
 passed to the statement. The parameter passed to the block
@@ -107,12 +113,17 @@ data 10 times.
           (150 / cpu.performance).miliseconds
         end
         sent += 1
-        delay_for 5.seconds
-        register_event :send if sent < 10
+        register_event :send, delay: 5.miliseconds if sent < 10
       end
 
       register_event :send
     end
+
+The optional `delay:` option of the `register_event` statement
+will cause the event to be registered with specified delay. Thus
+the above example will register the `:send` events with 5
+milisecond gaps. By default events are registered immediatelly,
+without any delay.
 
 All statements that can be used to describe processe's behavior
 can also be used inside `on_event` statement. In fact the event
@@ -166,8 +177,7 @@ responses can look like this:
         end
         send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
         sent += 1
-        delay_for 5.seconds
-        register_event :send if sent < 10
+        register_event :send, delay: 5.miliseconds if sent < 10
       end
 
       on_event :data_received do |data|
@@ -411,8 +421,7 @@ The created model is run and its statistics are printed.
           end
           send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
           sent += 1
-          delay_for 5.seconds
-          register_event :send if sent < opts[:count]
+          register_event :send, delay: 5.miliseconds if sent < opts[:count]
         end
 
         on_event :data_received do |data|
