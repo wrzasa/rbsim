@@ -24,10 +24,10 @@ describe RBSim::Simulator do
     end
 
     it "registers events in Statistisc" do
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:start, {tag: :work, name: 'worker'}, 0).once
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stop, {tag: :work, name: 'worker'}, 200)
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, name: 'worker'}, 300)
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, name: 'worker'}, 400)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:start, {tag: :work, group_name: 'worker'}, 0).once
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stop, {tag: :work, group_name: 'worker'}, 200)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, group_name: 'worker'}, 300)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, group_name: 'worker'}, 400)
       model.run
     end
 

@@ -10,24 +10,24 @@ module RBSim
 
     def event(type, params, time)
       tag = params[:tag]
-      name = params[:name] || ''
+      group_name = params[:group_name] || ''
       if type == :stats
-        @counter_events[name] ||= {}
-        @counter_events[name][tag] ||= []
-        @counter_events[name][tag] << time
+        @counter_events[group_name] ||= {}
+        @counter_events[group_name][tag] ||= []
+        @counter_events[group_name][tag] << time
       else
-        @duration_events[name] ||= {}
-        @duration_events[name][tag] ||= []
-        @duration_events[name][tag] << { type => time }
+        @duration_events[group_name] ||= {}
+        @duration_events[group_name][tag] ||= []
+        @duration_events[group_name][tag] << { type => time }
       end
     end
 
     def counters
       result = {}
-      @counter_events.each do |name, events|
+      @counter_events.each do |group_name, events|
         events.each do |tag, time_list|
-          result[name] ||= {}
-          result[name][tag] = time_list.count
+          result[group_name] ||= {}
+          result[group_name][tag] = time_list.count
         end
       end
       result
@@ -35,7 +35,7 @@ module RBSim
 
     def durations
       result = {}
-      @duration_events.each do |name, events|
+      @duration_events.each do |group_name, events|
         events.each do |tag, events|
           duration = 0
           start = nil
@@ -47,8 +47,8 @@ module RBSim
               start = nil
             end
           end
-          result[name] ||= {}
-          result[name][tag] = duration
+          result[group_name] ||= {}
+          result[group_name][tag] = duration
         end
       end
       result
@@ -74,9 +74,9 @@ module RBSim
     private 
 
     def print_stats(result)
-      result.keys.sort{ |a,b| a.to_s <=> b.to_s}.each do |name|
-        stats = result[name]
-        puts "\t#{name}"
+      result.keys.sort{ |a,b| a.to_s <=> b.to_s}.each do |group_name|
+        stats = result[group_name]
+        puts "\t#{group_name}"
         stats.keys.sort{ |a,b| a.to_s <=> b.to_s}.each do |tag|
           value = stats[tag]
           puts "\t\t#{tag}\t: #{yield value}"

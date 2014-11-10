@@ -73,18 +73,18 @@ module RBSim
       @process.enqueue_event(:log, message)
     end
 
-    def stats_start(tag, name = nil)
-      params = stats_event_params(tag, name)
+    def stats_start(tag, group_name = nil)
+      params = stats_event_params(tag, group_name)
       @process.enqueue_event(:stats_start, params)
     end
 
-    def stats_stop(tag, name = nil)
-      params = stats_event_params(tag, name)
+    def stats_stop(tag, group_name = nil)
+      params = stats_event_params(tag, group_name)
       @process.enqueue_event(:stats_stop, params)
     end
 
-    def stats(tag, name = nil)
-      params = stats_event_params(tag, name)
+    def stats(tag, group_name = nil)
+      params = stats_event_params(tag, group_name)
       @process.enqueue_event(:stats, params)
     end
 
@@ -100,9 +100,9 @@ module RBSim
 
     private
 
-    def stats_event_params(tag, name)
+    def stats_event_params(tag, group_name)
       params = { tag: tag }
-      params[:name] = name unless name.nil?
+      params[:group_name] = group_name unless group_name.nil?
       params
     end
   end

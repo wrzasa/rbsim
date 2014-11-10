@@ -124,24 +124,24 @@ module RBSim
 
         if e.transition == "event::cpu"
           node = e.binding[:cpu][:val].node
-          @resource_stats_collector.event :start, { name: 'CPU', tag: node }, e.clock
+          @resource_stats_collector.event :start, { group_name: 'CPU', tag: node }, e.clock
         elsif e.transition == "event::cpu_finished"
           node = e.binding[:cpu_and_process][:val][:cpu].node
-          @resource_stats_collector.event :stop, { name: 'CPU', tag: node }, e.clock
+          @resource_stats_collector.event :stop, { group_name: 'CPU', tag: node }, e.clock
         end
       end
 
       @simulator.cb_for :place, :remove do |t, e|
         if e.place == 'net'
           net = e.tokens.first[:val]
-          @resource_stats_collector.event :start, { name: 'NET', tag: net.name }, e.clock
+          @resource_stats_collector.event :start, { group_name: 'NET', tag: net.name }, e.clock
         end
       end
       @simulator.cb_for :place, :add do |t, e|
         if e.place == 'net'
           net = e.tokens.first[:val]
           ts = e.tokens.first[:ts]
-          @resource_stats_collector.event :stop, { name: 'NET', tag: net.name }, ts
+          @resource_stats_collector.event :stop, { group_name: 'NET', tag: net.name }, ts
         end
       end
     end
