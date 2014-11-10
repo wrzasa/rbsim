@@ -36,7 +36,7 @@ describe "Application process activity" do
         cpu do |cpu|
           100/cpu.performance
         end
-        register_event :data, args: 1000
+        register_event :data, delay: 200, args: 1000
         log "a log message here"
       end
     end
@@ -79,8 +79,10 @@ describe "Application process activity" do
     expect(transitions).to eq ["event::delay_for",
                                "event::cpu",
                                "event::cpu_finished",
-                               "event::serve_user",
+                               "event::register_event",
                                "event::log",
+                               "event::enqueue_event",
+                               "event::serve_user",
                                "event::delay_for",
                                "event::cpu",
                                "event::cpu_finished",

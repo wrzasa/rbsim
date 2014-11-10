@@ -69,5 +69,19 @@ module RBSim
       include TCPN::TokenMethods
     end
 
+
+    class Event
+      attr_reader :process_id, :name, :args
+      def initialize(process_id, name, args)
+        @process_id = process_id
+        @name = name
+        @args = args
+      end
+    end
+
+    class EventToken < Event
+      include TCPN::TokenMethods
+    end
+
   end
 end

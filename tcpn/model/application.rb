@@ -10,6 +10,9 @@ page 'application' do
   # statistics
   sub_page "stats.rb"
 
+  # new event from user (register_event statement)
+  sub_page "register_event.rb"
+
   # Delay process execution for specified time.
   # args: { time: time for which we should wait }
   class EventDelayFor
