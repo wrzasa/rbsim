@@ -1,8 +1,8 @@
 require 'rbsim'
 
-client_no = 1
+client_no = 10
 router_no = 1
-server_no = 1
+server_no = 10
 request_per_client = 10
 request_gap = 600.miliseconds
 long_prob = 0.0
@@ -81,8 +81,7 @@ model = RBSim.model do
       stats_start :request, process.name
       stats_start "request_#{sent}".to_sym, process.name
       sent += 1
-      delay_for opts[:delay]
-      register_event :send if sent < opts[:count]
+      register_event :send, delay: opts[:delay] if sent < opts[:count]
     end
 
     on_event :data_received do |data|
