@@ -4,24 +4,24 @@ module RBSim
   module Tokens
 
     class ProcessToken < HLModel::Process
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
     class RoutesToken < HLModel::Routes
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
     class NetToken < HLModel::Net
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
     class CPUToken < HLModel::Node::CPU
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
     class Data
       IncompleteDataDefinition = Class.new RuntimeError
-      attr_reader :src, :dst, :src_node, :size, :type, :content
+      attr_reader :src, :dst, :src_node, :size, :type, :content, :id
       attr_accessor :dst_node, :route
 
       def initialize(node, process, opts)
@@ -37,6 +37,7 @@ module RBSim
         if @dst.nil?
           raise IncompleteDataDefinition.new("Must define destination of data package!");
         end
+        @id = self.object_id
       end
 
       def to_s
@@ -45,10 +46,15 @@ module RBSim
         end.join ', '
         "{#{v}}"
       end
+
+      def ==(o)
+        return false unless o.kind_of? Data
+        o.id == id
+      end
     end
 
     class DataToken < Data
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
     class DataQueue
@@ -66,7 +72,7 @@ module RBSim
     end
 
     class DataQueueToken < DataQueue
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
 
@@ -80,7 +86,7 @@ module RBSim
     end
 
     class EventToken < Event
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
   end

@@ -11,7 +11,7 @@ describe "Application process activity" do
     end
 
     class CPUToken < CPU
-      include TCPN::TokenMethods
+      #include TCPN::TokenMethods
     end
 
   end

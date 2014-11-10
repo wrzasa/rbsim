@@ -19,7 +19,7 @@ page "register event" do
         @e = @process.serve_system_event :register_event
         event = @e[:args][:event]
         args = @e[:args][:event_args]
-        { val: RBSim::Tokens::EventToken.new(@process.token_id, event, args), ts: clock + @e[:args][:delay] }
+        { val: RBSim::Tokens::EventToken.new(@process.id, event, args), ts: clock + @e[:args][:delay] }
       end
 
       def guard(clock)
@@ -57,7 +57,7 @@ page "register event" do
       end
 
       def guard(clock)
-        @process.token_id == @event.process_id
+        @process.id == @event.process_id
       end
     end
 

@@ -11,6 +11,8 @@ module RBSim
       attr_reader :name, :program
       attr_accessor :node
 
+      alias id name
+
       # +name+: name of this process used to assign it to a node
       # +program+: name of program running in this process (if any name was given); this is just for information
       def initialize(name, program = nil)
