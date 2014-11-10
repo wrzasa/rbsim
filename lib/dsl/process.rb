@@ -47,7 +47,10 @@ module RBSim
       @process.on_event(event, &handler)
     end
 
-    def register_event(event, args = nil)
+    # register_event name, delay: 100, args: { event related args }
+    def register_event(event, opts = {})
+      args = opts[:args]
+      delay = opts[:delay] || 0
       @process.enqueue_event(event, args)
     end
 

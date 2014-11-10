@@ -23,7 +23,7 @@ describe "HLModel::Process created with DSL#new_process" do
         new_process :child do
           delay_for 400
         end
-        register_event :data, 1000
+        register_event :data, args: 1000
         send_data to: :child, size: 1024, type: :hello, content: "Hello!"
         log "finished main, will serve events"
       end

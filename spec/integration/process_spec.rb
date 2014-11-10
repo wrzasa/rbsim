@@ -36,7 +36,7 @@ describe "Application process activity" do
         cpu do |cpu|
           100/cpu.performance
         end
-        register_event :data, 1000
+        register_event :data, args: 1000
         log "a log message here"
       end
     end
