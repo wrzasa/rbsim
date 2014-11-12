@@ -60,18 +60,22 @@ module RBSim
     class DataQueue
       def initialize
         @queue = []
+        @lengths = Hash.new(0)
       end
 
       def put(o)
+        @lengths[o.dst] += 1 if o.respond_to? :dst
         @queue << o
       end
 
       def get
-        @queue.shift
+        o = @queue.shift
+        @lengths[o.dst] -= 1 if o.respond_to? :dst
+        o
       end
 
-      def length
-        @queue.length
+      def length_for(node)
+        @lengths[node]
       end
     end
 
