@@ -2,10 +2,10 @@ require 'rbsim'
 
 client_no = 10
 router_no = 1
-server_no = 100
-request_per_client = 100
-request_gap = 60.miliseconds
-long_prob = 0.01
+server_no = 10
+request_per_client = 1
+request_gap = 600.miliseconds
+long_prob = 0.1
 REQUEST_TIMES = {
   long: 5000.miliseconds,
   short: 50.miliseconds
@@ -24,6 +24,7 @@ model = RBSim.model do
         stats :requests, process.name
         request_queue << data
         register_event :process_request
+        stats_save request_queue.size, :rqueue_len, process.name
       elsif data.type == :response
         servers << data.src
         send_data to: data.content[:from], size: data.size, type: :response, content: data.content[:content]
@@ -37,6 +38,7 @@ model = RBSim.model do
       unless servers.empty? or request_queue.empty?
         data = request_queue.shift
         server = servers.shift
+        stats_save request_queue.size, :rqueue_len, process.name
         send_data to: server, size: data.size, type: :request, content: { from: data.src, content: data.content }
         register_event :process_request unless request_queue.empty?
       end

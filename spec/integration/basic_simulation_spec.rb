@@ -63,7 +63,6 @@ describe "Basic simulation example" do
 
   it "serves all requests" do
     expect{ model.run }.to output("0.000: apache starting\n").to_stdout
-    p model.stats_summary
     expect(model.stats_summary[:application][:counters][:client1][:request_served]).to eq 10
     expect(model.stats_summary[:application][:counters][:client2][:request_served]).to eq 10
   end

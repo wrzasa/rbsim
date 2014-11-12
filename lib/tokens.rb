@@ -69,6 +69,10 @@ module RBSim
       def get
         @queue.shift
       end
+
+      def length
+        @queue.length
+      end
     end
 
     class DataQueueToken < DataQueue

@@ -20,7 +20,8 @@ module RBSim
       elsif type == :save
         @saved_values[group_name] ||= {}
         @saved_values[group_name][tag] ||= {}
-        @saved_values[group_name][tag][time] = params[:value]
+        @saved_values[group_name][tag][time] ||= []
+        @saved_values[group_name][tag][time] << params[:value]
       else
         raise UnknownStatsType.new(type) unless [:start, :stop].include? type
         @duration_events[group_name] ||= {}
@@ -62,7 +63,7 @@ module RBSim
     end
 
     def hash
-      { counters: counters, durations: durations }
+      { counters: counters, durations: durations, values: values }
     end
 
     def print
@@ -75,6 +76,11 @@ module RBSim
       puts "------------------------------"
       print_stats durations do |value|
         "%6.3fs (%7.4f%%)" % [ (value.to_f.in_seconds), (value.to_f / @clock * 100) ]
+      end
+      puts "Values"
+      puts "------------------------------"
+      print_stats values do |pairs|
+        pairs.map { |time, value| "#{time}: #{value.inspect}" }.join ", "
       end
     end
 

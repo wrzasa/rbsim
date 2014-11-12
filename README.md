@@ -199,6 +199,8 @@ The `stats` statements can be used to collect running statistics.
  * `stats_stop tag [, group_name]` marks start of an activity
  * `stats tag [, group_name]` marks that a counter marked by `tag`
    should be increased
+ * `stats_save value, tag [, group_name] saves given value and current
+   time
 
 The optional `group_name` parameter allows one to group
 statistics by additional name, e.g. name of specific process
