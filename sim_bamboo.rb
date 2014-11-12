@@ -2,10 +2,10 @@ require 'rbsim'
 
 client_no = 10
 router_no = 1
-server_no = 10
-request_per_client = 10
-request_gap = 600.miliseconds
-long_prob = 0.0
+server_no = 100
+request_per_client = 100
+request_gap = 60.miliseconds
+long_prob = 0.01
 REQUEST_TIMES = {
   long: 5000.miliseconds,
   short: 50.miliseconds
@@ -21,6 +21,7 @@ model = RBSim.model do
     request_queue = []
     on_event :data_received do |data|
       if data.type == :request
+        stats :requests, process.name
         request_queue << data
         register_event :process_request
       elsif data.type == :response
@@ -155,7 +156,7 @@ puts "Servers\t\t: #{server_no}"
 puts "Requests\t: #{request_per_client}"
 puts "Request gap\t: #{request_gap.in_miliseconds}ms"
 puts "Long req. prob.\t: #{long_prob}"
-puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t}"}.join ', '}"
+puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t.in_miliseconds}ms"}.join ', '}"
 puts
 
 long_time = (model.stats_summary[:application][:durations][""][:requests_long] || 0).to_f
