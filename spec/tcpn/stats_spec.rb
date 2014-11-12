@@ -7,9 +7,11 @@ describe "TCPN model" do
     let :process_token do
       process = RBSim::Tokens::ProcessToken.new(:test_process)
       process.node = :node01
-      process.enqueue_event stats_event, { tag: stats_tag, group_name: stats_group_name }
+      process.enqueue_event stats_event, event_params
       process
     end
+
+    let(:event_params) { { tag: stats_tag, group_name: stats_group_name } }
 
     let :tcpn do
       tcpn = TCPN.read 'tcpn/model/stats.rb'
@@ -24,70 +26,52 @@ describe "TCPN model" do
 
     let(:stats_group_name) { 'apache' }
 
-    describe ":stats event" do
-      let(:stats_event) { :stats }
-      let(:stats_tag) { :work }
-
+    shared_examples "is served" do
       it "is served" do
         served = false
         args = nil
         sim.cb_for :transition, :after do |t, e|
           if e.transition == 'event::stats'
-            served = true
-            args = e.binding[:process][:val].serve_system_event(:stats)[:args]
+            served = true if e.binding[:process][:val].has_event?(stats_event)
+            args = e.binding[:process][:val].serve_system_event(stats_event)[:args]
           end
         end
 
         sim.run
 
         expect(served).to be true
-        expect(args).to eq({tag: stats_tag, group_name: stats_group_name})
-
+        expect(args).to eql(event_params)
       end
+    end
+
+    describe ":stats event" do
+      let(:stats_event) { :stats }
+      let(:stats_tag) { :work }
+
+      include_examples 'is served'
     end
 
     describe ":stats_start event" do
       let(:stats_event) { :stats_start }
       let(:stats_tag) { :doing }
 
-      it "is served" do
-        served = false
-        args = nil
-        sim.cb_for :transition, :after do |t, e|
-          if e.transition == 'event::stats'
-            served = true if e.binding[:process][:val].has_event?(:stats_start)
-            args = e.binding[:process][:val].serve_system_event(:stats_start)[:args]
-          end
-        end
-
-        sim.run
-
-        expect(served).to be true
-        expect(args).to eq({tag: stats_tag, group_name: stats_group_name})
-
-      end
+      include_examples 'is served'
     end
 
     describe ":stats_stop event" do
       let(:stats_event) { :stats_stop }
       let(:stats_tag) { :doing }
 
-      it "is served" do
-        served = false
-        args = nil
-        sim.cb_for :transition, :after do |t, e|
-          if e.transition == 'event::stats'
-            served = true if e.binding[:process][:val].has_event?(:stats_stop)
-            args = e.binding[:process][:val].serve_system_event(:stats_stop)[:args]
-          end
-        end
+      include_examples 'is served'
+    end
 
-        sim.run
+    describe ":stats_save event" do
+      let(:stats_event) { :stats_save }
+      let(:stats_tag) { :doing }
+      let(:event_value) { 2345 }
+      let(:event_params) { { value: event_value, tag: stats_tag, group_name: stats_group_name } }
 
-        expect(served).to be true
-        expect(args).to eq({tag: stats_tag, group_name: stats_group_name})
-
-      end
+      include_examples 'is served'
     end
 
   end

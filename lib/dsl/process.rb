@@ -88,6 +88,12 @@ module RBSim
       @process.enqueue_event(:stats, params)
     end
 
+    def stats_save(value, tag, group_name = nil)
+      params = stats_event_params(tag, group_name)
+      params[:value] = value
+      @process.enqueue_event(:stats_save, params)
+    end
+
     def new_process(name, args = nil, &block)
       constructor = proc do |args|
         new_process = self.class.new_process(@model, name, args, &block)

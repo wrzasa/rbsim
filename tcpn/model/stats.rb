@@ -6,7 +6,7 @@ page "stats" do
   class EventStats
     def initialize(binding)
       @process = binding[:process][:val]
-      @event_list = [ :stats, :stats_stop, :stats_start ]
+      @event_list = [ :stats, :stats_stop, :stats_start, :stats_save ]
     end
 
     def process_token(clock)

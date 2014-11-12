@@ -38,4 +38,11 @@ describe RBSim::Statistics do
       expect(subject.durations['apache'][:working]).to eq(400)
   end
 
+  it "saves reported values" do
+    subject.event :save, { value: 1024, tag: :queue_length, group_name: 'apache' }, 100
+    subject.event :save, { value: 2048, tag: :queue_length, group_name: 'apache' }, 200
+    subject.event :save, { value: 512, tag: :queue_length, group_name: 'apache' }, 400
+    expect(subject.values['apache'][:queue_length]).to eq({ 100 => 1024, 200 => 2048, 400 => 512 })
+  end
+
 end

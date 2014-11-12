@@ -6,6 +6,7 @@ module RBSim
     def initialize
       @counter_events = {}
       @duration_events = {}
+      @saved_values = {}
       @clock = 0
     end
 
@@ -16,6 +17,10 @@ module RBSim
         @counter_events[group_name] ||= {}
         @counter_events[group_name][tag] ||= []
         @counter_events[group_name][tag] << time
+      elsif type == :save
+        @saved_values[group_name] ||= {}
+        @saved_values[group_name][tag] ||= {}
+        @saved_values[group_name][tag][time] = params[:value]
       else
         raise UnknownStatsType.new(type) unless [:start, :stop].include? type
         @duration_events[group_name] ||= {}
@@ -50,6 +55,10 @@ module RBSim
         end
       end
       result
+    end
+
+    def values
+      @saved_values
     end
 
     def hash
