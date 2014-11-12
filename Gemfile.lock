@@ -1,7 +1,7 @@
 PATH
   remote: /home/wrzasa/rbsim/cpndsl
   specs:
-    tcpn (0.0.15.pre1-java)
+    tcpn (0.0.16.pre1-java)
       docile (~> 1.1.0)
 
 GEM
@@ -55,4 +55,4 @@ DEPENDENCIES
   rspec
   rspec-its
   simplecov
-  tcpn!
+  tcpn (>= 0.0.15)!

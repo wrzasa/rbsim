@@ -5,7 +5,7 @@ gem 'rspec-its'
 gem 'docile'
 gem 'pry'
 
-gem "tcpn", path: '/home/wrzasa/rbsim/cpndsl'
+gem "tcpn", '>= 0.0.15', path: '/home/wrzasa/rbsim/cpndsl'
 
 gem 'simplecov', :require => false, :group => :test
 gem 'rdoc'
