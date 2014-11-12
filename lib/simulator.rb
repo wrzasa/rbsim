@@ -126,6 +126,12 @@ module RBSim
         elsif e.transition == "event::cpu_finished"
           node = e.binding[:cpu_and_process][:val][:cpu].node
           @resource_stats_collector.event :stop, { group_name: 'CPU', tag: node }, e.clock
+        elsif e.transition == "transmitted"
+          process = e.binding[:data][:val].dst
+          @resource_stats_collector.event :start, { group_name: 'NETQ WAIT', tag: process }, e.clock
+        elsif e.transition == "event::data_received"
+          process = e.binding[:process][:val].name
+          @resource_stats_collector.event :stop, { group_name: 'NETQ WAIT', tag: process }, e.clock
         end
       end
 
