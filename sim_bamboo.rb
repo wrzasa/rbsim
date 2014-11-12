@@ -23,6 +23,7 @@ model = RBSim.model do
       if data.type == :request
         stats :requests, process.name
         request_queue << data
+        stats_start :request_in_queue, process.name
         register_event :process_request
         stats_save request_queue.size, :rqueue_len, process.name
       elsif data.type == :response
@@ -37,6 +38,7 @@ model = RBSim.model do
     on_event :process_request do
       unless servers.empty? or request_queue.empty?
         data = request_queue.shift
+        stats_stop :request_in_queue, process.name
         server = servers.shift
         stats_save request_queue.size, :rqueue_len, process.name
         send_data to: server, size: data.size, type: :request, content: { from: data.src, content: data.content }
@@ -164,15 +166,24 @@ max_rqueue_len = model.stats_summary[:application][:values].map do |process, rec
   records[:rqueue_len].map{ |time, values| values.last }.max
 end.max
 
+max_thinqueue_len = model.stats_summary[:resources][:values]['NETQ LEN'].map do |process, records|
+  if process.to_s =~ /thin*/
+    records.map{ |time, values| values.last }.max
+  else
+    0
+  end
+end.max
+
 puts "Clients\t\t: #{client_no}"
 puts "Routers\t\t: #{router_no}"
 puts "Servers\t\t: #{server_no}"
 puts "Requests\t: #{request_per_client}"
 puts "Request gap\t: #{request_gap.in_miliseconds}ms"
 puts "Long req. prob.\t: #{long_prob}"
-puts "Max rqueue len\t: #{max_rqueue_len}"
 puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t.in_miliseconds}ms"}.join ', '}"
 puts
+puts "Max rtr queue len\t: #{max_rqueue_len}"
+puts "Max thin queue len\t: #{max_thinqueue_len}"
 
 long_time = (model.stats_summary[:application][:durations][""][:requests_long] || 0).to_f
 short_time = (model.stats_summary[:application][:durations][""][:requests_short] || 0).to_f
@@ -181,10 +192,10 @@ short_count = (model.stats_summary[:application][:counters][""][:requests_short]
 
 if short_count > 0
   short_req_avg = short_time / short_count
-  puts "Short req. avg\t: #{short_req_avg.in_miliseconds}ms"
+  puts "Short req. avg\t\t: #{short_req_avg.in_miliseconds}ms"
 end
 
 if long_count > 0
   long_req_avg = long_time / long_count
-  puts "Long req. avg\t: #{long_req_avg.in_miliseconds}ms"
+  puts "Long req. avg\t\t: #{long_req_avg.in_miliseconds}ms"
 end
