@@ -152,12 +152,25 @@ model.run
 model.stats_print
 p model.stats_summary
 
+puts "======================="
+puts "Routers' queue length"
+model.stats_summary[:application][:values].each do |process, records|
+  puts process
+  puts records[:rqueue_len].map{ |time, values| "\t#{time}: #{values.last}" }.join "\n"
+end
+puts
+
+max_rqueue_len = model.stats_summary[:application][:values].map do |process, records|
+  records[:rqueue_len].map{ |time, values| values.last }.max
+end.max
+
 puts "Clients\t\t: #{client_no}"
 puts "Routers\t\t: #{router_no}"
 puts "Servers\t\t: #{server_no}"
 puts "Requests\t: #{request_per_client}"
 puts "Request gap\t: #{request_gap.in_miliseconds}ms"
 puts "Long req. prob.\t: #{long_prob}"
+puts "Max rqueue len\t: #{max_rqueue_len}"
 puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t.in_miliseconds}ms"}.join ', '}"
 puts
 
