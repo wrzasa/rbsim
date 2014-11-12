@@ -115,14 +115,12 @@ module RBSim
 
     def set_stats_collector_callbacks
       @simulator.cb_for :transition, :after do |t, e|
-        [ :stats, :stats_start, :stats_stop ].each do |event|
-          if e.transition == "event::#{event}"
-            params = e.binding[:process][:val].serve_system_event(event)[:args]
-            @stats_collector.send :event, event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
-          end
-        end
-
-        if e.transition == "event::cpu"
+        if e.transition == "event::stats"
+          process = e.binding[:process][:val]
+          event = [ :stats, :stats_start, :stats_stop ].select { |e| process.has_event? e }.first
+          params = process.serve_system_event(event)[:args]
+          @stats_collector.event event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
+        elsif e.transition == "event::cpu"
           node = e.binding[:cpu][:val].node
           @resource_stats_collector.event :start, { group_name: 'CPU', tag: node }, e.clock
         elsif e.transition == "event::cpu_finished"

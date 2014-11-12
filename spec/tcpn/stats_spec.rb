@@ -54,8 +54,8 @@ describe "TCPN model" do
         served = false
         args = nil
         sim.cb_for :transition, :after do |t, e|
-          if e.transition == 'event::stats_start'
-            served = true
+          if e.transition == 'event::stats'
+            served = true if e.binding[:process][:val].has_event?(:stats_start)
             args = e.binding[:process][:val].serve_system_event(:stats_start)[:args]
           end
         end
@@ -76,8 +76,8 @@ describe "TCPN model" do
         served = false
         args = nil
         sim.cb_for :transition, :after do |t, e|
-          if e.transition == 'event::stats_stop'
-            served = true
+          if e.transition == 'event::stats'
+            served = true if e.binding[:process][:val].has_event?(:stats_stop)
             args = e.binding[:process][:val].serve_system_event(:stats_stop)[:args]
           end
         end

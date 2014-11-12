@@ -4,18 +4,26 @@ page "stats" do
   # stats for process
   # args: stats tag
   class EventStats
-    def initialize(binding, type)
+    def initialize(binding)
       @process = binding[:process][:val]
-      @type = type
+      @event_list = [ :stats, :stats_stop, :stats_start ]
     end
 
     def process_token(clock)
-      @event = @process.serve_system_event @type
+      catch(:found) do
+        @event_list.each do |e|
+          if @process.has_event? e
+            @event = @process.serve_system_event e
+            throw :found
+          end
+        end
+        raise "WTF!? No event from list #{@event_list} is wating in #{@process.inspect}!"
+      end
       { val: @process, ts: clock }
     end
 
     def guard(clock)
-      @process.has_event? @type
+      not @event_list.select { |e| @process.has_event? e }.empty?
     end
   end
 
@@ -23,35 +31,11 @@ page "stats" do
     input process, :process
 
     output process do |binding, clock|
-      EventStats.new(binding, :stats).process_token(clock)
+      EventStats.new(binding).process_token(clock)
     end
 
     guard do |binding, clock|
-      EventStats.new(binding, :stats).guard(clock)
-    end
-  end
-
-  transition 'event::stats_start' do
-    input process, :process
-
-    output process do |binding, clock|
-      EventStats.new(binding, :stats_start).process_token(clock)
-    end
-
-    guard do |binding, clock|
-      EventStats.new(binding, :stats_start).guard(clock)
-    end
-  end
-
-  transition 'event::stats_stop' do
-    input process, :process
-
-    output process do |binding, clock|
-      EventStats.new(binding, :stats_stop).process_token(clock)
-    end
-
-    guard do |binding, clock|
-      EventStats.new(binding, :stats_stop).guard(clock)
+      EventStats.new(binding).guard(clock)
     end
   end
 
