@@ -36,6 +36,7 @@ describe RBSim::Tokens::DataQueue do
       it "has no packages for apache333" do
         expect(subject.length_for('apache333')).to eq 0
       end
+
     end
 
     context "when putting and getting from the queue" do
@@ -59,4 +60,30 @@ describe RBSim::Tokens::DataQueue do
     end
 
   end
+
+  describe "remembers last involved process" do
+    context "when putting" do
+      subject do
+        queue = RBSim::Tokens::DataQueueToken.new
+        queue.put RBSim::Tokens::DataToken.new(:node01, 'wget', size: 1024, to: 'apache0')
+        queue.put RBSim::Tokens::DataToken.new(:node01, 'wget', size: 1024, to: 'apache2')
+        queue.put RBSim::Tokens::DataToken.new(:node01, 'wget', size: 1024, to: 'apache1')
+        queue
+      end
+      its(:last_involved_process) { should eq 'apache1' }
+    end
+
+    context "when getting" do
+      subject do
+        queue = RBSim::Tokens::DataQueueToken.new
+        queue.put RBSim::Tokens::DataToken.new(:node01, 'wget', size: 1024, to: 'apache0')
+        queue.put RBSim::Tokens::DataToken.new(:node01, 'wget', size: 1024, to: 'apache2')
+        queue.put RBSim::Tokens::DataToken.new(:node01, 'wget', size: 1024, to: 'apache1')
+        queue.get
+        queue
+      end
+      its(:last_involved_process) { should eq 'apache0' }
+    end
+  end
+
 end

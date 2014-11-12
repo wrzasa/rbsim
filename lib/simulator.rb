@@ -126,16 +126,6 @@ module RBSim
         elsif e.transition == "event::cpu_finished"
           node = e.binding[:cpu_and_process][:val][:cpu].node
           @resource_stats_collector.event :stop, { group_name: 'CPU', tag: node }, e.clock
-        elsif e.transition == "event::data_received" || e.transition == "transmitted"
-          queue = e.binding[:queue][:val]
-          process = if not e.binding[:process].nil?
-                   e.binding[:process][:val].name
-                 else
-                   e.binding[:data][:val].dst
-                 end
-          @resource_stats_collector.event :save, 
-            { value: queue.length_for(process), group_name: 'NETQ LEN', tag: process }, 
-            e.clock
         end
       end
 
@@ -150,6 +140,12 @@ module RBSim
           net = e.tokens.first[:val]
           ts = e.tokens.first[:ts]
           @resource_stats_collector.event :stop, { group_name: 'NET', tag: net.name }, ts
+        elsif e.place == 'data to receive'
+          queue = e.tokens.first[:val]
+          process = queue.last_involved_process
+          @resource_stats_collector.event :save, 
+            { value: queue.length_for(process), group_name: 'NETQ LEN', tag: process }, 
+            e.clock
         end
       end
     end
