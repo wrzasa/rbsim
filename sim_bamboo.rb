@@ -174,6 +174,10 @@ max_thinqueue_len = model.stats_summary[:resources][:values]['NETQ LEN'].map do 
   end
 end.max
 
+max_thinqueue_wait = model.stats_summary[:resources][:durations]['NETQ WAIT'].select do |process, time|
+  process.to_s =~ /thin*/
+end.values.max
+
 puts "Clients\t\t: #{client_no}"
 puts "Routers\t\t: #{router_no}"
 puts "Servers\t\t: #{server_no}"
@@ -184,6 +188,7 @@ puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t.in_miliseconds}ms"}
 puts
 puts "Max rtr queue len\t: #{max_rqueue_len}"
 puts "Max thin queue len\t: #{max_thinqueue_len}"
+puts "Max thin queue wait\t: #{max_thinqueue_wait.in_miliseconds}ms"
 
 long_time = (model.stats_summary[:application][:durations][""][:requests_long] || 0).to_f
 short_time = (model.stats_summary[:application][:durations][""][:requests_short] || 0).to_f
