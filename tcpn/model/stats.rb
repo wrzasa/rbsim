@@ -10,20 +10,12 @@ page "stats" do
     end
 
     def process_token(clock)
-      catch(:found) do
-        @event_list.each do |e|
-          if @process.has_event? e
-            @event = @process.serve_system_event e
-            throw :found
-          end
-        end
-        raise "WTF!? No event from list #{@event_list} is wating in #{@process.inspect}!"
-      end
+      @process.serve_system_event @process.first_event
       { val: @process, ts: clock }
     end
 
     def guard(clock)
-      not @event_list.select { |e| @process.has_event? e }.empty?
+      @event_list.include? @process.first_event
     end
   end
 

@@ -117,7 +117,7 @@ module RBSim
       @simulator.cb_for :transition, :after do |t, e|
         if e.transition == "event::stats"
           process = e.binding[:process][:val]
-          event = [ :stats, :stats_start, :stats_stop ].select { |e| process.has_event? e }.first
+          event = process.first_event
           params = process.serve_system_event(event)[:args]
           @stats_collector.event event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
         elsif e.transition == "event::cpu"

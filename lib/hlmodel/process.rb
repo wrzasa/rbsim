@@ -89,6 +89,16 @@ module RBSim
         false
       end
 
+      # returns name of the first event in queue
+      def first_event
+        event = @event_queue.first
+        if event.nil?
+          nil
+        else
+          event[:name]
+        end
+      end
+
       def handlers_size
         @event_handlers.size
       end
