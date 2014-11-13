@@ -59,10 +59,12 @@ module RBSim
     end
 
     # FIXME: not tested!
-    def durations
-      return enum_for(:durations) unless block_given?
+    def durations(filters = {})
+      return enum_for(:durations, filters) unless block_given?
       @duration_events.each do |group_name, events|
+        next if filters[:group] && group_name != filters[:group]
         events.each do |tag, times|
+          next if filters[:tag] && tag != filters[:tag]
           times[:start].each_with_index do |start, i|
             stop = times[:stop][i]
             yield group_name, tag, start, stop
@@ -72,10 +74,12 @@ module RBSim
     end
 
     # FIXME: not tested!
-    def counters
-      return enum_for(:counters) unless block_given?
+    def counters(filters = {})
+      return enum_for(:counters, filters) unless block_given?
       @counter_events.each do |group_name, events|
+        next if filters[:group] && group_name != filters[:group]
         events.each do |tag, times_list|
+          next if filters[:tag] && tag != filters[:tag]
           yield group_name, tag, times_list
         end
       end
@@ -83,10 +87,12 @@ module RBSim
     end
 
     # FIXME: not tested!
-    def values
-      return enum_for(:values) unless block_given?
+    def values(filters = {})
+      return enum_for(:values, filters) unless block_given?
       @saved_values.each do |group_name, events|
+        next if filters[:group] && group_name != filters[:group]
         events.each do |tag, time_with_values|
+          next if filters[:tag] && tag != filters[:tag]
           time_with_values.each do |time, values|
             yield group_name, tag, time, values
           end
