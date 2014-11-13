@@ -135,10 +135,10 @@ module RBSim
           @resource_stats_collector.event :stop, { group_name: 'CPU', tag: node }, e.clock
         elsif e.transition == "transmitted"
           process = e.binding[:data][:val].dst
-          @resource_stats_collector.event :start, { group_name: 'NETQ WAIT', tag: process }, e.clock
+          @resource_stats_collector.event :start, { group_name: 'DATAQ WAIT', tag: process }, e.clock
         elsif e.transition == "event::data_received"
           process = e.binding[:process][:val].name
-          @resource_stats_collector.event :stop, { group_name: 'NETQ WAIT', tag: process }, e.clock
+          @resource_stats_collector.event :stop, { group_name: 'DATAQ WAIT', tag: process }, e.clock
         end
       end
 
@@ -157,7 +157,7 @@ module RBSim
           queue = e.tokens.first[:val]
           process = queue.last_involved_process
           @resource_stats_collector.event :save, 
-            { value: queue.length_for(process), group_name: 'NETQ LEN', tag: process }, 
+            { value: queue.length_for(process), group_name: 'DATAQ LEN', tag: process }, 
             e.clock
         end
       end

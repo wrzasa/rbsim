@@ -1,9 +1,9 @@
 require 'rbsim'
 
 client_no = 1
-router_no = 1
+router_no = 2
 server_no = 10
-request_per_client = 1000
+request_per_client = 10
 request_gap = 60.miliseconds
 long_prob = 0.01
 REQUEST_TIMES = {
@@ -166,7 +166,7 @@ max_rqueue_len = model.stats_summary[:application][:values].map do |process, rec
   records[:rqueue_len].map{ |time, values| values.last }.max
 end.max
 
-max_thinqueue_len = model.stats_summary[:resources][:values]['NETQ LEN'].map do |process, records|
+max_thinqueue_len = model.stats_summary[:resources][:values]['DATAQ LEN'].map do |process, records|
   if process.to_s =~ /thin*/
     records.map{ |time, values| values.last }.max
   else
@@ -174,13 +174,13 @@ max_thinqueue_len = model.stats_summary[:resources][:values]['NETQ LEN'].map do 
   end
 end.max
 
-#max_thinqueue_wait = model.stats_summary[:resources][:durations]['NETQ WAIT'].select do |process, time|
+#max_thinqueue_wait = model.stats_summary[:resources][:durations]['DATAQ WAIT'].select do |process, time|
 #  process.to_s =~ /thin*/
 #end.values.max
 
 max_thinq_wait = nil
 model.stats_data[:resources].durations do |group, tag, start, stop|
-  next unless group == 'NETQ WAIT'
+  next unless group == 'DATAQ WAIT'
   next unless tag.to_s =~ /thin.*/
   if max_thinq_wait.nil? || (stop - start) > max_thinq_wait[:time]
     max_thinq_wait = { time: stop - start, tag: tag }
@@ -197,7 +197,7 @@ model.stats_data[:application].durations do |group, tag, start, stop|
   max_rqueue_wait = wait if wait > max_rqueue_wait
 end
 
-summary_thinqueue_wait = model.stats_summary[:resources][:durations]['NETQ WAIT'].select do |process, time|
+summary_thinqueue_wait = model.stats_summary[:resources][:durations]['DATAQ WAIT'].select do |process, time|
   process.to_s =~ /thin*/
 end.values.reduce(:+)
 
