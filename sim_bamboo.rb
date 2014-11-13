@@ -1,11 +1,11 @@
 require 'rbsim'
 
 client_no = 1
-router_no = 2
+router_no = 1
 server_no = 10
-request_per_client = 30
+request_per_client = 10
 request_gap = 60.miliseconds
-long_prob = 0.1
+long_prob = 0.01
 REQUEST_TIMES = {
   long: 5000.miliseconds,
   short: 50.miliseconds
@@ -156,9 +156,9 @@ p model.stats_summary
 
 puts "======================="
 puts "Routers' queue length"
-model.stats_summary[:application][:values].each do |process, records|
-  puts process
-  puts records[:rqueue_len].map{ |time, values| "\t#{time}: #{values.last}" }.join "\n"
+model.stats_data[:application].values.each do |process, tag, time, values|
+  next unless tag == :rqueue_len
+  puts "#{process}\t#{time}: #{values.last}"
 end
 puts
 
@@ -179,7 +179,7 @@ end.max
 #end.values.max
 
 max_thinq_wait = nil
-model.stats_data[:resources].each_duration_event do |group, tag, start, stop|
+model.stats_data[:resources].durations do |group, tag, start, stop|
   next unless group == 'NETQ WAIT'
   next unless tag.to_s =~ /thin.*/
   if max_thinq_wait.nil? || (stop - start) > max_thinq_wait[:time]

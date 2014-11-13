@@ -31,7 +31,7 @@ module RBSim
       end
     end
 
-    def counters
+    def counters_summary
       result = {}
       @counter_events.each do |group_name, events|
         events.each do |tag, time_list|
@@ -42,7 +42,7 @@ module RBSim
       result
     end
 
-    def durations
+    def durations_summary
       result = {}
       @duration_events.each do |group_name, events|
         events.each do |tag, times|
@@ -59,41 +59,63 @@ module RBSim
     end
 
     # FIXME: not tested!
-    # change it to Enumeration, to chain methods like this: durations.each &block
-    def each_duration_event(&block)
+    def durations
+      return enum_for(:durations) unless block_given?
       @duration_events.each do |group_name, events|
         events.each do |tag, times|
           times[:start].each_with_index do |start, i|
             stop = times[:stop][i]
-            block.yield group_name, tag, start, stop
+            yield group_name, tag, start, stop
           end
         end
       end
     end
 
+    # FIXME: not tested!
+    def counters
+      return enum_for(:counters) unless block_given?
+      @counter_events.each do |group_name, events|
+        events.each do |tag, times_list|
+          yield group_name, tag, times_list
+        end
+      end
+      result
+    end
 
+    # FIXME: not tested!
     def values
+      return enum_for(:values) unless block_given?
+      @saved_values.each do |group_name, events|
+        events.each do |tag, time_with_values|
+          time_with_values.each do |time, values|
+            yield group_name, tag, time, values
+          end
+        end
+      end
+    end
+
+    def values_summary
       @saved_values
     end
 
     def hash
-      { counters: counters, durations: durations, values: values }
+      { counters: counters_summary, durations: durations_summary, values: values_summary }
     end
 
     def print
       puts "Counters"
       puts "------------------------------"
-      print_stats counters do |value|
+      print_stats counters_summary do |value|
         value
       end
       puts "Durations"
       puts "------------------------------"
-      print_stats durations do |value|
+      print_stats durations_summary do |value|
         "%6.3fs (%7.4f%%)" % [ (value.to_f.in_seconds), (value.to_f / @clock * 100) ]
       end
       puts "Values"
       puts "------------------------------"
-      print_stats values do |pairs|
+      print_stats values_summary do |pairs|
         pairs.map { |time, value| "#{time}: #{value.inspect}" }.join ", "
       end
     end
