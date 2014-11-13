@@ -58,6 +58,20 @@ module RBSim
       result
     end
 
+    # FIXME: not tested!
+    # change it to Enumeration, to chain methods like this: durations.each &block
+    def each_duration_event(&block)
+      @duration_events.each do |group_name, events|
+        events.each do |tag, times|
+          times[:start].each_with_index do |start, i|
+            stop = times[:stop][i]
+            block.yield group_name, tag, start, stop
+          end
+        end
+      end
+    end
+
+
     def values
       @saved_values
     end

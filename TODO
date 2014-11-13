@@ -1,0 +1,4 @@
+ * use implementation of Statistics#ecach_duration_event to do it well, as
+   described in comment to this method
+ * data to self imlementation will spoil NETQ WAIT stats -- no
+   stats_start is called when network is passed over!
