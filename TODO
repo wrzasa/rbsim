@@ -1,4 +1,11 @@
- * use implementation of Statistics#ecach_duration_event to do it well, as
-   described in comment to this method
- * data to self imlementation will spoil NETQ WAIT stats -- no
-   stats_start is called when network is passed over!
+ * DataQueue works incorrectly! We have global queue, so if a process
+   is busy and does not receive network data, other processes may
+   be blocked! This is not consistent with reality... MUST be fixed
+   imediately
+ * Data to self imlementation will spoil DATAQ WAIT stats -- no
+   stats_start is called when network is passed over! Neet to add
+   stats_start
+ * To speed-up simulation, we may create a token with one data queue
+   for each net segment in place 'data with route', if multiple data
+   packages are send in one moment, simulator will not choke on large
+   cartesian product in transition 'net'
