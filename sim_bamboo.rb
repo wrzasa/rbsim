@@ -190,12 +190,8 @@ end
 sum_rqueue_wait = 0
 max_rqueue_wait = 0
 model.stats_data[:application].durations do |group, tag, start, stop|
-  p group
-  p tag
-  puts "+++++++++++++++++++"
   next unless group.to_s =~ /router.*/
   next unless tag == :request_in_queue
-  puts "==================="
   wait = stop - start
   sum_rqueue_wait += wait
   max_rqueue_wait = wait if wait > max_rqueue_wait
@@ -236,3 +232,8 @@ if long_count > 0
   long_req_avg = long_time / long_count
   puts "Long req. avg\t\t: #{long_req_avg.in_miliseconds}ms"
 end
+
+file = "rtr_#{router_no}_req_#{request_per_client}.dump"
+model.stats_save file
+puts "\nStats saved in #{file}"
+

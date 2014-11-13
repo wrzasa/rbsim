@@ -77,6 +77,13 @@ module RBSim
       { application: @stats_collector, resources: @resource_stats_collector }
     end
 
+    # FIXME: not tested!
+    def stats_save(file)
+      File.open file, 'w' do |f|
+        f.puts Marshal.dump(stats_data)
+      end
+    end
+
     def stats_print
       puts
       puts "="*80
