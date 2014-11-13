@@ -3,7 +3,7 @@ require 'rbsim'
 client_no = 10
 router_no = 1
 server_no = 10
-request_per_client = 1
+request_per_client = 10
 request_gap = 600.miliseconds
 long_prob = 0.1
 REQUEST_TIMES = {
@@ -178,6 +178,10 @@ max_thinqueue_wait = model.stats_summary[:resources][:durations]['NETQ WAIT'].se
   process.to_s =~ /thin*/
 end.values.max
 
+summary_thinqueue_wait = model.stats_summary[:resources][:durations]['NETQ WAIT'].select do |process, time|
+  process.to_s =~ /thin*/
+end.values.reduce(:+)
+
 puts "Clients\t\t: #{client_no}"
 puts "Routers\t\t: #{router_no}"
 puts "Servers\t\t: #{server_no}"
@@ -189,6 +193,8 @@ puts
 puts "Max rtr queue len\t: #{max_rqueue_len}"
 puts "Max thin queue len\t: #{max_thinqueue_len}"
 puts "Max thin queue wait\t: #{max_thinqueue_wait.in_miliseconds}ms"
+puts "Summary thin queue wait\t: #{summary_thinqueue_wait.in_miliseconds}ms"
+puts "Avg. thin queue wait\t: #{(summary_thinqueue_wait/(client_no*request_per_client)).in_miliseconds}ms"
 
 long_time = (model.stats_summary[:application][:durations][""][:requests_long] || 0).to_f
 short_time = (model.stats_summary[:application][:durations][""][:requests_short] || 0).to_f
