@@ -35,7 +35,7 @@ describe "TCPN model" do
 
     it "puts data token with correct timestamp in 'data to receive' place" do
       TCPN.sim(tcpn).run
-      expect(tcpn.marking_for('data to receive').first[:val].get).to eq data_token
+      expect(tcpn.marking_for('data to receive').first[:val].get data_token.dst).to eq data_token
       time = 7.0*data_token.size/200
       expect(tcpn.marking_for('data to receive').first[:ts]).to eq time
     end

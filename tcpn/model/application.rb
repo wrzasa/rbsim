@@ -136,7 +136,7 @@ page 'application' do
       def initialize(binding)
         @process = binding[:process][:val]
         @queue = binding[:queue][:val]
-        @data = @queue.get
+        @data = @queue.get @process.name
         @process.enqueue_event :data_received, @data
       end
 
@@ -159,8 +159,8 @@ page 'application' do
 
     guard do |binding, clock|
       process = binding[:process][:val]
-      data = binding[:queue][:val].get
-      !data.nil? && process.name == data.dst
+      data = binding[:queue][:val].get process.name
+      !data.nil?
     end
   end
 

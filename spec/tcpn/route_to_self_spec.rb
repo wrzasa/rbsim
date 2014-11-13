@@ -40,7 +40,7 @@ describe "TCPN model" do
         TCPN.sim(tcpn).run
 
         expect(tcpn.marking_for('data with route')).to eq([])
-        expect(tcpn.marking_for('data to receive').first[:val].get).to eq(data_token)
+        expect(tcpn.marking_for('data to receive').first[:val].get data_token.dst).to eq(data_token)
       end
 
     end

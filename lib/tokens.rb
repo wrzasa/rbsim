@@ -58,34 +58,33 @@ module RBSim
     end
 
     class DataQueue
-      attr_reader :last_involved_process
+      attr_reader :last_involved_queue
 
       def initialize
-        @queue = []
-        @lengths = Hash.new(0)
+        @queue = {}
       end
 
       def put(o)
-        if o.respond_to? :dst
-          @lengths[o.dst] += 1
-          @last_involved_process = o.dst
-        end
-        @queue << o
+        @last_involved_queue = queue_name(o)
+        @queue[queue_name(o)] ||= []
+        @queue[queue_name(o)] << o
       end
 
-      def get
-        o = @queue.shift
-        if o.respond_to? :dst
-          @lengths[o.dst] -= 1
-          @last_involved_process = o.dst
-        end
-        o
+      def get(qname)
+        return nil if @queue[qname].nil?
+        @last_involved_queue = qname
+        @queue[qname].shift
       end
 
-      def length_for(node)
-        @lengths[node]
+      def length_for(qname)
+        return 0 if @queue[qname].nil?
+        @queue[qname].length
       end
 
+      private
+      def queue_name(o)
+        o.dst
+      end
     end
 
     class DataQueueToken < DataQueue

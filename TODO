@@ -1,7 +1,3 @@
- * DataQueue works incorrectly! We have global queue, so if a process
-   is busy and does not receive network data, other processes may
-   be blocked! This is not consistent with reality... MUST be fixed
-   imediately
  * Data to self imlementation will spoil DATAQ WAIT stats -- no
    stats_start is called when network is passed over! Neet to add
    stats_start
