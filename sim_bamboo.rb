@@ -1,9 +1,9 @@
 require 'rbsim'
 
 client_no = 1
-router_no = 2
+router_no = 50
 server_no = 10
-request_per_client = 10
+request_per_client = 1000
 request_gap = 60.miliseconds
 long_prob = 0.01
 REQUEST_TIMES = {
