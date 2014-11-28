@@ -2,3 +2,4 @@ syntax: glob
 .bundle/*
 coverage
 doc
+*.dump
