@@ -51,6 +51,11 @@ module RBSim
         return false unless o.kind_of? Data
         o.id == id
       end
+
+      def has_next_net?
+        @route.has_next_net?
+      end
+
     end
 
     class DataToken < Data

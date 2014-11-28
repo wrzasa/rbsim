@@ -10,9 +10,9 @@ page 'add route' do
 
   class TCPNAddRouteToData
     def initialize(binding)
-      @data = binding[:data][:val]
-      @queue = binding[:queue][:val]
-      @routes = binding[:routes][:val]
+      @data = binding['data for network'].val
+      @queue = binding['data to receive'].val
+      @routes = binding['routes'].val
     end
 
     def with_route_token(clock)
@@ -47,11 +47,11 @@ page 'add route' do
   end
 
   transition 'add_route' do
-    input data_for_network, :data
-    input routes, :routes
-    input data_to_receive, :queue
+    input data_for_network
+    input routes
+    input data_to_receive
 
-    output routes, :routes
+    output routes
 
     output data_with_route do |binding, clock|
       TCPNAddRouteToData.new(binding).with_route_token(clock)

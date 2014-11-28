@@ -1,13 +1,13 @@
 page "register event" do
-  process = place 'process'
-  event = place 'event'
+  process = timed_place 'process', { first_event: :first_event, id: :id }
+  event = timed_place 'event' #, { process_id: :process_id }
 
   transition 'event::register_event' do
-    input process, :process
+    input process
 
     class EventRegisterEvent
       def initialize(binding)
-        @process = binding[:process][:val]
+        @process = binding['process'].val
       end
 
       def process_token(clock)
@@ -36,19 +36,26 @@ page "register event" do
       EventRegisterEvent.new(binding).event_token(clock)
     end
 
+    sentry do |marking_for, clock, result|
+      marking_for['process'].each(:first_event, :register_event) do |p|
+        result << { 'process' => p }
+      end
+    end
+=begin
     guard do |binding, clock|
       EventRegisterEvent.new(binding).guard(clock)
     end
+=end
   end
 
   transition 'event::enqueue_event' do
-    input event, :event
-    input process, :process
+    input event
+    input process
 
     class EventEnqueueEvent
       def initialize(binding)
-        @process = binding[:process][:val]
-        @event = binding[:event][:val]
+        @process = binding['process'].val
+        @event = binding['event'].val
       end
 
       def process_token(clock)
@@ -65,8 +72,18 @@ page "register event" do
       EventEnqueueEvent.new(binding).process_token(clock)
     end
 
+    sentry do |marking_for, clock, result|
+      marking_for['event'].each do |e|
+        marking_for['process'].each(:id, e.process_id) do |p|
+          result << { 'process' => p, 'event' => e }
+        end
+      end
+    end
+
+=begin
     guard do |binding, clock|
       EventEnqueueEvent.new(binding).guard(clock)
     end
+=end
   end
 end

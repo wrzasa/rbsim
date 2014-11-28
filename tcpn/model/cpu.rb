@@ -1,17 +1,17 @@
 # model of CPU load by application logic
 # (TCPN implementation of event:cpu)
 page "cpu" do
-  cpu = place 'CPU'
-  process = place 'process'
-  working_cpu = place 'working CPU'
+  cpu = timed_place 'CPU', node: :node
+  process = timed_place 'process', { cpu_event: [ :has_event?, :cpu ] }
+  working_cpu = timed_place 'working CPU'
 
   # Processing data on CPU.
   # args: { block: a Proc that will receive a cpu object as argument and returns computation time on this CPU }
   class EventCPU
     attr_reader :process, :cpu, :event, :delay
     def initialize(binding)
-      @process = binding[:process][:val]
-      @cpu = binding[:cpu][:val]
+      @process = binding['process'].val
+      @cpu = binding['cpu'].val
     end
 
     def cpu_and_process_token(clock)
@@ -28,14 +28,22 @@ page "cpu" do
   end
 
   transition 'event::cpu' do
-    input process, :process
-    input cpu, :cpu
+    input process
+    input cpu
 
 
     output working_cpu do |binding, clock|
       EventCPU.new(binding).cpu_and_process_token clock
     end
 
+    sentry do |marking_for, clock, result|
+      marking_for['process'].each(:cpu_event, true) do |process|
+        marking_for['cpu'].each(:node, process.node) do |cpu|
+          result << { 'process' => process, 'cpu' => cpu }
+        end
+      end
+    end
+=begin
     guard do |binding, clock|
       if binding[:process][:val].has_event?(:cpu) &&
          (binding[:process][:val].node == binding[:cpu][:val].node)
@@ -44,19 +52,21 @@ page "cpu" do
         false
       end
     end
+=end
+
   end
 
 
   transition 'event::cpu_finished' do
-    input working_cpu, :cpu_and_process
+    input working_cpu
 
     output cpu do |binding, clock|
-      cpu = binding[:cpu_and_process][:val][:cpu]
+      cpu = binding['working cpu'].val[:cpu]
       { ts: clock, val: cpu }
     end
 
     output process do |binding, clock|
-      process = binding[:cpu_and_process][:val][:process]
+      process = binding['working cpu'].val[:process]
       { ts: clock, val: process }
     end
 
