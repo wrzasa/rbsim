@@ -48,21 +48,18 @@ module RBSim
       def initialize(*)
         super
         self.twoway = false unless self.twoway
+        @net_number = 0
       end
 
       def next_net
-        net_enum.next
+        raise StopIteration if @net_number >= via.length
+        net = via[@net_number]
+        @net_number += 1
+        net
       end
 
       def has_next_net?
-        net_enum.peek
-        true
-      rescue StopIteration
-        false
-      end
-
-      def net_enum
-        @net_enum ||= self.via.each
+        @net_number < via.length
       end
 
       def reverse!

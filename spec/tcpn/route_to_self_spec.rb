@@ -28,19 +28,19 @@ describe "TCPN model" do
       end
 
       let :tcpn do
-        tcpn = TCPN.read 'tcpn/model/add_route.rb'
+        tcpn = FastTCPN.read 'tcpn/model/add_route.rb'
 
         tcpn.add_marking_for 'data for network', data_token
         tcpn.add_marking_for 'routes', routes_token
-        tcpn.add_marking_for 'data to receive', RBSim::Tokens::DataQueueToken.new
+        tcpn.add_marking_for 'data to receive', RBSim::Tokens::DataQueueToken.new(:worker1)
         tcpn
       end
 
       it "adds correct route to data" do
-        TCPN.sim(tcpn).run
+        tcpn.sim
 
         expect(tcpn.marking_for('data with route')).to eq([])
-        expect(tcpn.marking_for('data to receive').first[:val].get data_token.dst).to eq(data_token)
+        expect(tcpn.marking_for('data to receive').first[:val].get).to eq(data_token)
       end
 
     end

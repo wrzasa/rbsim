@@ -4,10 +4,10 @@ page "stats" do
   # stats for process
   # args: stats tag
   class EventStats
-    EvenList = [ :stats, :stats_stop, :stats_start, :stats_save ]
+    EventList = [ :stats, :stats_stop, :stats_start, :stats_save ]
 
     def initialize(binding)
-      @process = binding['process'].val
+      @process = binding['process'].value
       @event_list = EventList
     end
 
@@ -31,7 +31,7 @@ page "stats" do
 
     sentry do |marking_for, clock, result|
       EventStats::EventList.each do |e|
-        p = marking_for(:first_event, e).first
+        p = marking_for['process'].each(:first_event, e).first
         result << { 'process' => p } unless p.nil?
       end
     end

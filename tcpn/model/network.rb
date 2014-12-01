@@ -2,8 +2,8 @@
 page 'network' do
   data_with_route = place 'data with route'
   net = timed_place 'net', { name: :name }
-  data_after_net = timed_place 'data after net', { has_next_net: :has_next_net? }
-  data_to_receive = place 'data to receive'
+  data_after_net = timed_place 'data after net', has_next_net: :has_next_net?
+  data_to_receive = place 'data to receive', process_name: :process_name
 
   transition 'net' do
     input data_with_route
@@ -11,8 +11,8 @@ page 'network' do
 
     class TCPNNet
       def initialize(binding)
-        @net = binding['net'].val
-        @data = binding['data with route'].val
+        @net = binding['net'].value
+        @data = binding['data with route'].value
       end
 
       def net_token(clock)
@@ -44,7 +44,8 @@ page 'network' do
 
     sentry do |marking_for, clock, result|
       marking_for['data with route'].each do |data|
-        marking_for['net'].each(:name, data.route.next_net) do |net|
+        next_net = data.value.route.next_net
+        marking_for['net'].each(:name, next_net) do |net|
           result << { 'data with route' => data, 'net' => net }
         end
       end
@@ -81,15 +82,17 @@ page 'network' do
     input data_to_receive
 
     output data_to_receive do |binding, clock|
-      queue = binding['data to receive'].val
-      data = binding['data after net'].val
+      queue = binding['data to receive'].value
+      data = binding['data after net'].value
       queue.put data
       { ts: clock, val: queue }
     end
 
     sentry do |marking_for, clock, result|
       marking_for['data after net'].each(:has_next_net, false) do |data|
-        result << { 'data after net' => data }
+        marking_for['data to receive'].each(:process_name, data.value.dst) do |queue|
+          result << { 'data after net' => data, 'data to receive' =>  queue }
+        end
       end
     end
 =begin

@@ -25,7 +25,7 @@ module RBSim
 
     def tcpn
       if @tcpn.nil?
-        @tcpn = TCPN.read 'tcpn/model.rb'
+        @tcpn = FastTCPN.read 'tcpn/model.rb'
         hlmodel.nets.each do |net|
           @tcpn.add_marking_for 'net', net
         end
@@ -40,13 +40,13 @@ module RBSim
         hlmodel.processes.each do |name, process|
           process.node = hlmodel.mapping[name]
           @tcpn.add_marking_for 'process', process
+          @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new(process.name)
         end
 
 
         @tcpn.add_marking_for 'routes', hlmodel.routes
         @tcpn.add_marking_for 'mapping', hlmodel.mapping
 
-        @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new
 
       end
 
@@ -55,7 +55,7 @@ module RBSim
 
     def simulator
       if @simulator.nil?
-        @simulator = TCPN.sim(tcpn)
+        @simulator = tcpn
 
         set_logger_callbacks
         set_stats_collector_callbacks
@@ -114,7 +114,7 @@ module RBSim
     def set_logger_callbacks
       @simulator.cb_for :transition, :after do |t, e|
         if e.transition == 'event::log'
-          message = e.binding[:process][:val].serve_system_event(:log)[:args]
+          message = e.binding['process'].value.serve_system_event(:log)[:args]
           @logger.call e.clock, message
         end
       end
@@ -123,28 +123,28 @@ module RBSim
     def set_stats_collector_callbacks
       @simulator.cb_for :transition, :after do |t, e|
         if e.transition == "event::stats"
-          process = e.binding[:process][:val]
+          process = e.binding['process'].value
           event = process.first_event
           params = process.serve_system_event(event)[:args]
           @stats_collector.event event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
         elsif e.transition == "event::cpu"
-          node = e.binding[:cpu][:val].node
+          node = e.binding['CPU'].value.node
           @resource_stats_collector.event :start, { group_name: 'CPU', tag: node }, e.clock
         elsif e.transition == "event::cpu_finished"
-          node = e.binding[:cpu_and_process][:val][:cpu].node
+          node = e.binding['working CPU'].value[:cpu].node
           @resource_stats_collector.event :stop, { group_name: 'CPU', tag: node }, e.clock
         elsif e.transition == "transmitted"
-          process = e.binding[:data][:val].dst
+          process = e.binding['data after net'].value.dst
           @resource_stats_collector.event :start, { group_name: 'DATAQ WAIT', tag: process }, e.clock
         elsif e.transition == "event::data_received"
-          process = e.binding[:process][:val].name
+          process = e.binding['process'].value.name
           @resource_stats_collector.event :stop, { group_name: 'DATAQ WAIT', tag: process }, e.clock
         end
       end
 
       @simulator.cb_for :place, :remove do |t, e|
         if e.place == 'net'
-          net = e.tokens.first[:val]
+          net = e.tokens.first.value
           @resource_stats_collector.event :start, { group_name: 'NET', tag: net.name }, e.clock
         end
       end
@@ -155,9 +155,9 @@ module RBSim
           @resource_stats_collector.event :stop, { group_name: 'NET', tag: net.name }, ts
         elsif e.place == 'data to receive'
           queue = e.tokens.first[:val]
-          process = queue.last_involved_queue
+          process = queue.process_name
           @resource_stats_collector.event :save, 
-            { value: queue.length_for(process), group_name: 'DATAQ LEN', tag: process }, 
+            { value: queue.length, group_name: 'DATAQ LEN', tag: process }, 
             e.clock
         end
       end

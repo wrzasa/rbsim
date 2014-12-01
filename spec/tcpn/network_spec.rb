@@ -16,9 +16,9 @@ describe "TCPN model" do
     end
 
     let :tcpn do
-      tcpn = TCPN.read 'tcpn/model/network.rb'
+      tcpn = FastTCPN.read 'tcpn/model/network.rb'
 
-      tcpn.add_marking_for 'data to receive', RBSim::Tokens::DataQueueToken.new
+      tcpn.add_marking_for 'data to receive', RBSim::Tokens::DataQueueToken.new(:worker1)
       tcpn.add_marking_for 'data with route', data_token
       bw = 50
       [ :net01, :net02, :net03, :net04, :net05 ].each do |name|
@@ -26,36 +26,36 @@ describe "TCPN model" do
         bw *= 2
       end
 
-
       tcpn
     end
 
-    before :each do
+    it "finishes simulation with correct clock value" do
+      tcpn.sim
+      time = 7.0*data_token.size/200
+      expect(tcpn.clock).to eq time
     end
 
-    it "puts data token with correct timestamp in 'data to receive' place" do
-      TCPN.sim(tcpn).run
-      expect(tcpn.marking_for('data to receive').first[:val].get data_token.dst).to eq data_token
-      time = 7.0*data_token.size/200
-      expect(tcpn.marking_for('data to receive').first[:ts]).to eq time
+    it "finishes simulation with data token in 'data to receive' place" do
+      tcpn.sim
+      expect(tcpn.marking_for('data to receive').first[:val].get).to eq data_token
     end
 
     it "fires net transition correct number of times" do
-      sim = TCPN.sim(tcpn)
       count = 0
-      sim.cb_for :transition, :after do |t, e|
+      tcpn.cb_for :transition, :before do |t, e|
         if e.transition == 'net'
+          d = e.binding['data with route'].value
           count += 1
         end
       end
-      sim.run
+      tcpn.sim
 
       expect(count).to eq(route.via.length)
 
     end
 
-    it "updates timestamp of correct net tokens" do
-      TCPN.sim(tcpn).run
+    it "correctly updates timestamps of net tokens" do
+      tcpn.sim
       time = 0
       [:net01, :net02, :net03].each do |net_name|
         net = tcpn.marking_for('net').select { |net| net[:val].name == net_name }.first

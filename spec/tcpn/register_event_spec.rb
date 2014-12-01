@@ -14,20 +14,16 @@ describe "TCPN model" do
     end
 
     let :tcpn do
-      tcpn = TCPN.read 'tcpn/model/register_event.rb'
+      tcpn = FastTCPN.read 'tcpn/model/register_event.rb'
 
       tcpn.add_marking_for 'process', process_token
       tcpn
     end
 
-    let :sim do
-      TCPN.sim(tcpn)
-    end
-
     it "enqueues event in specified time" do
       register_event_fired = false
       enqueue_event_fired = false
-      sim.cb_for :transition, :after do |t, e|
+      tcpn.cb_for :transition, :after do |t, e|
         if e.transition == 'event::register_event'
           register_event_fired = true
         elsif e.transition == 'event::enqueue_event'
@@ -35,7 +31,7 @@ describe "TCPN model" do
         end
       end
 
-      sim.run
+      tcpn.sim
 
       expect(register_event_fired).to be true
       expect(enqueue_event_fired).to be true

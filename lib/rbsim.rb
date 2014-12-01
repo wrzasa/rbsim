@@ -1,4 +1,4 @@
-require 'tcpn'
+require 'fast-tcpn'
 require 'dsl'
 require 'hlmodel'
 require 'simulator'

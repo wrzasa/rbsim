@@ -1,8 +1,8 @@
 page 'application' do
-  process = timed_place 'process', { first_event: :first_event, user_event: :has_user_event? }
+  process = timed_place 'process', { first_event: :first_event, user_event: :has_user_event?, name: :name }
   data_to_send = place 'data to send'
   mapping = place 'mapping'
-  data_to_receive = place 'data to receive'
+  data_to_receive = place 'data to receive', empty: :empty?
 
   # model of CPU load by application logic 
   sub_page "cpu.rb"
@@ -17,7 +17,7 @@ page 'application' do
   # args: { time: time for which we should wait }
   class EventDelayFor
     def initialize(binding)
-      @process = binding['process'].val
+      @process = binding['process'].value
       @event = @process.serve_system_event :delay_for
     end
 
@@ -49,7 +49,7 @@ page 'application' do
     input process
 
     output process do |binding, clock|
-      process = binding['process'].val
+      process = binding['process'].value
       process.serve_user_event
       process
     end
@@ -77,7 +77,7 @@ page 'application' do
     #         content: content of send data (to use in HLModel) }
     class EventSendData
       def initialize(binding)
-        @process = binding['process'].val
+        @process = binding['process'].value
         @event = @process.serve_system_event :send_data
         @data = RBSim::Tokens::DataToken.new(@process.node, @process.name, @event[:args])
       end
@@ -122,10 +122,10 @@ page 'application' do
     #         constructor_args: args passed to the constructor }
     class EventNewProcess
       def initialize(binding)
-        @process = binding['process'].val
+        @process = binding['process'].value
         @event = @process.serve_system_event :new_process
         @new_process = @event[:args][:constructor].call @event[:args][:constructor_args]
-        @mapping = binding['mapping'].val
+        @mapping = binding['mapping'].value
         @mapping[@new_process.name] = @new_process.node
       end
 
@@ -148,7 +148,8 @@ page 'application' do
 
     sentry do |marking_for, clock, result|
       marking_for['process'].each(:first_event, :new_process) do |p|
-        result << { 'process' => p }
+        mapping = marking_for['mapping'].first
+        result << { 'process' => p , 'mapping' => mapping}
       end
     end
 =begin
@@ -164,9 +165,9 @@ page 'application' do
 
     class EventDataReceived
       def initialize(binding)
-        @process = binding['process'].val
-        @queue = binding['data to receive'].val
-        @data = @queue.get @process.name
+        @process = binding['process'].value
+        @queue = binding['data to receive'].value
+        @data = @queue.get
         @process.enqueue_event :data_received, @data
       end
 
@@ -188,7 +189,11 @@ page 'application' do
     end
 
     sentry do |marking_for, clock, result|
-      raise "Not yet implemented!"
+      marking_for['data to receive'].each(:empty, false) do |queue|
+        marking_for['process'].each(:name, queue.value.process_name) do |process|
+          result << { 'process' => process, 'data to receive' => queue }
+        end
+      end
     end
 
 =begin
@@ -207,7 +212,7 @@ page 'application' do
     # args: log message
     class EventLog
       def initialize(binding)
-        @process = binding['process'].val
+        @process = binding['process'].value
         @event = @process.serve_system_event :log
       end
 

@@ -31,7 +31,7 @@ describe "TCPN model" do
 
 
     let :tcpn do
-      tcpn = TCPN.read 'tcpn/model/cpu.rb'
+      tcpn = FastTCPN.read 'tcpn/model/cpu.rb'
 
       tcpn.add_marking_for 'process', process_token
       tcpn.add_marking_for 'CPU', cpu_token
@@ -39,7 +39,7 @@ describe "TCPN model" do
     end
 
     it "sets correct timestamps for cpu and process tokens" do
-      TCPN.sim(tcpn).run
+      tcpn.sim
 
       process_timestamp = tcpn.marking_for('process').first[:ts]
       expect(process_timestamp).to eq times.first

@@ -10,15 +10,17 @@ page 'map data' do
     input data_to_send
     input mapping
 
-    output mapping
+    output mapping do |binding, clock|
+      binding['mapping']
+    end
 
     class TCPNMapDataDestination
       ProcessNotMappedToNode = Class.new RuntimeError
 
       def initialize(binding)
-        @data = binding['data to send'].val
+        @data = binding['data to send'].value
         @dst = @data.dst
-        @mapping = binding['mapping'].val
+        @mapping = binding['mapping'].value
         @dst_node = @mapping[@dst]
         if @dst_node.nil?
           raise ProcessNotMappedToNode.new(@dst)

@@ -7,7 +7,7 @@ page "register event" do
 
     class EventRegisterEvent
       def initialize(binding)
-        @process = binding['process'].val
+        @process = binding['process'].value
       end
 
       def process_token(clock)
@@ -37,8 +37,8 @@ page "register event" do
     end
 
     sentry do |marking_for, clock, result|
-      marking_for['process'].each(:first_event, :register_event) do |p|
-        result << { 'process' => p }
+      marking_for['process'].each(:first_event, :register_event) do |process|
+        result << { 'process' => process }
       end
     end
 =begin
@@ -54,8 +54,8 @@ page "register event" do
 
     class EventEnqueueEvent
       def initialize(binding)
-        @process = binding['process'].val
-        @event = binding['event'].val
+        @process = binding['process'].value
+        @event = binding['event'].value
       end
 
       def process_token(clock)
@@ -74,7 +74,7 @@ page "register event" do
 
     sentry do |marking_for, clock, result|
       marking_for['event'].each do |e|
-        marking_for['process'].each(:id, e.process_id) do |p|
+        marking_for['process'].each(:id, e.value.process_id) do |p|
           result << { 'process' => p, 'event' => e }
         end
       end

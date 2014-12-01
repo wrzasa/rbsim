@@ -10,8 +10,8 @@ page "cpu" do
   class EventCPU
     attr_reader :process, :cpu, :event, :delay
     def initialize(binding)
-      @process = binding['process'].val
-      @cpu = binding['cpu'].val
+      @process = binding['process'].value
+      @cpu = binding['CPU'].value
     end
 
     def cpu_and_process_token(clock)
@@ -38,8 +38,8 @@ page "cpu" do
 
     sentry do |marking_for, clock, result|
       marking_for['process'].each(:cpu_event, true) do |process|
-        marking_for['cpu'].each(:node, process.node) do |cpu|
-          result << { 'process' => process, 'cpu' => cpu }
+        marking_for['CPU'].each(:node, process.value.node) do |cpu|
+          result << { 'process' => process, 'CPU' => cpu }
         end
       end
     end
@@ -61,12 +61,12 @@ page "cpu" do
     input working_cpu
 
     output cpu do |binding, clock|
-      cpu = binding['working cpu'].val[:cpu]
+      cpu = binding['working CPU'].value[:cpu]
       { ts: clock, val: cpu }
     end
 
     output process do |binding, clock|
-      process = binding['working cpu'].val[:process]
+      process = binding['working CPU'].value[:process]
       { ts: clock, val: process }
     end
 

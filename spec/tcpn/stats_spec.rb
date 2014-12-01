@@ -14,14 +14,10 @@ describe "TCPN model" do
     let(:event_params) { { tag: stats_tag, group_name: stats_group_name } }
 
     let :tcpn do
-      tcpn = TCPN.read 'tcpn/model/stats.rb'
+      tcpn = FastTCPN.read 'tcpn/model/stats.rb'
 
       tcpn.add_marking_for 'process', process_token
       tcpn
-    end
-
-    let :sim do
-      TCPN.sim(tcpn)
     end
 
     let(:stats_group_name) { 'apache' }
@@ -30,14 +26,14 @@ describe "TCPN model" do
       it "is served" do
         served = false
         args = nil
-        sim.cb_for :transition, :after do |t, e|
+        tcpn.cb_for :transition, :after do |t, e|
           if e.transition == 'event::stats'
-            served = true if e.binding[:process][:val].has_event?(stats_event)
-            args = e.binding[:process][:val].serve_system_event(stats_event)[:args]
+            served = true if e.binding['process'].value.has_event?(stats_event)
+            args = e.binding['process'].value.serve_system_event(stats_event)[:args]
           end
         end
 
-        sim.run
+        tcpn.sim
 
         expect(served).to be true
         expect(args).to eql(event_params)
