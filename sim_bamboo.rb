@@ -1,10 +1,10 @@
 require 'rbsim'
 
 client_no = 1
-router_no = 50
+router_no = 200
 server_no = 10
-request_per_client = 1000
-request_gap = 60.miliseconds
+request_per_client = 2000
+request_gap = 30.miliseconds
 long_prob = 0.01
 REQUEST_TIMES = {
   long: 5000.miliseconds,
@@ -53,7 +53,7 @@ model = RBSim.model do
         tag = "request_#{data.content[:content][:length]}".to_sym
         stats tag, process.name
         stats :request, process.name
-        log "#{process.name} got request #{data.content[:content][:number]} from #{data.content[:from]} #{data.content[:content][:length]}"
+        #log "#{process.name} got request #{data.content[:content][:number]} from #{data.content[:from]} #{data.content[:content][:length]}"
         cpu do |cpu|
           # request holds information about its processing time
           REQUEST_TIMES[data.content[:content][:length]] / cpu.performance
@@ -82,7 +82,7 @@ model = RBSim.model do
       content = { number: sent, length: length }
       target = opts[:targets][rand opts[:targets].length]
       send_data to: target, size: 1024.bytes, type: :request, content: content
-      log "#{process.name} sent request #{sent} #{length}"
+      #log "#{process.name} sent request #{sent} #{length}"
       stats_start :request, process.name
       stats_start "request_#{sent}".to_sym, process.name
       sent += 1
@@ -92,7 +92,7 @@ model = RBSim.model do
     on_event :data_received do |data|
       stats_stop :request, process.name
       stats_stop "requests_#{data.content[:length]}".to_sym#, process.name
-      log "#{process.name} got response #{data.content[:number]} #{data.content[:server]} #{data.content[:length]}"
+      #log "#{process.name} got response #{data.content[:number]} #{data.content[:server]} #{data.content[:length]}"
       stats :request_served, process.name
       stats_stop "request_#{data.content[:number]}".to_sym, process.name
     end
@@ -149,17 +149,36 @@ model = RBSim.model do
 
 end
 
+prev_seconds = 0
+model.tcpn.cb_for :clock, :after do |tag, event|
+  print "\b"*40
+  seconds = event.clock.in_seconds.truncate
+  print "Time: #{seconds} sec." if seconds > prev_seconds
+  prev_seconds = seconds
+end
+
+puts "Clients\t\t: #{client_no}"
+puts "Routers\t\t: #{router_no}"
+puts "Servers\t\t: #{server_no}"
+puts "Requests\t: #{request_per_client}"
+puts "Request gap\t: #{request_gap.in_miliseconds}ms"
+puts "Long req. prob.\t: #{long_prob}"
+puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t.in_miliseconds}ms"}.join ', '}"
+puts
+
 model.run
 
-model.stats_print
-p model.stats_summary
+#model.stats_print
+#p model.stats_summary
 
+=begin
 puts "======================="
 puts "Routers' queue length"
 model.stats_data[:application].values.each do |process, tag, time, values|
   next unless tag == :rqueue_len
   puts "#{process}\t#{time}: #{values.last}"
 end
+=end
 puts
 
 max_rqueue_len = model.stats_summary[:application][:values].map do |process, records|
@@ -201,13 +220,6 @@ summary_thinqueue_wait = model.stats_summary[:resources][:durations]['DATAQ WAIT
   process.to_s =~ /thin*/
 end.values.reduce(:+)
 
-puts "Clients\t\t: #{client_no}"
-puts "Routers\t\t: #{router_no}"
-puts "Servers\t\t: #{server_no}"
-puts "Requests\t: #{request_per_client}"
-puts "Request gap\t: #{request_gap.in_miliseconds}ms"
-puts "Long req. prob.\t: #{long_prob}"
-puts "Request times\t: #{REQUEST_TIMES.map{ |n,t| "#{n}: #{t.in_miliseconds}ms"}.join ', '}"
 puts
 puts "Max rtr queue len\t: #{max_rqueue_len}"
 puts "Max rtr queue wait\t: #{max_rqueue_wait.in_miliseconds}ms"
