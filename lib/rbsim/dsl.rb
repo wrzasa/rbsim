@@ -1,9 +1,9 @@
 require 'docile'
-require 'tokens'
-require 'dsl/infrastructure'
-require 'dsl/program'
-require 'dsl/process'
-require 'dsl/mapping'
+require 'rbsim/tokens'
+require 'rbsim/dsl/infrastructure'
+require 'rbsim/dsl/program'
+require 'rbsim/dsl/process'
+require 'rbsim/dsl/mapping'
 
 module RBSim
 

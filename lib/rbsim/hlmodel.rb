@@ -1,6 +1,6 @@
-require 'hlmodel/infrastructure.rb'
-require 'hlmodel/process.rb'
-require 'hlmodel/mapping.rb'
+require 'rbsim/hlmodel/infrastructure.rb'
+require 'rbsim/hlmodel/process.rb'
+require 'rbsim/hlmodel/mapping.rb'
 
 module RBSim
   module HLModel

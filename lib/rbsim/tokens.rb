@@ -1,4 +1,4 @@
-require 'hlmodel'
+require 'rbsim/hlmodel'
 
 module RBSim
   module Tokens
