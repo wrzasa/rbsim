@@ -104,7 +104,7 @@ module RBSim
       @saved_values
     end
 
-    def hash
+    def to_hash
       { counters: counters_summary, durations: durations_summary, values: values_summary }
     end
 

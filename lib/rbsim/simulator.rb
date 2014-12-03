@@ -70,7 +70,7 @@ module RBSim
     end
 
     def stats_summary
-      { application: @stats_collector.hash, resources: @resource_stats_collector.hash }
+      { application: @stats_collector.to_hash, resources: @resource_stats_collector.to_hash }
     end
 
     def stats_data
