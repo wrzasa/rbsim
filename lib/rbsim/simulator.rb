@@ -25,7 +25,7 @@ module RBSim
 
     def tcpn
       if @tcpn.nil?
-        @tcpn = FastTCPN.read 'tcpn/model.rb'
+        @tcpn = FastTCPN.read File.expand_path '../../../tcpn/model.rb', __FILE__
         hlmodel.nets.each do |net|
           @tcpn.add_marking_for 'net', net
         end

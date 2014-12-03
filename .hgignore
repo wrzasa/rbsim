@@ -3,3 +3,4 @@ syntax: glob
 coverage
 doc
 *.dump
+*.gem
