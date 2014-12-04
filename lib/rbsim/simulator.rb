@@ -156,9 +156,9 @@ module RBSim
         elsif e.place == 'data to receive'
           queue = e.tokens.first[:val]
           process = queue.process_name
-          @resource_stats_collector.event :save, 
-            { value: queue.length, group_name: 'DATAQ LEN', tag: process }, 
-            e.clock
+          @resource_stats_collector.event :save,
+            { value: queue.length, group_name: 'DATAQ LEN', tag: process },
+            e.tcpn.clock
         end
       end
     end
