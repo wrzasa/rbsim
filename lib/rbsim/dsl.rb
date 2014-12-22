@@ -15,7 +15,7 @@ module RBSim
 
   # TODO: after implementing marking TCPN from the HLModel, update spec/integration/new_process_spec.rb!
 
-  def self.model(&block)
-    Simulator.new &block
+  def self.model(params = {}, &block)
+    Simulator.new params, &block
   end
 end

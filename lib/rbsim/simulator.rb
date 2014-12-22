@@ -3,8 +3,12 @@ module RBSim
   class Simulator
     attr_reader :clock
 
-    def initialize(&block)
+    # Create new simulator
+    # +block+ defines new model
+    # +params+ will be passed as block parameter to the model
+    def initialize(params = {}, &block)
       @block = block
+      @params = params
       @logger = default_logger
       @stats_collector = Statistics.new
       @resource_stats_collector = Statistics.new
@@ -18,7 +22,7 @@ module RBSim
     def hlmodel
       if @hlmodel.nil?
         @hlmodel = RBSim::HLModel::Model.new
-        Docile.dsl_eval(RBSim::DSL.new(@hlmodel), &@block)
+        Docile.dsl_eval(RBSim::DSL.new(@hlmodel), @params, &@block)
       end
       @hlmodel
     end

@@ -1,7 +1,7 @@
 PATH
   remote: /home/wrzasa/nauka/fast-tcpn
   specs:
-    fast-tcpn (0.0.1.pre1)
+    fast-tcpn (0.0.2.pre1)
       docile (~> 1.1)
 
 GEM
