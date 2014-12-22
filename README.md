@@ -9,11 +9,20 @@ statistics module is included.
 
 ## Usage
 
-Define your model using `RBSim.model` method.
+Define your model using `RBSim.model` method:
 
-    model = RBSim.model do
+    model = RBSim.model some_params do |params|
       # define your model here
+      # use params passed to the block
     end
+
+Or read the model from a file:
+
+    model = RBSim.read file_name, some_params_hash
+
++some_params_hash+ will be available in the model loaded from the file
+as +params+ variable.
+
 
 Run simulator:
 
@@ -31,13 +40,14 @@ To collect statistics you can also use
 
 ## Model
 
-Use `RBSim.model` to load model described by DSL. The model is a
-set of `process`es that are `put` on `nodes` and communicate over
-`net`s. Processes can be defined by `program`s or directly by
-blocks, `route`s define sequence of `net`s that should be
-traversed by data while communication between `node`s.
-Application logic implemented in `process`es is described in
-terms of events.
+Use `RBSim.model` to create model described by DSL in a block or
+`RBSim.read` to load a model from separate file.
+
+The model is a set of `process`es that are `put` on `nodes` and
+communicate over `net`s. Processes can be defined by `program`s or
+directly by blocks, `route`s define sequence of `net`s that should be
+traversed by data while communication between `node`s.  Application
+logic implemented in `process`es is described in terms of events.
 
 So to summarize, the most important parts of the model are:
 
