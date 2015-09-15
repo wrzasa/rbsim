@@ -1,3 +1,8 @@
+ * Add to README.mddescription of preferred RBSim usage scenario describing
+   usage of RBSim::Experiment. Good usage example can be found in
+   nauka/mrzasa_dynosize/
+
+
  * Data to self imlementation will spoil DATAQ WAIT stats -- no
    stats_start is called when network is passed over! Neet to add
    stats_start

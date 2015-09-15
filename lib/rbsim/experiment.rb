@@ -1,12 +1,13 @@
-# This is a base class to create RBSim based simulator
-# of your model and encapsulate all parameters, statistics
-# and others.
+# This is a base class to create RBSim based experiment
+# that is able to load your model and start simulation.
+# It encapsulates model, parameters and statistics
+# and also all your methods used to compute simulation results.
 
 require 'pathname'
 
 module RBSim
 
-  class Model
+  class Experiment
     attr_accessor :file, :params
     attr_reader :model
 
