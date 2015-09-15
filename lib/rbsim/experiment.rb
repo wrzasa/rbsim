@@ -37,26 +37,32 @@ module RBSim
       end
     end
 
-    # Read statistics from a file, return array of
+    # Read statistics from a file, return Enumerator of
     # objects, each opject represents separate experiment
     def self.read_stats(file, dots = false)
-      objects = []
-      begin
+      size = 0
+      File.open(file) do |file|
+        size = file.each_line(RECORD_SEPARATOR).count
+      end
+
+      e = Enumerator.new size do |y|
         File.open(file) do |file|
-          while !file.eof?
-            file.each_line(RECORD_SEPARATOR) do |line|
-              print "." if dots
-              params, stats = Marshal.restore line
-              objects << self.new(params, stats)
+          begin
+            while !file.eof?
+              file.each_line(RECORD_SEPARATOR) do |line|
+                print "." if dots
+                params, stats = Marshal.restore line
+                y << self.new(params, stats)
+              end
             end
+          rescue ArgumentError => e
+            raise ArgumentError.new "#{caller.first} got #{e.inspect} after reading #{objects.length} objects!"
           end
         end
-      rescue ArgumentError => e
-        puts "#{caller.first} got #{e.inspect} after reading #{objects.length} objects!"
       end
 
       puts if dots
-      objects
+      e
     end
 
     def res_stats
