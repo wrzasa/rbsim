@@ -11,8 +11,9 @@
                end
              end
 
-   Obviously, it slows down simulation, but sometimes may be required.
-   The preemption parameter could itself do the above.
+   Obviously, it slows down simulation and makes stats swell (every cpu event
+   is logged in stats), but sometimes may be required.  The preemption
+   parameter could itself do the above.
 
  * Data to self imlementation will spoil DATAQ WAIT stats -- no
    stats_start is called when network is passed over! Neet to add
