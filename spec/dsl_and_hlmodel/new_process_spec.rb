@@ -121,4 +121,40 @@ describe "HLModel::Process created with DSL#new_process" do
 
   end
 
+  describe "#event_time" do
+    let :model do
+      RBSim.dsl do
+        new_process :worker do
+
+          on_event :start do
+            start_time = event_time
+            register_event :next_one, delay: 100.seconds
+          end
+
+          on_event :next_one do
+            next_time = event_time
+          end
+
+          register_event :start
+        end
+      end
+    end
+
+    it "returns time reported by simulator" do
+      simulator = double("simulator")
+      expect(simulator).to receive(:clock).twice
+      model.simulator = simulator
+
+      e = process.serve_system_event :register_event
+      process.enqueue_event e[:args][:event], e[:args][:event_args]
+
+      process.serve_user_event # :start
+
+      process.serve_system_event :register_event
+      process.enqueue_event e[:args][:event], e[:args][:event_args]
+
+      process.serve_user_event # :next_one
+    end
+  end
+
 end

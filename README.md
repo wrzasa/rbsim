@@ -139,6 +139,37 @@ All statements that can be used to describe processe's behavior
 can also be used inside `on_event` statement. In fact the event
 handlers are preferred place to describe behavior of a process.
 
+#### Reading simulation clock
+
+It is possible to check value of simulation clock at which given event
+is being handled. This clock has the same value inside the whole block
+handling the event and it equals to the time at which the event handling
+started (not the time when the event occured/was registered!). The clock
+can be read using:
+
+* `event_time` method that returns clock value
+
+Value returned by the `event_time` method does not change inside
+the event handling block even if you used `delay_for` or `cpu`
+statements in this block before the `event_time` method was
+called. But if you call `event_time inside the `cpu` block it
+will return the time at which this block is valueted i.e. time at
+which the CPU processing starts.
+
+Concluding:
+
+* the `event_time` method can be used inside each block inside program
+  definition,
+* inside the whole block it returns the same value -- time when the event
+  handling (i.e. block evaluation) started,
+* if called inside a block which is inside a block... it returns time at
+  which the most inner event handling (block evaluation) started.
+
+If you need to measure time between two occurrences in whatever you
+simulate, just define these occurences as two separate events in
+the model. Then you will be able to read the time at which
+handling of each of these events started.
+
 #### Communication
 
 ##### Sending data

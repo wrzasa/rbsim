@@ -103,6 +103,10 @@ module RBSim
       @process.enqueue_event(:new_process, constructor_args: args, constructor: constructor)
     end
 
+    # returns time at which the event occured
+    def event_time
+      @model.simulator.clock
+    end
 
     private
 

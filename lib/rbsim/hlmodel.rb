@@ -5,7 +5,7 @@ require 'rbsim/hlmodel/mapping.rb'
 module RBSim
   module HLModel
 
-    Model = Struct.new :nodes, :nets, :routes, :programs, :processes, :mapping do
+    Model = Struct.new :nodes, :nets, :routes, :programs, :processes, :mapping, :simulator do
       def initialize(*)
         super
         self.programs = {}
@@ -17,6 +17,7 @@ module RBSim
             self.send "#{attr}=".to_sym, []
           end
         end
+        self.simulator = nil
       end
     end
 

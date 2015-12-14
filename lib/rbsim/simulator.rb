@@ -22,6 +22,7 @@ module RBSim
     def hlmodel
       if @hlmodel.nil?
         @hlmodel = RBSim::HLModel::Model.new
+        @hlmodel.simulator = self
         Docile.dsl_eval(RBSim::DSL.new(@hlmodel), @params, &@block)
       end
       @hlmodel
