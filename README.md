@@ -141,6 +141,9 @@ handlers are preferred place to describe behavior of a process.
 
 #### Reading simulation clock
 
+I am not convinced that this is necessary, but for now it is available.
+Read and understand all this section if you think you need this.
+
 It is possible to check value of simulation clock at which given event
 is being handled. This clock has the same value inside the whole block
 handling the event and it equals to the time at which the event handling
@@ -169,6 +172,11 @@ If you need to measure time between two occurrences in whatever you
 simulate, just define these occurences as two separate events in
 the model. Then you will be able to read the time at which
 handling of each of these events started.
+
+The truth is that you should not need this. Not ever. For instance if
+you need to model timeout waiting for a response, just register a
+timeout event when you send request and inside this event either mark
+request as timed out or do nothing it response was receivd before.
 
 #### Communication
 
