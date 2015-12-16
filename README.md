@@ -139,6 +139,50 @@ All statements that can be used to describe processe's behavior
 can also be used inside `on_event` statement. In fact the event
 handlers are preferred place to describe behavior of a process.
 
+#### Reusable functions
+
+The model allows to define functions that can be called from blocks
+defining event handlers. The functions can hol reusable code useful
+in one or more then handlers. Functions are defined using `function`
+statement like this:
+
+```ruby
+function :do_something do
+  # any statements allowed in
+  # event handler blocks can be
+  # put here
+end
+```
+
+Functions take parameters defined as usually for Ruby blocks:
+
+```ruby
+function :do_something_with_params do |param1, param2|
+  # any statements allowed in
+  # event handler blocks can be
+  # put here
+end
+```
+
+They return values like Ruby methods: either defined by `return`
+statement or the last stateent in the function block.
+
+##### Note on `def`
+
+You don't have to undrstand this. You don't even have to read this
+unless you insist on using Ruby's `def` defined methods instead of above
+described `function` statement.
+
+You can use Ruby `def` statement to define reusable code in the model,
+but it is **not recommended** unless you know exactly what you are
+doing! The `def` defined methods will be accessible from event handler
+blocks, but when called, they will be evalueated in the context in which
+they were defined, not in the context of the block calling the function.
+Consequently, any side effects caused by the function (like
+`register_event`, `log`, `stat` or anything the DSL gives you) will be
+reflected in the wrong context! Using `def` defined methods is safe only
+if they are strictly functional-like -- i.e. cause no side effects.
+
 #### Reading simulation clock
 
 I am not convinced that this is necessary, but for now it is available.
