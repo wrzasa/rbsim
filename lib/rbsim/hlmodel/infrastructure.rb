@@ -6,7 +6,35 @@ module RBSim
       CPU = Struct.new :performance, :node
     end
 
-    Net = Struct.new :name, :bw, :delay
+    class Net
+      attr_reader :name, :bw, :delay, :drop
+
+      InvalidTypeOfDropParameter = Class.new RuntimeError
+      InvalidValueOfDropProbability = Class.new RuntimeError
+
+      def initialize(name, bw, delay = 0, args = {})
+        @name, @bw, @delay = name, bw, delay
+        @drop = args[:drop] || 0
+        unless @drop.kind_of?(Proc) || @drop.kind_of?(Numeric)
+          raise InvalidTypeOfDropParameter.new(@drop.class)
+        end
+        if @drop.kind_of? Numeric
+          if @drop > 1 || @drop < 0
+            raise InvalidValueOfDropProbability.new(@drop)
+          end
+        end
+      end
+
+      def drop?
+        return @drop.call if @drop.kind_of? Proc
+
+        # a little optimization ;-)
+        return true if @drop == 1
+        return false if @drop == 0
+
+        return rand <= @drop
+      end
+    end
 
     class Routes
       def initialize
