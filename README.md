@@ -379,10 +379,36 @@ process description.
 
 Nets used in communication are defined with `net` statement with
 name as parameter and a Hash definind other parameters of the
-segment, currently only bandwidth.
+segment. The most important parameter of each net segmetn is its
+bandwidth:
 
     net :lan, bw: 1024.bps
     net :subnet1, bw: 20480.bps
+
+Additionally it is possible to specify probability that a packet
+transmitted over this network will be dropped. Currently, each message
+sent between two processes is treated as a single packet, so this
+probability will apply to dropping the whole message -- the message will
+be sent, but nothing will be received. By default drop probability is
+set to 0 and all sent messages are delivered. 
+
+There are two ways to define probability drop probability. First,
+specify a `Float` number between 0 and 1. The packets will be dropped
+with this this probability and uniform distribution:
+
+    net :lan, bw: 1024.bps, drop: 0.01
+
+Second, it is possible to define a block of code. That block will be
+evaluated for each packet transmitted over this network and should
+return true if packet should be dropped and false otherwise. This block
+can use Ruby's `rand` function and any desired logic to produce require
+distribution of dropped packets. Fo example, to drop packets according
+to exponential distribution with lambda = 2:
+
+    net :lan, bw: 1024.bps, drop: ->{ -0.5*Math.log(rand) < 0.1 }
+
+Currently, it is not possible to make probability of dropping a packet
+dependent on dropping previous packets.
 
 #### Routes
 

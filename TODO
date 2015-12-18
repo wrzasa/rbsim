@@ -1,3 +1,7 @@
+ * Error handling:
+ ** when there is not route between two processes, packets sent
+    between them are silently ignored -- no error message
+
  * Add to README.md description of preferred RBSim usage scenario describing
    usage of RBSim::Experiment. Good usage example can be found in
    nauka/mrzasa_dynosize/

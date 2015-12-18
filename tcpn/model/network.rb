@@ -20,6 +20,7 @@ page 'network' do
       end
 
       def data_token(clock)
+        return nil if @net.drop?
         @data.route.next_net
         { ts: clock + delay, val: @data }
       end
