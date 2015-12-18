@@ -12,9 +12,9 @@ module RBSim
       InvalidTypeOfDropParameter = Class.new RuntimeError
       InvalidValueOfDropProbability = Class.new RuntimeError
 
-      def initialize(name, bw, delay = 0, args = {})
+      def initialize(name, bw, delay = 0, drop = 0)
         @name, @bw, @delay = name, bw, delay
-        @drop = args[:drop] || 0
+        @drop = drop
         unless @drop.kind_of?(Proc) || @drop.kind_of?(Numeric)
           raise InvalidTypeOfDropParameter.new(@drop.class)
         end
