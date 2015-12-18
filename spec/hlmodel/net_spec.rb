@@ -1,7 +1,23 @@
 require 'spec_helper'
 
 describe RBSim::HLModel::Net do
+  describe "drop decision" do
+    it "is always the same for two clones of the same net" do
+      net = RBSim::HLModel::Net.new :net01, 1024, 10, 0.5
+      equal_times = 1000.times.reduce(0) do |a,v|
+        net_clone = net.clone
+        if net.drop? == net_clone.drop?
+          a + 1
+        else
+          a
+        end
+      end
+      expect(equal_times).to eq 1000
+    end
+  end
+
   describe "drop probability" do
+
     it "defaults to 0" do
       net = RBSim::HLModel::Net.new :net01, 1024, 10
       expect(net.drop).to eq 0

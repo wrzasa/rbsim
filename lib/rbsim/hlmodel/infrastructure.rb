@@ -23,9 +23,18 @@ module RBSim
             raise InvalidValueOfDropProbability.new(@drop)
           end
         end
+        @drop_next = drop_next?
       end
 
       def drop?
+        drop_this = @drop_next
+        @drop_next = drop_next?
+        drop_this
+      end
+
+      private
+
+      def drop_next?
         return @drop.call if @drop.kind_of? Proc
 
         # a little optimization ;-)
