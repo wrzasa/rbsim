@@ -7,7 +7,7 @@ describe 'RBSim#dsl' do
      RBSim.dsl do
 
       net :net01, bw: 100, delay: 10
-      net :net02, bw: 1000, delay: 20
+      net :net02, bw: 1000, delay: 20, drop: 0.3
 
      end
     end
@@ -32,6 +32,7 @@ describe 'RBSim#dsl' do
       subject { model.nets[1] }
       its(:bw) { should eq(1000) }
       its(:delay) { should eq(20) }
+      its(:drop) { should eq(0.3) }
     end
   end
 

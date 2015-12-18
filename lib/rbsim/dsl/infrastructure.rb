@@ -13,8 +13,9 @@ module RBSim
 
     def net(name, args = {})
       bw = args[:bw]
-      delay = args[:delay]
-      @model.nets << Tokens::NetToken.new(name, bw, delay)
+      delay = args[:delay] || 0
+      drop = args[:drop] || 0
+      @model.nets << Tokens::NetToken.new(name, bw, delay, drop)
     end
 
     def route(args = {})
