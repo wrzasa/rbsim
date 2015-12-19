@@ -19,18 +19,24 @@ describe "Network model" do
         cpu 1
       end
 
-      net :network, bw: 1024, drop: 1
+      net :net01, bw: 1024, drop: 1
 
       put :sender, on: :sender
       put :receiver, on: :receiver
-      route from: :sender, to: :receiver, via: [ :network ], toway: true
+      route from: :sender, to: :receiver, via: [ :net01 ], toway: true
     end
   end
 
   it "checks if a packet should be dropped" do
     # for the sake of cloning we don't have the object that will
     # receive the message at the beginning of simulation
-    expect_any_instance_of(RBSim::HLModel::Net).to receive(:drop?).and_return true
+    # twice, because stats calls it too and that also counts
+    #
+    # http://stackoverflow.com/questions/9800992/how-to-say-any-instance-should-receive-any-number-of-times-in-rspec
+    allow(RBSim::HLModel::Net).to receive(:drop?)
+    allow_any_instance_of(RBSim::HLModel::Net).to receive(:drop?) { |*a| RBSim::HLModel::Net.drop? *a }
+
+    expect(RBSim::HLModel::Net).to receive(:drop?).twice #.and_return true
     model.run
   end
 

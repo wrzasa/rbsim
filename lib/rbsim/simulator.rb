@@ -144,6 +144,12 @@ module RBSim
         elsif e.transition == "event::data_received"
           process = e.binding['process'].value.name
           @resource_stats_collector.event :stop, { group_name: 'DATAQ WAIT', tag: process }, e.clock
+        elsif e.transition == "net"
+          net_name = e.binding['net'].value.name
+          dropped = e.binding['net'].value.drop?
+          if dropped
+            @resource_stats_collector.event :stats, { group_name: 'NET DROP', tag: net_name }, e.clock
+          end
         end
       end
 
