@@ -8,7 +8,7 @@ require 'pathname'
 module RBSim
 
   class Experiment
-    attr_accessor :file, :params
+    attr_accessor :file, :params, :time_limit
     attr_reader :model
 
     RECORD_SEPARATOR = "__ END OF RECORD __"
@@ -80,6 +80,7 @@ module RBSim
       @params = params
       @model = RBSim.read file, params
       @model.tcpn.cb_for :clock, :after, &self.method(:timer)
+      @model.tcpn.cb_for :clock, :after, &self.method(:time_limit_observer)
     end
 
     def timer(tag, event)
@@ -95,6 +96,13 @@ module RBSim
       end
       @prev_seconds = seconds
     end
+
+    def time_limit_observer(tag, event)
+      if event.clock > @time_limit
+        @model.stop
+      end
+    end
+
   end
 
 end

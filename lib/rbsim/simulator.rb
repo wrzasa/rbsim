@@ -19,6 +19,10 @@ module RBSim
       simulator.run
     end
 
+    def stop
+      simulator.stop
+    end
+
     def hlmodel
       if @hlmodel.nil?
         @hlmodel = RBSim::HLModel::Model.new
