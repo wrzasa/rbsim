@@ -83,7 +83,6 @@ module RBSim
           yield group_name, tag, times_list
         end
       end
-      result
     end
 
     # FIXME: not tested!
