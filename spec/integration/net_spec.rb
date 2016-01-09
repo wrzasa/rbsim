@@ -36,7 +36,8 @@ describe "Network model" do
     allow(RBSim::HLModel::Net).to receive(:drop?)
     allow_any_instance_of(RBSim::HLModel::Net).to receive(:drop?) { |*a| RBSim::HLModel::Net.drop? *a }
 
-    expect(RBSim::HLModel::Net).to receive(:drop?).twice #.and_return true
+    # twice in TCPN (arc to data and arc to net) and while collecting statistics
+    expect(RBSim::HLModel::Net).to receive(:drop?).exactly(3) #.and_return true
     model.run
   end
 

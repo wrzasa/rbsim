@@ -105,6 +105,33 @@ describe "TCPN model" do
         end
       end
 
+      describe "when #drop? returns false then true" do
+        let :data_token do
+          data1 = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+          data1.dst_node = :node02
+          data1.route = route
+
+          data2 = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+          data2.dst_node = :node02
+          data2.route = route
+
+          [ data1, data2 ]
+        end
+
+        let(:drop) do 
+          values = [ false, true ]
+          lambda do
+            values.shift
+          end
+        end
+
+        it "drops one package and lets one package go" do
+          tcpn.sim
+          expect(tcpn.marking_for('data to receive').first[:val].length).to be 1
+        end
+
+      end
+
     end
 
   end

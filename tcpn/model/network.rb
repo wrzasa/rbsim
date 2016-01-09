@@ -13,6 +13,8 @@ page 'network' do
       def initialize(binding)
         @net = binding['net'].value
         @data = binding['data with route'].value
+        # make it run random drop generator code to cache drop decision for the next time
+        @drop = @net.drop?
       end
 
       def net_token(clock)
@@ -20,7 +22,7 @@ page 'network' do
       end
 
       def data_token(clock)
-        return nil if @net.drop?
+        return nil if @drop
         @data.route.next_net
         { ts: clock + delay, val: @data }
       end
