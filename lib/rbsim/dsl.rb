@@ -22,7 +22,8 @@ module RBSim
   # Read model from a +file+.
   # +params+ will be passes as to the model as 'params' variable
   def self.read(file, params = {})
-    block = instance_eval "proc { |params| #{File.read file} }", file
+    p = "proc { |params| #{File.read file} }"
+    block = instance_eval p, file
     model params, &block
   end
 
