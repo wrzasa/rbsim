@@ -66,7 +66,7 @@ module RBSim
         events.each do |tag, times|
           next if filters[:tag] && tag != filters[:tag]
           times[:start].each_with_index do |start, i|
-            stop = times[:stop][i]
+            stop = times[:stop][i] rescue nil
             yield group_name, tag, start, stop
           end
         end
