@@ -98,6 +98,7 @@ module RBSim
     end
 
     def time_limit_observer(tag, event)
+      return if @time_limit.nil?
       if event.clock > @time_limit
         @model.stop
       end
