@@ -12,7 +12,7 @@ describe RBSim::Simulator do
           stats tag: :wait, group_name: 'worker'
           delay_for 100
           stats tag: :wait, group_name: 'worker'
-          stats_save 31415, :queue_length, 'worker'
+          stats_save 31415, tag: :queue_length, group_name: 'worker'
         end
 
         node :n1 do
@@ -29,7 +29,7 @@ describe RBSim::Simulator do
       expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stop, {tag: :work, group_name: 'worker'}, 200)
       expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, group_name: 'worker'}, 300)
       expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, group_name: 'worker'}, 400)
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:save, {value: 31415, tag: :queue_length, group_name: 'worker'}, 400)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:save, {value: 31415, tags: { tag: :queue_length, group_name: 'worker'} }, 400)
       model.run
     end
 

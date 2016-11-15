@@ -95,23 +95,19 @@ module RBSim
     end
 
     def stats_start(tags)
-      params = tags
-      @process.enqueue_event(:stats_start, params)
+      @process.enqueue_event(:stats_start, tags)
     end
 
     def stats_stop(tags)
-      params = tags
-      @process.enqueue_event(:stats_stop, params)
+      @process.enqueue_event(:stats_stop, tags)
     end
 
     def stats(tags)
-      params = tags
-      @process.enqueue_event(:stats, params)
+      @process.enqueue_event(:stats, tags)
     end
 
-    def stats_save(value, tag, group_name = nil)
-      params = stats_event_params(tag, group_name)
-      params[:value] = value
+    def stats_save(value, tags)
+      params = { tags: tags, value: value }
       @process.enqueue_event(:stats_save, params)
     end
 
@@ -127,14 +123,6 @@ module RBSim
     # returns time at which the event occured
     def event_time
       @model.simulator.clock
-    end
-
-    private
-
-    def stats_event_params(tag, group_name)
-      params = { tag: tag }
-      params[:group_name] = group_name unless group_name.nil?
-      params
     end
   end
 end

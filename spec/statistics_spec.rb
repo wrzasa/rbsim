@@ -2,14 +2,6 @@ require 'spec_helper'
 
 describe RBSim::Statistics do
 
-  it "saves reported values" do
-    subject.event :save, { value: 1024, tag: :queue_length, group_name: 'apache' }, 100
-    subject.event :save, { value: 1524, tag: :queue_length, group_name: 'apache' }, 100
-    subject.event :save, { value: 2048, tag: :queue_length, group_name: 'apache' }, 200
-    subject.event :save, { value: 512, tag: :queue_length, group_name: 'apache' }, 400
-    expect(subject.values_summary['apache'][:queue_length]).to eq({ 100 => [ 1024, 1524 ], 200 => [ 2048 ], 400 => [ 512 ] })
-  end
-
   describe "with hash based tags" do
     describe "event counters" do
       let :stats do
@@ -211,12 +203,97 @@ describe RBSim::Statistics do
     end
 
     describe "saves reported values" do
-      it "returns all values"
-      it "filters values by single tag"
-      it "filters values by two tags"
-      it "filters values by rare tag"
-      it "filters values by regexp"
-      it "filters values by empty regexp"
+      let :stats do
+        stats = RBSim::Statistics.new
+
+        stats.event :save, { value: 1024, tags: { tag: :queue_length, name: 'apache' } }, 100
+        stats.event :save, { value: 1524, tags: { tag: :queue_length, name: 'apache' } }, 100
+        stats.event :save, { value: 1024, tags: { tag: :queue_length, name: 'nginx'  } }, 100
+        stats.event :save, { value: 2048, tags: { tag: :queue_length, name: 'apache' } }, 200
+        stats.event :save, { value: 2048, tags: { tag: :queue_length, name: 'apache', mod: :php } }, 200
+        stats.event :save, { value: 2048, tags: { tag: :queue_length, name: 'nginx'  } }, 200
+        stats.event :save, { value: 2048, tags: { tag: :queue_length, name: 'nginx', mod: :php  } }, 300
+        stats.event :save, { value: 20,   tags: { tag: :wait_time, name: 'nginx'     } }, 350
+        stats.event :save, { value: 512,  tags: { tag: :queue_length, name: 'apache' } }, 400
+        stats.event :save, { value: 30,   tags: { tag: :wait_time, name: 'nginx'     } }, 400
+
+        stats.clock = 1000
+
+        stats
+      end
+
+      subject { stats }
+
+      it "returns all values" do
+        values = subject.values.to_a
+        expected_values = [
+          [ { tag: :queue_length, name: 'apache' }, 100, [ 1024, 1524 ] ],
+          [ { tag: :queue_length, name: 'nginx'  }, 100, [ 1024 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'apache', mod: :php }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'nginx' }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'nginx', mod: :php }, 300, [ 2048 ] ],
+          [ { tag: :wait_time, name: 'nginx' }, 350, [ 20 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 400, [ 512 ] ],
+          [ { tag: :wait_time, name: 'nginx' }, 400, [ 30 ] ],
+        ]
+        expect(values).to match_array expected_values
+      end
+
+      it "filters values by single tag" do
+        values = subject.values(tag: :queue_length).to_a
+        expected_values = [
+          [ { tag: :queue_length, name: 'apache' }, 100, [ 1024, 1524 ] ],
+          [ { tag: :queue_length, name: 'nginx'  }, 100, [ 1024 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'apache', mod: :php }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'nginx' }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'nginx', mod: :php }, 300, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 400, [ 512 ] ],
+        ]
+        expect(values).to match_array expected_values
+      end
+
+      it "filters values by two tags" do
+        values = subject.values(tag: :queue_length, name: 'apache').to_a
+        expected_values = [
+          [ { tag: :queue_length, name: 'apache' }, 100, [ 1024, 1524 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'apache', mod: :php }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 400, [ 512 ] ],
+        ]
+        expect(values).to match_array expected_values
+      end
+
+      it "filters values by rare tag" do
+        values = subject.values(mod: :php).to_a
+        expected_values = [
+          [ { tag: :queue_length, name: 'apache', mod: :php }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'nginx', mod: :php }, 300, [ 2048 ] ],
+        ]
+        expect(values).to match_array expected_values
+      end
+
+      it "filters values by regexp" do
+        values = subject.values(name: /^a.*/).to_a
+        expected_values = [
+          [ { tag: :queue_length, name: 'apache' }, 100, [ 1024, 1524 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'apache', mod: :php }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'apache' }, 400, [ 512 ] ],
+        ]
+        expect(values).to match_array expected_values
+      end
+
+      it "filters values by any regexp matching any value if key exists" do
+        values = subject.values(mod: /.*/).to_a
+        expected_values = [
+          [ { tag: :queue_length, name: 'apache', mod: :php }, 200, [ 2048 ] ],
+          [ { tag: :queue_length, name: 'nginx', mod: :php }, 300, [ 2048 ] ],
+        ]
+        expect(values).to match_array expected_values
+      end
+
     end
   end
 
