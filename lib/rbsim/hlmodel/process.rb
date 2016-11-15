@@ -8,7 +8,7 @@ module RBSim
       NoEventToServe = Class.new RuntimeError
       NotAssignedToNode = Class.new RuntimeError
 
-      attr_reader :name, :program
+      attr_reader :name, :program, :functions
       attr_accessor :node
 
       alias id name
@@ -20,6 +20,12 @@ module RBSim
         @event_queue = []
         @name = name
         @program = program
+        @functions = {}
+      end
+
+      # define a new reusable function for this program
+      def function(name, &block)
+        @functions[name] = block
       end
 
       # define event handler

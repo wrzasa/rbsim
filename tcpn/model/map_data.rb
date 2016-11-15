@@ -7,18 +7,20 @@ page 'map data' do
   data_for_network = place 'data for network'
 
   transition 'add dst node' do
-    input data_to_send, :data
-    input mapping, :mapping
+    input data_to_send
+    input mapping
 
-    output mapping, :mapping
+    output mapping do |binding, clock|
+      binding['mapping']
+    end
 
     class TCPNMapDataDestination
       ProcessNotMappedToNode = Class.new RuntimeError
 
       def initialize(binding)
-        @data = binding[:data][:val]
+        @data = binding['data to send'].value
         @dst = @data.dst
-        @mapping = binding[:mapping][:val]
+        @mapping = binding['mapping'].value
         @dst_node = @mapping[@dst]
         if @dst_node.nil?
           raise ProcessNotMappedToNode.new(@dst)

@@ -1,3 +1,24 @@
+ * Error handling:
+ ** when there is not route between two processes, packets sent
+    between them are silently ignored -- no error message
+
+ * Add to README.md description of preferred RBSim usage scenario describing
+   usage of RBSim::Experiment. Good usage example can be found in
+   nauka/mrzasa_dynosize/
+ * Maybe it would be useful to add optional `:preemption` parameter to `cpu`
+   statement in process model to enable user to define preemption levels.
+   Currently, it can be done with the following piece of code:
+
+             10.times do # can be preempted 10 times
+               cpu do |cpu|
+                 cpu_time / 10 / cpu.performance
+               end
+             end
+
+   Obviously, it slows down simulation and makes stats swell (every cpu event
+   is logged in stats), but sometimes may be required.  The preemption
+   parameter could itself do the above.
+
  * Data to self imlementation will spoil DATAQ WAIT stats -- no
    stats_start is called when network is passed over! Neet to add
    stats_start

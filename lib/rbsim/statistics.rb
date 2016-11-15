@@ -66,7 +66,7 @@ module RBSim
         events.each do |tag, times|
           next if filters[:tag] && tag != filters[:tag]
           times[:start].each_with_index do |start, i|
-            stop = times[:stop][i]
+            stop = times[:stop][i] rescue nil
             yield group_name, tag, start, stop
           end
         end
@@ -83,7 +83,6 @@ module RBSim
           yield group_name, tag, times_list
         end
       end
-      result
     end
 
     # FIXME: not tested!
@@ -104,7 +103,7 @@ module RBSim
       @saved_values
     end
 
-    def hash
+    def to_hash
       { counters: counters_summary, durations: durations_summary, values: values_summary }
     end
 

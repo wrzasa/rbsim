@@ -90,18 +90,18 @@ class Numeric
   #
 
   def bps
-    self
+    self.to_f.in_seconds
   end
 
   def Bps
-    self * 8
+    (self * 8).to_f.in_seconds
   end
 
   def in_bps
-    self
+    self.seconds
   end
 
   def in_Bps
-    self / 8
+    (self / 8).seconds
   end
 end

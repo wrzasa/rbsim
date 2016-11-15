@@ -9,11 +9,20 @@ statistics module is included.
 
 ## Usage
 
-Define your model using `RBSim.model` method.
+Define your model using `RBSim.model` method:
 
-    model = RBSim.model do
+    model = RBSim.model some_params do |params|
       # define your model here
+      # use params passed to the block
     end
+
+Or read the model from a file:
+
+    model = RBSim.read file_name, some_params_hash
+
++some_params_hash+ will be available in the model loaded from the file
+as +params+ variable.
+
 
 Run simulator:
 
@@ -31,13 +40,14 @@ To collect statistics you can also use
 
 ## Model
 
-Use `RBSim.model` to load model described by DSL. The model is a
-set of `process`es that are `put` on `nodes` and communicate over
-`net`s. Processes can be defined by `program`s or directly by
-blocks, `route`s define sequence of `net`s that should be
-traversed by data while communication between `node`s.
-Application logic implemented in `process`es is described in
-terms of events.
+Use `RBSim.model` to create model described by DSL in a block or
+`RBSim.read` to load a model from separate file.
+
+The model is a set of `process`es that are `put` on `nodes` and
+communicate over `net`s. Processes can be defined by `program`s or
+directly by blocks, `route`s define sequence of `net`s that should be
+traversed by data while communication between `node`s.  Application
+logic implemented in `process`es is described in terms of events.
 
 So to summarize, the most important parts of the model are:
 
@@ -128,6 +138,89 @@ without any delay.
 All statements that can be used to describe processe's behavior
 can also be used inside `on_event` statement. In fact the event
 handlers are preferred place to describe behavior of a process.
+
+#### Reusable functions
+
+The model allows to define functions that can be called from blocks
+defining event handlers. The functions can hol reusable code useful
+in one or more then handlers. Functions are defined using `function`
+statement like this:
+
+```ruby
+function :do_something do
+  # any statements allowed in
+  # event handler blocks can be
+  # put here
+end
+```
+
+Functions take parameters defined as usually for Ruby blocks:
+
+```ruby
+function :do_something_with_params do |param1, param2|
+  # any statements allowed in
+  # event handler blocks can be
+  # put here
+end
+```
+
+They return values like Ruby methods: either defined by `return`
+statement or the last stateent in the function block.
+
+##### Note on `def`
+
+You don't have to undrstand this. You don't even have to read this
+unless you insist on using Ruby's `def` defined methods instead of above
+described `function` statement.
+
+You can use Ruby `def` statement to define reusable code in the model,
+but it is **not recommended** unless you know exactly what you are
+doing! The `def` defined methods will be accessible from event handler
+blocks, but when called, they will be evalueated in the context in which
+they were defined, not in the context of the block calling the function.
+Consequently, any side effects caused by the function (like
+`register_event`, `log`, `stat` or anything the DSL gives you) will be
+reflected in the wrong context! Using `def` defined methods is safe only
+if they are strictly functional-like -- i.e. cause no side effects.
+
+#### Reading simulation clock
+
+I am not convinced that this is necessary, but for now it is available.
+Read and understand all this section if you think you need this.
+
+It is possible to check value of simulation clock at which given event
+is being handled. This clock has the same value inside the whole block
+handling the event and it equals to the time at which the event handling
+started (not the time when the event occured/was registered!). The clock
+can be read using:
+
+* `event_time` method that returns clock value
+
+Value returned by the `event_time` method does not change inside
+the event handling block even if you used `delay_for` or `cpu`
+statements in this block before the `event_time` method was
+called. But if you call `event_time inside the `cpu` block it
+will return the time at which this block is valueted i.e. time at
+which the CPU processing starts.
+
+Concluding:
+
+* the `event_time` method can be used inside each block inside program
+  definition,
+* inside the whole block it returns the same value -- time when the event
+  handling (i.e. block evaluation) started,
+* if called inside a block which is inside a block... it returns time at
+  which the most inner event handling (block evaluation) started.
+
+If you need to measure time between two occurrences in whatever you
+simulate, just define these occurences as two separate events in
+the model. Then you will be able to read the time at which
+handling of each of these events started.
+
+The truth is that you should not need this. Not ever. For instance if
+you need to model timeout waiting for a response, just register a
+timeout event when you send request and inside this event either mark
+request as timed out or do nothing it response was receivd before.
 
 #### Communication
 
@@ -286,10 +379,36 @@ process description.
 
 Nets used in communication are defined with `net` statement with
 name as parameter and a Hash definind other parameters of the
-segment, currently only bandwidth.
+segment. The most important parameter of each net segmetn is its
+bandwidth:
 
     net :lan, bw: 1024.bps
     net :subnet1, bw: 20480.bps
+
+Additionally it is possible to specify probability that a packet
+transmitted over this network will be dropped. Currently, each message
+sent between two processes is treated as a single packet, so this
+probability will apply to dropping the whole message -- the message will
+be sent, but nothing will be received. By default drop probability is
+set to 0 and all sent messages are delivered. 
+
+There are two ways to define probability drop probability. First,
+specify a `Float` number between 0 and 1. The packets will be dropped
+with this this probability and uniform distribution:
+
+    net :lan, bw: 1024.bps, drop: 0.01
+
+Second, it is possible to define a block of code. That block will be
+evaluated for each packet transmitted over this network and should
+return true if packet should be dropped and false otherwise. This block
+can use Ruby's `rand` function and any desired logic to produce require
+distribution of dropped packets. Fo example, to drop packets according
+to exponential distribution with lambda = 2:
+
+    net :lan, bw: 1024.bps, drop: ->{ -0.5*Math.log(rand) < 0.1 }
+
+Currently, it is not possible to make probability of dropping a packet
+dependent on dropping previous packets.
 
 #### Routes
 

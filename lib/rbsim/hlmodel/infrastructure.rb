@@ -6,7 +6,44 @@ module RBSim
       CPU = Struct.new :performance, :node
     end
 
-    Net = Struct.new :name, :bw, :delay
+    class Net
+      attr_reader :name, :bw, :delay, :drop
+
+      InvalidTypeOfDropParameter = Class.new RuntimeError
+      InvalidValueOfDropProbability = Class.new RuntimeError
+
+      def initialize(name, bw, delay = 0, drop = 0)
+        @name, @bw, @delay = name, bw, delay
+        @drop = drop
+        unless @drop.kind_of?(Proc) || @drop.kind_of?(Numeric)
+          raise InvalidTypeOfDropParameter.new(@drop.class)
+        end
+        if @drop.kind_of? Numeric
+          if @drop > 1 || @drop < 0
+            raise InvalidValueOfDropProbability.new(@drop)
+          end
+        end
+        @drop_next = drop_next?
+      end
+
+      def drop?
+        drop_this = @drop_next
+        @drop_next = drop_next?
+        drop_this
+      end
+
+      private
+
+      def drop_next?
+        return @drop.call if @drop.kind_of? Proc
+
+        # a little optimization ;-)
+        return true if @drop == 1
+        return false if @drop == 0
+
+        return rand <= @drop
+      end
+    end
 
     class Routes
       def initialize
@@ -48,21 +85,18 @@ module RBSim
       def initialize(*)
         super
         self.twoway = false unless self.twoway
+        @net_number = 0
       end
 
       def next_net
-        net_enum.next
+        raise StopIteration if @net_number >= via.length
+        net = via[@net_number]
+        @net_number += 1
+        net
       end
 
       def has_next_net?
-        net_enum.peek
-        true
-      rescue StopIteration
-        false
-      end
-
-      def net_enum
-        @net_enum ||= self.via.each
+        @net_number < via.length
       end
 
       def reverse!

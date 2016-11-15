@@ -12,10 +12,10 @@ describe "Numeric units" do
       its(:in_bytes)  { should eq subject / 8 }
 
       # network units
-      its(:bps)     { should eq subject }
-      its(:Bps)     { should eq subject * 8 }
-      its(:in_bps)  { should eq subject }
-      its(:in_Bps)  { should eq subject / 8 }
+      its(:bps)     { should eq subject.to_f / jiffies}
+      its(:Bps)     { should eq subject.to_f * 8 / jiffies }
+      its(:in_bps)  { should eq subject * jiffies }
+      its(:in_Bps)  { should eq subject / 8 * jiffies }
 
       # time units
       its(:seconds)         { should eq subject * jiffies }

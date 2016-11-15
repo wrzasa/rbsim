@@ -39,12 +39,33 @@ module RBSim
 
     def on_event(event, &block)
       # Cannot use self as eval context and
-      # must pass process because after clonning in TCPN it will be 
+      # must pass process because after clonning in TCPN it will be
       # completely different process object then it is now!
       handler = proc do |process, args|
-        Docile.dsl_eval(ProcessDSL.new(@model, @name, @program, process), args, &block).process
+        process.functions.each do |name, definition|
+          # This is actually a kind of hack... but there is
+          # no other way to hit exactly this class with define_method, since
+          # almost all other methods from this class are removed by docile.
+          # Therefore every attempt to do metaprogramming on objects of this class
+          # hit the objects to whom this class forwards method calls...
+          # But this way we actually can define required methods that will operate
+          # in the context of proper object representing a process and that will
+          # cause side effects (e.g. changes in event queue) in proper objects.
+          Docile::FallbackContextProxy.__send__ :define_method, name, definition
+        end
+        changed_process = Docile.dsl_eval(ProcessDSL.new(@model, @name, @program, process), args, &block).process
+        process.functions.each do |name, definition|
+          # remove newly defined methods not to mess things up in the Docile::FallbackContextProxy
+          # unless removed, these methods would be available for the other processes!
+          Docile::FallbackContextProxy.__send__ :undef_method
+        end
+        changed_process
       end
       @process.on_event(event, &handler)
+    end
+
+    def function(name, &block)
+      @process.function name, &block
     end
 
     # register_event name, delay: 100, args: { event related args }
@@ -103,6 +124,10 @@ module RBSim
       @process.enqueue_event(:new_process, constructor_args: args, constructor: constructor)
     end
 
+    # returns time at which the event occured
+    def event_time
+      @model.simulator.clock
+    end
 
     private
 

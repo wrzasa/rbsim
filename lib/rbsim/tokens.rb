@@ -1,4 +1,4 @@
-require 'hlmodel'
+require 'rbsim/hlmodel'
 
 module RBSim
   module Tokens
@@ -51,6 +51,11 @@ module RBSim
         return false unless o.kind_of? Data
         o.id == id
       end
+
+      def has_next_net?
+        @route.has_next_net?
+      end
+
     end
 
     class DataToken < Data
@@ -58,32 +63,26 @@ module RBSim
     end
 
     class DataQueue
-      attr_reader :last_involved_queue
-
-      def initialize
-        @queue = {}
+      attr_reader :process_name
+      def initialize(process_name)
+        @process_name = process_name
+        @queue = []
       end
 
       def put(o)
-        @last_involved_queue = queue_name(o)
-        @queue[queue_name(o)] ||= []
-        @queue[queue_name(o)] << o
+        @queue << o
       end
 
-      def get(qname)
-        return nil if @queue[qname].nil?
-        @last_involved_queue = qname
-        @queue[qname].shift
+      def get
+        @queue.shift
       end
 
-      def length_for(qname)
-        return 0 if @queue[qname].nil?
-        @queue[qname].length
+      def length
+        @queue.length
       end
 
-      private
-      def queue_name(o)
-        o.dst
+      def empty?
+        length == 0
       end
     end
 

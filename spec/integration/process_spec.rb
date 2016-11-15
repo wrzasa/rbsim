@@ -42,20 +42,17 @@ describe "Application process activity" do
     end
   end
 
-  let :data_queue do
-    RBSim::Tokens::DataQueueToken.new
-  end
-
+  let(:process_token) { hlmodel.processes[:worker] }
+  let(:data_queue) { RBSim::Tokens::DataQueueToken.new(process_token.name) }
 
   # FIXME: marking for TCPN should be set by DSL!
   let :tcpn do
-    process_token = hlmodel.processes[:worker]
     process_token.node = :node01
     cpu_token = ProcessActivitySpec::CPUToken.new(:node01, 10)
     mapping_token = { ts: 0, val: { process_token.name => process_token.node } }
 
 
-    tcpn = TCPN.read 'tcpn/model/application.rb'
+    tcpn = FastTCPN.read 'tcpn/model/application.rb'
 
     tcpn.add_marking_for 'CPU', cpu_token
     tcpn.add_marking_for 'process', process_token
@@ -64,17 +61,13 @@ describe "Application process activity" do
     tcpn
   end
 
-  let :simulator do
-    TCPN.sim tcpn
-  end
-
   it "produces correct transition firing sequence and final TCPN marking" do
     transitions = []
-    simulator.cb_for :transition, :after do |t, e|
+    tcpn.cb_for :transition, :after do |t, e|
       transitions << e.transition
     end
 
-    simulator.run
+    tcpn.sim
 
     expect(transitions).to eq ["event::delay_for",
                                "event::cpu",
@@ -106,14 +99,14 @@ describe "Application process activity" do
     data_queue.put RBSim::Tokens::DataToken.new(:node01, :process01, to: :child, size: 1234)
     received_data = false
     transitions = []
-    simulator.cb_for :transition, :before do |t, e|
+    tcpn.cb_for :transition, :before do |t, e|
       transitions << e.transition
-      if e.transition == 'event::serve_user' && e.binding[:process][:val].has_event?(:data_received)
+      if e.transition == 'event::serve_user' && e.binding['process'].value.has_event?(:data_received)
         received_data = true
       end
     end
 
-    simulator.run
+    tcpn.sim
 
     expect(transitions).to include("event::data_received")
     expect(received_data).to be true

@@ -3,8 +3,12 @@ module RBSim
   class Simulator
     attr_reader :clock
 
-    def initialize(&block)
+    # Create new simulator
+    # +block+ defines new model
+    # +params+ will be passed as block parameter to the model
+    def initialize(params = {}, &block)
       @block = block
+      @params = params
       @logger = default_logger
       @stats_collector = Statistics.new
       @resource_stats_collector = Statistics.new
@@ -15,17 +19,22 @@ module RBSim
       simulator.run
     end
 
+    def stop
+      simulator.stop
+    end
+
     def hlmodel
       if @hlmodel.nil?
         @hlmodel = RBSim::HLModel::Model.new
-        Docile.dsl_eval(RBSim::DSL.new(@hlmodel), &@block)
+        @hlmodel.simulator = self
+        Docile.dsl_eval(RBSim::DSL.new(@hlmodel), @params, &@block)
       end
       @hlmodel
     end
 
     def tcpn
       if @tcpn.nil?
-        @tcpn = TCPN.read 'tcpn/model.rb'
+        @tcpn = FastTCPN.read File.expand_path '../../../tcpn/model.rb', __FILE__
         hlmodel.nets.each do |net|
           @tcpn.add_marking_for 'net', net
         end
@@ -40,13 +49,13 @@ module RBSim
         hlmodel.processes.each do |name, process|
           process.node = hlmodel.mapping[name]
           @tcpn.add_marking_for 'process', process
+          @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new(process.name)
         end
 
 
         @tcpn.add_marking_for 'routes', hlmodel.routes
         @tcpn.add_marking_for 'mapping', hlmodel.mapping
 
-        @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new
 
       end
 
@@ -55,7 +64,7 @@ module RBSim
 
     def simulator
       if @simulator.nil?
-        @simulator = TCPN.sim(tcpn)
+        @simulator = tcpn
 
         set_logger_callbacks
         set_stats_collector_callbacks
@@ -70,7 +79,7 @@ module RBSim
     end
 
     def stats_summary
-      { application: @stats_collector.hash, resources: @resource_stats_collector.hash }
+      { application: @stats_collector.to_hash, resources: @resource_stats_collector.to_hash }
     end
 
     def stats_data
@@ -114,7 +123,7 @@ module RBSim
     def set_logger_callbacks
       @simulator.cb_for :transition, :after do |t, e|
         if e.transition == 'event::log'
-          message = e.binding[:process][:val].serve_system_event(:log)[:args]
+          message = e.binding['process'].value.serve_system_event(:log)[:args]
           @logger.call e.clock, message
         end
       end
@@ -123,28 +132,34 @@ module RBSim
     def set_stats_collector_callbacks
       @simulator.cb_for :transition, :after do |t, e|
         if e.transition == "event::stats"
-          process = e.binding[:process][:val]
+          process = e.binding['process'].value
           event = process.first_event
           params = process.serve_system_event(event)[:args]
           @stats_collector.event event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
         elsif e.transition == "event::cpu"
-          node = e.binding[:cpu][:val].node
+          node = e.binding['CPU'].value.node
           @resource_stats_collector.event :start, { group_name: 'CPU', tag: node }, e.clock
         elsif e.transition == "event::cpu_finished"
-          node = e.binding[:cpu_and_process][:val][:cpu].node
+          node = e.binding['working CPU'].value[:cpu].node
           @resource_stats_collector.event :stop, { group_name: 'CPU', tag: node }, e.clock
         elsif e.transition == "transmitted"
-          process = e.binding[:data][:val].dst
+          process = e.binding['data after net'].value.dst
           @resource_stats_collector.event :start, { group_name: 'DATAQ WAIT', tag: process }, e.clock
         elsif e.transition == "event::data_received"
-          process = e.binding[:process][:val].name
+          process = e.binding['process'].value.name
           @resource_stats_collector.event :stop, { group_name: 'DATAQ WAIT', tag: process }, e.clock
+        elsif e.transition == "net"
+          net_name = e.binding['net'].value.name
+          dropped = e.binding['net'].value.drop?
+          if dropped
+            @resource_stats_collector.event :stats, { group_name: 'NET DROP', tag: net_name }, e.clock
+          end
         end
       end
 
       @simulator.cb_for :place, :remove do |t, e|
         if e.place == 'net'
-          net = e.tokens.first[:val]
+          net = e.tokens.first.value
           @resource_stats_collector.event :start, { group_name: 'NET', tag: net.name }, e.clock
         end
       end
@@ -155,10 +170,10 @@ module RBSim
           @resource_stats_collector.event :stop, { group_name: 'NET', tag: net.name }, ts
         elsif e.place == 'data to receive'
           queue = e.tokens.first[:val]
-          process = queue.last_involved_queue
-          @resource_stats_collector.event :save, 
-            { value: queue.length_for(process), group_name: 'DATAQ LEN', tag: process }, 
-            e.clock
+          process = queue.process_name
+          @resource_stats_collector.event :save,
+            { value: queue.length, group_name: 'DATAQ LEN', tag: process },
+            e.tcpn.clock
         end
       end
     end

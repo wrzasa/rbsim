@@ -13,7 +13,7 @@ describe "TCPN model" do
     end
 
     let :tcpn do
-      tcpn = TCPN.read 'tcpn/model/map_data.rb'
+      tcpn = FastTCPN.read 'tcpn/model/map_data.rb'
 
       tcpn.add_marking_for 'data to send', data_token
       tcpn.add_marking_for 'mapping', mapping_token
@@ -21,7 +21,7 @@ describe "TCPN model" do
     end
 
     it "maps data to correct node and does not touch mapping" do
-      TCPN.sim(tcpn).run
+      tcpn.sim
       data = tcpn.marking_for('data for network').first[:val]
       expect(data.dst_node).to eq(:node10)
 

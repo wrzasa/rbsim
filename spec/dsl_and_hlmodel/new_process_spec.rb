@@ -1,4 +1,5 @@
- 'spec_helper'
+ require 'spec_helper'
+ require 'pry'
 
 # Test behavior of HLModel::Process created with
 # DSL new_process statement
@@ -121,4 +122,114 @@ describe "HLModel::Process created with DSL#new_process" do
 
   end
 
+  describe "#event_time" do
+    let :model do
+      RBSim.dsl do
+        new_process :worker do
+
+          on_event :start do
+            start_time = event_time
+            register_event :next_one, delay: 100.seconds
+          end
+
+          on_event :next_one do
+            next_time = event_time
+          end
+
+          register_event :start
+        end
+      end
+    end
+
+    it "returns time reported by simulator" do
+      simulator = double("simulator")
+      expect(simulator).to receive(:clock).twice
+      model.simulator = simulator
+
+      e = process.serve_system_event :register_event
+      process.enqueue_event e[:args][:event], e[:args][:event_args]
+
+      process.serve_user_event # :start
+
+      process.serve_system_event :register_event
+      process.enqueue_event e[:args][:event], e[:args][:event_args]
+
+      process.serve_user_event # :next_one
+    end
+
+  end
+
+  describe "#function statement" do
+    describe "defines function with access to variable values in correct context" do
+      let :model do
+        RBSim.dsl do
+          new_process :worker do
+            @variable = :initial_value
+
+            function :do_something do
+              log @variable
+            end
+
+            on_event :start do
+              do_something
+            end
+
+            register_event :start
+          end
+        end
+      end
+
+      it "function reads correct values from variables" do
+        e = process.serve_system_event :register_event
+        process.enqueue_event e[:args][:event], e[:args][:event_args]
+
+        # :start
+        process.serve_user_event
+
+        # value of variable logged by the function
+        e = process.serve_system_event :log
+
+        expect(e[:name]).to eq :log
+        expect(e[:args]).to eq :initial_value
+
+      end
+    end
+
+    describe "defines function with access to correct 'self'" do
+      let :model do
+        RBSim.dsl do
+          new_process :worker do
+
+            function :do_something do
+              self
+            end
+
+            on_event :start do
+              log self
+              log do_something
+            end
+
+            register_event :start
+          end
+        end
+      end
+
+      it "'self' in function equals to 'self' in calling block" do
+        e = process.serve_system_event :register_event
+        process.enqueue_event e[:args][:event], e[:args][:event_args]
+
+        # :start
+        process.serve_user_event
+
+        # values of variables 'self' 
+        # logged by the function...
+        log_function = process.serve_system_event :log
+        # ...and logged by the action handler block
+        log_block = process.serve_system_event :log
+
+        expect(log_function[:args].object_id).to eq log_block[:args].object_id
+      end
+    end
+
+  end
 end
