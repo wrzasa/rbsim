@@ -89,25 +89,6 @@ module RBSim
       end
     end
 
-    def stats_print
-      puts
-      puts "="*80
-      puts "STATISTICS:\n\n"
-      puts "Time: %.6fs" % @clock.to_f.in_seconds
-
-      puts
-      puts "APPLICATION"
-      puts "-"*80
-      @stats_collector.print
-
-      puts
-      puts "RESOURCES"
-      puts "-"*80
-      @resource_stats_collector.print
-      puts "="*80
-
-    end
-
     private
 
     def default_logger
@@ -134,21 +115,21 @@ module RBSim
           @stats_collector.event event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
         elsif e.transition == "event::cpu"
           node = e.binding['CPU'].value.node
-          @resource_stats_collector.event :start, { group_name: 'CPU', tag: node }, e.clock
+          @resource_stats_collector.event :start, { resource: 'CPU', node: node }, e.clock
         elsif e.transition == "event::cpu_finished"
           node = e.binding['working CPU'].value[:cpu].node
-          @resource_stats_collector.event :stop, { group_name: 'CPU', tag: node }, e.clock
+          @resource_stats_collector.event :stop, { resource: 'CPU', node: node }, e.clock
         elsif e.transition == "transmitted"
           process = e.binding['data after net'].value.dst
-          @resource_stats_collector.event :start, { group_name: 'DATAQ WAIT', tag: process }, e.clock
+          @resource_stats_collector.event :start, { resource: 'DATAQ WAIT', process: process }, e.clock
         elsif e.transition == "event::data_received"
           process = e.binding['process'].value.name
-          @resource_stats_collector.event :stop, { group_name: 'DATAQ WAIT', tag: process }, e.clock
+          @resource_stats_collector.event :stop, { resource: 'DATAQ WAIT', process: process }, e.clock
         elsif e.transition == "net"
           net_name = e.binding['net'].value.name
           dropped = e.binding['net'].value.drop?
           if dropped
-            @resource_stats_collector.event :stats, { group_name: 'NET DROP', tag: net_name }, e.clock
+            @resource_stats_collector.event :stats, { event: 'NET DROP', net: net_name }, e.clock
           end
         end
       end
@@ -156,19 +137,19 @@ module RBSim
       @simulator.cb_for :place, :remove do |t, e|
         if e.place == 'net'
           net = e.tokens.first.value
-          @resource_stats_collector.event :start, { group_name: 'NET', tag: net.name }, e.clock
+          @resource_stats_collector.event :start, { resource: 'NET', name: net.name }, e.clock
         end
       end
       @simulator.cb_for :place, :add do |t, e|
         if e.place == 'net'
           net = e.tokens.first[:val]
           ts = e.tokens.first[:ts]
-          @resource_stats_collector.event :stop, { group_name: 'NET', tag: net.name }, ts
+          @resource_stats_collector.event :stop, { resource: 'NET', name: net.name }, ts
         elsif e.place == 'data to receive'
           queue = e.tokens.first[:val]
           process = queue.process_name
           @resource_stats_collector.event :save,
-            { value: queue.length, group_name: 'DATAQ LEN', tag: process },
+            { value: queue.length, tags: { resource: 'DATAQ LEN', process: process } },
             e.tcpn.clock
         end
       end

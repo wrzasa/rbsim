@@ -66,7 +66,7 @@ describe RBSim::Simulator do
 
           allow(RBSim::Statistics).to receive(:dropped_stats)
           allow_any_instance_of(RBSim::Statistics).to receive(:event) do |*a|
-            if a[1..-2] == [:stats, {tag: :net01, group_name: 'NET DROP'}]
+            if a[1..-2] == [:stats, {net: :net01, event: 'NET DROP'}]
               RBSim::Statistics.dropped_stats
             end
           end
