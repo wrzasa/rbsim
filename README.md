@@ -28,15 +28,9 @@ Run simulator:
 
     model.run
 
-Collect statistics:
 
-    model.stats_print
-
-To collect statistics you can also use
-
- - `model.stats_summary` to get Hash of summary
- - `model.stats_data` to get Hash with objects holding complete
-   data collected from simulation
+To collect statistics you can also use to get Hash with objects holding complete
+data collected from simulation
 
 ## Model
 
@@ -275,7 +269,7 @@ responses can look like this:
 
       on_event :data_received do |data|
         log "Got data #{data} in process #{process.name}"
-        stats :request_served, process.name
+        stats event: :request_served, where: process.name
       end
 
       register_event :send
@@ -288,27 +282,22 @@ send a message to logs (by default to STDOUT).
 
 The `stats` statements can be used to collect running statistics.
 
- * `stats_start tag [, group_name]` marks start of an activity
- * `stats_stop tag [, group_name]` marks start of an activity
- * `stats tag [, group_name]` marks that a counter marked by `tag`
-   should be increased
- * `stats_save value, tag [, group_name] saves given value and current
-   time
+ * `stats_start tags` marks start of an activity described by `tags`
+ * `stats_stop tags` marks start of an activity described by `tags`
+ * `stats tags` marks that a counter marked by `tags` should be
+   incremented
+ * `stats_save value, tags` saves given value and current time
 
-The optional `group_name` parameter allows one to group
-statistics by additional name, e.g. name of specific process
-(apache1, apache2, apache2, ...) in which they were collected.
+The `tags` parameter allows one to group
+statistics by require criteria, e.g. name of specific process
+(apache1, apache2, apache2, ...) in which they were collected. This was
+expected to be a Hash, but can be anything.
 
 Simulator automatically collects statistics for resource usage
 (subsequent CPUs and net segments).
 
 The statistics collected by `stats` statements can be obtained
-after simulation with one of the following methods mentioned at
-the beginning:
-
-    model.stats_print
-    model.stats_summary
-    model.stats_data
+after simulation using `model.stats` method.
 
 ##### Variabeles, Conditions, Loops
 
@@ -505,7 +494,7 @@ Every measurement unit has its equivalent `in_*` method.
 
 Below thete is a simble but complete example model of two
 applications: `wget` sending subsequent requests to specified
-process and `apache` responding to received requests. 
+process and `apache` responding to received requests.
 
 The `wget` program accepts parameters describing its target
 (destination of requests) -- `opts[:target]` and count of
@@ -547,7 +536,7 @@ The created model is run and its statistics are printed.
 
         on_event :data_received do |data|
           log "Got data #{data} in process #{process.name}"
-          stats :request_served, process.name
+          stats event: :request_served, client: process.name
         end
 
         register_event :send
@@ -555,12 +544,12 @@ The created model is run and its statistics are printed.
 
       program :apache do
         on_event :data_received do |data|
-          stats_start :apache, process.name
+          stats_start server: :apache, name: process.name
           cpu do |cpu|
             (100 * data.size.in_bytes / cpu.performance).miliseconds
           end
           send_data to: data.src, size: data.size * 10, type: :response, content: data.content
-          stats_stop :apache, process.name
+          stats_stop server: :apache, name: process.name
         end
       end
 
@@ -589,45 +578,11 @@ The created model is run and its statistics are printed.
 
     model.run
 
-    model.stats_print
+You can use `model.stats` to obtain simulation statistics.
 
-This model will print the following statistics for application
-and its resources:
+## Using `Experiment` class
 
-
-
-    ================================================================================
-    STATISTICS:
-
-    Time: 1.461264s
-
-    APPLICATION
-    --------------------------------------------------------------------------------
-    Counters
-    ------------------------------
-      client1
-        request_served	: 10
-      client2
-        request_served	: 10
-    Durations
-    ------------------------------
-      server
-        apache	:  1.460s (99.9135%)
-
-    RESOURCES
-    --------------------------------------------------------------------------------
-    Counters
-    ------------------------------
-    Durations
-    ------------------------------
-      CPU
-        desktop	:  0.020s ( 1.3687%)
-        gandalf	:  1.460s (99.9135%)
-      NET
-        net01	:  0.002s ( 0.1204%)
-        net02	:  0.004s ( 0.2409%)
-    ================================================================================
-
+TODO
 
 ## Custom Logger 
 
