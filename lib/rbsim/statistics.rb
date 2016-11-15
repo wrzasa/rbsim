@@ -30,17 +30,6 @@ module RBSim
       end
     end
 
-    def counters_summary
-      result = {}
-      @counter_events.each do |group_name, events|
-        events.each do |tag, time_list|
-          result[group_name] ||= {}
-          result[group_name][tag] = time_list.count
-        end
-      end
-      result
-    end
-
     def durations_summary
       result = {}
       @duration_events.each do |group_name, events|
@@ -72,7 +61,6 @@ module RBSim
       end
     end
 
-    # FIXME: not tested!
     def counters(filters = {})
       return enum_for(:counters, filters) unless block_given?
       data = @counter_events.select do |tags, event_list|
