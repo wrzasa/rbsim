@@ -17,7 +17,7 @@ describe "HLModel::Process created with DSL#new_process" do
         end
         delay_for 100
         stats_stop :work, 'worker1'
-        stats :doing_something, 'worker1'
+        stats tag: :doing_something, group_name: 'worker1'
         cpu do |cpu|
           100/cpu.performance
         end

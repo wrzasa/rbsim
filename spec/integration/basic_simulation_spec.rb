@@ -19,7 +19,7 @@ describe "Basic simulation example" do
 
         on_event :data_received do |data|
           #log "Got data #{data} in process #{process.name}"
-          stats :request_served, process.name
+          stats tag: :request_served, group_name: process.name
         end
 
         register_event :send
@@ -63,7 +63,7 @@ describe "Basic simulation example" do
 
   it "serves all requests" do
     expect{ model.run }.to output("0.000: apache starting\n").to_stdout
-    expect(model.stats_summary[:application][:counters][:client1][:request_served]).to eq 10
-    expect(model.stats_summary[:application][:counters][:client2][:request_served]).to eq 10
+    expect(model.stats[:application].counters(group_name: :client1, tag: :request_served).to_h.values.flatten.size).to eq 10
+    expect(model.stats[:application].counters(group_name: :client2, tag: :request_served).to_h.values.flatten.size).to eq 10
   end
 end

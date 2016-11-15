@@ -14,9 +14,8 @@ module RBSim
       tag = params[:tag]
       group_name = params[:group_name] || ''
       if type == :stats
-        @counter_events[group_name] ||= {}
-        @counter_events[group_name][tag] ||= []
-        @counter_events[group_name][tag] << time
+        @counter_events[params] ||= []
+        @counter_events[params] << time
       elsif type == :save
         @saved_values[group_name] ||= {}
         @saved_values[group_name][tag] ||= {}
@@ -76,12 +75,18 @@ module RBSim
     # FIXME: not tested!
     def counters(filters = {})
       return enum_for(:counters, filters) unless block_given?
-      @counter_events.each do |group_name, events|
-        next if filters[:group] && group_name != filters[:group]
-        events.each do |tag, times_list|
-          next if filters[:tag] && tag != filters[:tag]
-          yield group_name, tag, times_list
+      data = @counter_events.select do |tags, event_list|
+        filters.reduce(true) do |acc, filter_item|
+          filter_key, filter_value = filter_item;
+          if filter_value.is_a? Regexp
+            acc && tags.has_key?(filter_key) && tags[filter_key].to_s =~ filter_value
+          else
+            acc && tags[filter_key] == filter_value
+          end
         end
+      end
+      data.each do |tags, events|
+        yield tags, events
       end
     end
 

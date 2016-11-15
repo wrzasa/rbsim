@@ -9,9 +9,9 @@ describe RBSim::Simulator do
           delay_for 200
           stats_stop :work, 'worker'
           delay_for 100
-          stats :wait, 'worker'
+          stats tag: :wait, group_name: 'worker'
           delay_for 100
-          stats :wait, 'worker'
+          stats tag: :wait, group_name: 'worker'
           stats_save 31415, :queue_length, 'worker'
         end
 

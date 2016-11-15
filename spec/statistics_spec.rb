@@ -1,14 +1,6 @@
 require 'spec_helper'
 
 describe RBSim::Statistics do
-  it "has correct event counters" do
-    subject.event :stats, { tag: :hit, group_name: 'db' }, 100
-    subject.event :stats, { tag: :hit, group_name: 'db' }, 300
-    subject.event :stats, { tag: :hit, group_name: 'db' }, 500
-    subject.event :stats, { tag: :hit, group_name: 'db' }, 900
-    subject.clock = 1000
-    expect(subject.counters_summary['db'][:hit]).to eq(4)
-  end
 
   describe "correctly computes event duration" do
     it "for correct data" do
@@ -66,7 +58,7 @@ describe RBSim::Statistics do
       subject { stats }
 
       it "returns all counters" do
-        counters = subject.counters
+        counters = subject.counters.to_h
         expected_counters = {
           { score: :hit, target: 'small' } => [ 100, 500 ],
           { score: :hit, target: 'big' } => [ 300, 900 ],
@@ -74,13 +66,13 @@ describe RBSim::Statistics do
           { score: :hit, target: 'big', value: 230 } => [ 900 ],
           { score: :miss, target: 'small' } => [ 500, 500 ],
           { score: :hit3, target: 'big' } => [ 900 ],
-          { score: :hit5, target: 'hudge' } => [ 950 ],
+          { score: :hit5, target: 'huge' } => [ 950 ],
         }
         expect(counters).to eq expected_counters
       end
 
       it "filters counters by single tag" do
-        counters = subject.counters(score: :hit)
+        counters = subject.counters(score: :hit).to_h
         expected_counters = {
           { score: :hit, target: 'small' } => [ 100, 500 ],
           { score: :hit, target: 'big' } => [ 300, 900 ],
@@ -91,7 +83,7 @@ describe RBSim::Statistics do
       end
 
       it "filters counters by two tags" do
-        counters = subject.counters(score: :hit, target: 'big')
+        counters = subject.counters(score: :hit, target: 'big').to_h
         expected_counters = {
           { score: :hit, target: 'big' } => [ 300, 900 ],
           { score: :hit, target: 'big', value: 23 } => [ 900 ],
@@ -101,7 +93,7 @@ describe RBSim::Statistics do
       end
 
       it "filters counters by rare tag" do
-        counters = subject.counters(value: 23)
+        counters = subject.counters(value: 23).to_h
         expected_counters = {
           { score: :hit, target: 'big', value: 23 } => [ 900 ],
         }
@@ -109,20 +101,20 @@ describe RBSim::Statistics do
       end
 
       it "filters counters by regexp" do
-        counters = subject.counters(score: /hit./)
+        counters = subject.counters(score: /hit.?/).to_h
         expected_counters = {
           { score: :hit, target: 'small' } => [ 100, 500 ],
           { score: :hit, target: 'big' } => [ 300, 900 ],
           { score: :hit, target: 'big', value: 23 } => [ 900 ],
           { score: :hit, target: 'big', value: 230 } => [ 900 ],
           { score: :hit3, target: 'big' } => [ 900 ],
-          { score: :hit5, target: 'hudge' } => [ 950 ],
+          { score: :hit5, target: 'huge' } => [ 950 ],
         }
         expect(counters).to eq expected_counters
       end
 
-      it "filters counters by empty regexp" do
-        counters = subject.counters(value: //)
+      it "filters counters by any regexp matching any value if key exists" do
+        counters = subject.counters(value: /.*/).to_h
         expected_counters = {
           { score: :hit, target: 'big', value: 23 } => [ 900 ],
           { score: :hit, target: 'big', value: 230 } => [ 900 ],
