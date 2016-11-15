@@ -94,13 +94,13 @@ module RBSim
       @process.enqueue_event(:log, message)
     end
 
-    def stats_start(tag, group_name = nil)
-      params = stats_event_params(tag, group_name)
+    def stats_start(tags)
+      params = tags
       @process.enqueue_event(:stats_start, params)
     end
 
-    def stats_stop(tag, group_name = nil)
-      params = stats_event_params(tag, group_name)
+    def stats_stop(tags)
+      params = tags
       @process.enqueue_event(:stats_stop, params)
     end
 

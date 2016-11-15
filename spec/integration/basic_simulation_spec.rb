@@ -28,12 +28,12 @@ describe "Basic simulation example" do
       program :apache do
         log "apache starting"
         on_event :data_received do |data|
-          stats_start :apache, process.name
+          stats_start tag: :apache, group_name: process.name
           cpu do |cpu|
             100*data.size*rand / cpu.performance
           end
           send_data to: data.src, size: data.size * 10, type: :response, content: data.content
-          stats_stop :apache, process.name
+          stats_stop tag: :apache, group_name: process.name
         end
       end
 

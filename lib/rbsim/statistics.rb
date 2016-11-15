@@ -23,56 +23,26 @@ module RBSim
         @saved_values[group_name][tag][time] << params[:value]
       else
         raise UnknownStatsType.new(type) unless [:start, :stop].include? type
-        @duration_events[group_name] ||= {}
-        @duration_events[group_name][tag] ||= {}
-        @duration_events[group_name][tag][type] ||= []
-        @duration_events[group_name][tag][type] << time
+        @duration_events[params] ||= {}
+        @duration_events[params][type] ||= []
+        @duration_events[params][type] << time
       end
     end
 
-    def durations_summary
-      result = {}
-      @duration_events.each do |group_name, events|
-        events.each do |tag, times|
-          duration = 0
-          times[:start].each_with_index do |start, i|
-            stop = times[:stop][i]
-            duration += stop - start unless stop.nil?
-          end
-          result[group_name] ||= {}
-          result[group_name][tag] = duration
-        end
-      end
-      result
-    end
-
-    # FIXME: not tested!
     def durations(filters = {})
       return enum_for(:durations, filters) unless block_given?
-      @duration_events.each do |group_name, events|
-        next if filters[:group] && group_name != filters[:group]
-        events.each do |tag, times|
-          next if filters[:tag] && tag != filters[:tag]
-          times[:start].each_with_index do |start, i|
-            stop = times[:stop][i] rescue nil
-            yield group_name, tag, start, stop
-          end
+      data = @duration_events.select &events_filter(filters)
+      data.each do |tags, times|
+        starts_and_stops = times[:start].zip times[:stop]
+        starts_and_stops.each do |start, stop|
+          yield tags, start, stop
         end
       end
     end
 
     def counters(filters = {})
       return enum_for(:counters, filters) unless block_given?
-      data = @counter_events.select do |tags, event_list|
-        filters.reduce(true) do |acc, filter_item|
-          filter_key, filter_value = filter_item;
-          if filter_value.is_a? Regexp
-            acc && tags.has_key?(filter_key) && tags[filter_key].to_s =~ filter_value
-          else
-            acc && tags[filter_key] == filter_value
-          end
-        end
-      end
+      data = @counter_events.select &events_filter(filters)
       data.each do |tags, events|
         yield tags, events
       end
@@ -127,6 +97,19 @@ module RBSim
         stats.keys.sort{ |a,b| a.to_s <=> b.to_s}.each do |tag|
           value = stats[tag]
           puts "\t\t#{tag}\t: #{yield value}"
+        end
+      end
+    end
+
+    def events_filter(filters)
+      lambda do |tags, event_list|
+        filters.reduce(true) do |acc, filter_item|
+          filter_key, filter_value = filter_item;
+          if filter_value.is_a? Regexp
+            acc && tags.has_key?(filter_key) && tags[filter_key].to_s =~ filter_value
+          else
+            acc && tags[filter_key] == filter_value
+          end
         end
       end
     end

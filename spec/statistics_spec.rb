@@ -2,34 +2,6 @@ require 'spec_helper'
 
 describe RBSim::Statistics do
 
-  describe "correctly computes event duration" do
-    it "for correct data" do
-      subject.event :start, { tag: :working, group_name: 'apache' }, 100
-      subject.event :stop, { tag: :working, group_name: 'apache' }, 200
-      subject.event :start, { tag: :working, group_name: 'apache' }, 300
-      subject.event :stop, { tag: :working, group_name: 'apache' }, 400
-      subject.event :start, { tag: :working, group_name: 'apache' }, 600
-      subject.event :stop, { tag: :working, group_name: 'apache' }, 700
-      subject.clock = 1000
-      expect(subject.durations_summary['apache'][:working]).to eq(300)
-    end
-
-    # compute from first :start fo first :stop,
-    # from second :start to second :stop and so on...
-    it "for incorrect data" do
-        subject.event :start, { tag: :working, group_name: 'apache' }, 100
-        subject.event :start, { tag: :working, group_name: 'apache' }, 150
-        subject.event :stop, { tag: :working, group_name: 'apache' }, 200
-        subject.event :stop, { tag: :working, group_name: 'apache' }, 250
-        subject.event :start, { tag: :working, group_name: 'apache' }, 300
-        subject.event :stop, { tag: :working, group_name: 'apache' }, 400
-        subject.event :start, { tag: :working, group_name: 'apache' }, 600
-        subject.event :stop, { tag: :working, group_name: 'apache' }, 700
-        subject.clock = 1000
-        expect(subject.durations_summary['apache'][:working]).to eq(400)
-    end
-  end
-
   it "saves reported values" do
     subject.event :save, { value: 1024, tag: :queue_length, group_name: 'apache' }, 100
     subject.event :save, { value: 1524, tag: :queue_length, group_name: 'apache' }, 100
@@ -126,15 +98,115 @@ describe RBSim::Statistics do
 
     describe "correctly computes event duration" do
       context "for correct data" do
-        it "returns all durations"
-        it "filters durations by single tag"
-        it "filters durations by two tags"
-        it "filters durations by rare tag"
-        it "filters durations by regexp"
-        it "filters durations by empty regexp"
+        let :stats do
+          stats = RBSim::Statistics.new
+          stats.event :start, { tag: :working, name: 'apache' }, 100
+          stats.event :start, { tag: :working, name: 'nginx'  }, 100
+
+          stats.event :start, { tag: :request, name: 'apache' }, 200
+          stats.event :stop,  { tag: :request, name: 'apache' }, 300
+          stats.event :start, { tag: :request, name: 'nginx'  }, 350
+          stats.event :start, { tag: :request, name: 'apache' }, 350
+          stats.event :stop,  { tag: :request, name: 'nginx'  }, 400
+          stats.event :stop,  { tag: :request, name: 'apache' }, 420
+          stats.event :start, { tag: :compute, name: 'apache', mod: :php }, 500
+          stats.event :stop,  { tag: :compute, name: 'apache', mod: :php }, 600
+
+          stats.event :stop,  { tag: :working, name: 'nginx'  }, 850
+          stats.event :stop,  { tag: :working, name: 'apache' }, 900
+          stats.clock = 1000
+
+          stats
+        end
+
+        subject { stats }
+
+        it "returns all durations" do
+          durations = subject.durations.to_a
+          expected_durations = [
+            [ { tag: :working, name: 'apache' }, 100, 900 ],
+            [ { tag: :working, name: 'nginx'  }, 100, 850 ],
+            [ { tag: :request, name: 'apache' }, 200, 300 ],
+            [ { tag: :request, name: 'apache' }, 350, 420 ],
+            [ { tag: :compute, name: 'apache', mod: :php }, 500, 600 ],
+            [ { tag: :request, name: 'nginx'  }, 350, 400 ],
+          ]
+          expect(durations).to match_array expected_durations
+        end
+
+        it "filters durations by single tag" do
+          durations = subject.durations(tag: :working).to_a
+          expected_durations = [
+            [ { tag: :working, name: 'apache' }, 100, 900 ],
+            [ { tag: :working, name: 'nginx'  }, 100, 850 ],
+          ]
+          expect(durations).to match_array expected_durations
+        end
+
+        it "filters durations by two tags" do
+          durations = subject.durations(tag: :request, name: 'apache').to_a
+          expected_durations = [
+            [ { tag: :request, name: 'apache' }, 200, 300 ],
+            [ { tag: :request, name: 'apache' }, 350, 420 ],
+          ]
+          expect(durations).to match_array expected_durations
+        end
+
+        it "filters durations by rare tag" do
+          durations = subject.durations(tag: :compute).to_a
+          expected_durations = [
+            [ { tag: :compute, name: 'apache', mod: :php }, 500, 600 ],
+          ]
+          expect(durations).to match_array expected_durations
+        end
+
+        it "filters durations by regexp" do
+          durations = subject.durations(tag: /r/).to_a
+          expected_durations = [
+            [ { tag: :working, name: 'apache' }, 100, 900 ],
+            [ { tag: :working, name: 'nginx'  }, 100, 850 ],
+            [ { tag: :request, name: 'apache' }, 200, 300 ],
+            [ { tag: :request, name: 'apache' }, 350, 420 ],
+            [ { tag: :request, name: 'nginx'  }, 350, 400 ],
+          ]
+          expect(durations).to match_array expected_durations
+        end
+
+        it "filters durations by any regexp matching any value if key exists" do
+          durations = subject.durations(mod: /.*/).to_a
+          expected_durations = [
+            [ { tag: :compute, name: 'apache', mod: :php }, 500, 600 ],
+          ]
+          expect(durations).to match_array expected_durations
+        end
+
       end
       context "for incorrect data" do
-        it "correctly yields first start with first stop and so on"
+        let :stats do
+          stats = RBSim::Statistics.new
+          stats.event :start, { tag: :request, name: 'apache' }, 200
+          stats.event :start, { tag: :request, name: 'apache' }, 300
+          stats.event :start, { tag: :request, name: 'apache' }, 400
+          stats.event :stop,  { tag: :request, name: 'apache' }, 450
+          stats.event :stop,  { tag: :request, name: 'apache' }, 550
+          stats.event :stop,  { tag: :request, name: 'apache' }, 650
+
+          stats.clock = 1000
+
+          stats
+        end
+
+        subject { stats }
+
+        it "correctly yields first start with first stop and so on" do
+          durations = subject.durations.to_a
+          expected_durations = [
+            [ { tag: :request, name: 'apache' }, 200, 450 ],
+            [ { tag: :request, name: 'apache' }, 300, 550 ],
+            [ { tag: :request, name: 'apache' }, 400, 650 ],
+          ]
+          expect(durations).to match_array expected_durations
+        end
       end
     end
 

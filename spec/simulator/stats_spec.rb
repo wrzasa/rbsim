@@ -5,9 +5,9 @@ describe RBSim::Simulator do
     let :model do
       RBSim.model do
         new_process :worker do
-          stats_start :work, 'worker'
+          stats_start tag: :work, group_name: 'worker'
           delay_for 200
-          stats_stop :work, 'worker'
+          stats_stop tag: :work, group_name: 'worker'
           delay_for 100
           stats tag: :wait, group_name: 'worker'
           delay_for 100
