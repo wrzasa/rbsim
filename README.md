@@ -580,6 +580,14 @@ The created model is run and its statistics are printed.
 
 You can use `model.stats` to obtain simulation statistics.
 
+## Using resource tags in statistics
+
+* net
+* cpu
+* process
+
+TODO
+
 ## Using `Experiment` class
 
 TODO
