@@ -63,9 +63,10 @@ module RBSim
     end
 
     class DataQueue
-      attr_reader :process_name
-      def initialize(process_name)
+      attr_reader :process_name, :process_tags
+      def initialize(process_name, process_tags = {})
         @process_name = process_name
+        @process_tags = process_tags
         @queue = []
       end
 

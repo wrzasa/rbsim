@@ -49,7 +49,7 @@ module RBSim
         hlmodel.processes.each do |name, process|
           process.node = hlmodel.mapping[name]
           @tcpn.add_marking_for 'process', process
-          @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new(process.name)
+          @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new(process.name, process.tags)
         end
 
 
@@ -114,22 +114,23 @@ module RBSim
           params = process.serve_system_event(event)[:args]
           @stats_collector.event event.to_s.sub(/^stats_/,'').to_sym, params, e.clock
         elsif e.transition == "event::cpu"
-          node = e.binding['CPU'].value.node
-          @resource_stats_collector.event :start, { resource: 'CPU', node: node }, e.clock
+          cpu = e.binding['CPU'].value
+          @resource_stats_collector.event :start, cpu.tags.merge({ resource: 'CPU', node: cpu.node }), e.clock
         elsif e.transition == "event::cpu_finished"
-          node = e.binding['working CPU'].value[:cpu].node
-          @resource_stats_collector.event :stop, { resource: 'CPU', node: node }, e.clock
+          cpu = e.binding['working CPU'].value[:cpu]
+          @resource_stats_collector.event :stop, cpu.tags.merge({ resource: 'CPU', node: cpu.node }), e.clock
         elsif e.transition == "transmitted"
           process = e.binding['data after net'].value.dst
-          @resource_stats_collector.event :start, { resource: 'DATAQ WAIT', process: process }, e.clock
+          queue = e.binding['data to receive'].value
+          @resource_stats_collector.event :start, queue.process_tags.merge({ resource: 'DATAQ WAIT', process: process }), e.clock
         elsif e.transition == "event::data_received"
-          process = e.binding['process'].value.name
-          @resource_stats_collector.event :stop, { resource: 'DATAQ WAIT', process: process }, e.clock
+          process = e.binding['process'].value
+          @resource_stats_collector.event :stop, process.tags.merge({ resource: 'DATAQ WAIT', process: process.name }), e.clock
         elsif e.transition == "net"
-          net_name = e.binding['net'].value.name
+          net = e.binding['net'].value
           dropped = e.binding['net'].value.drop?
           if dropped
-            @resource_stats_collector.event :stats, { event: 'NET DROP', net: net_name }, e.clock
+            @resource_stats_collector.event :stats, net.tags.merge({ event: 'NET DROP', net: net.name }), e.clock
           end
         end
       end
@@ -137,19 +138,20 @@ module RBSim
       @simulator.cb_for :place, :remove do |t, e|
         if e.place == 'net'
           net = e.tokens.first.value
-          @resource_stats_collector.event :start, { resource: 'NET', name: net.name }, e.clock
+          @resource_stats_collector.event :start, net.tags.merge({ resource: 'NET', name: net.name }), e.clock
         end
       end
       @simulator.cb_for :place, :add do |t, e|
         if e.place == 'net'
           net = e.tokens.first[:val]
           ts = e.tokens.first[:ts]
-          @resource_stats_collector.event :stop, { resource: 'NET', name: net.name }, ts
+          @resource_stats_collector.event :stop, net.tags.merge({ resource: 'NET', name: net.name }), ts
         elsif e.place == 'data to receive'
           queue = e.tokens.first[:val]
-          process = queue.process_name
+          process_name = queue.process_name
+          process_tags = queue.process_tags
           @resource_stats_collector.event :save,
-            { value: queue.length, tags: { resource: 'DATAQ LEN', process: process } },
+            { value: queue.length, tags: process_tags.merge({ resource: 'DATAQ LEN', process: process_name }) },
             e.tcpn.clock
         end
       end

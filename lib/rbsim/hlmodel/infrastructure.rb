@@ -3,18 +3,19 @@ module RBSim
 
     Node = Struct.new :name, :cpus
     class Node
-      CPU = Struct.new :performance, :node
+      CPU = Struct.new :performance, :node, :tags
     end
 
     class Net
-      attr_reader :name, :bw, :delay, :drop
+      attr_reader :name, :bw, :delay, :drop, :tags
 
       InvalidTypeOfDropParameter = Class.new RuntimeError
       InvalidValueOfDropProbability = Class.new RuntimeError
 
-      def initialize(name, bw, delay = 0, drop = 0)
+      def initialize(name, bw, delay = 0, drop = 0, tags = {})
         @name, @bw, @delay = name, bw, delay
         @drop = drop
+        @tags = tags
         unless @drop.kind_of?(Proc) || @drop.kind_of?(Numeric)
           raise InvalidTypeOfDropParameter.new(@drop.class)
         end

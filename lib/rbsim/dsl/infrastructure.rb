@@ -15,7 +15,8 @@ module RBSim
       bw = args[:bw]
       delay = args[:delay] || 0
       drop = args[:drop] || 0
-      @model.nets << Tokens::NetToken.new(name, bw, delay, drop)
+      tags = args[:tags] || {}
+      @model.nets << Tokens::NetToken.new(name, bw, delay, drop, tags)
     end
 
     def route(args = {})
@@ -34,8 +35,8 @@ module RBSim
       @cpus = []
     end
 
-    def cpu(performance)
-      @cpus << Tokens::CPUToken.new(performance)
+    def cpu(performance, args = {})
+      @cpus << Tokens::CPUToken.new(performance, nil, args[:tags])
     end
 
     def build

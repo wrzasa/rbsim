@@ -8,18 +8,19 @@ module RBSim
       NoEventToServe = Class.new RuntimeError
       NotAssignedToNode = Class.new RuntimeError
 
-      attr_reader :name, :program, :functions
+      attr_reader :name, :program, :functions, :tags
       attr_accessor :node
 
       alias id name
 
       # +name+: name of this process used to assign it to a node
       # +program+: name of program running in this process (if any name was given); this is just for information
-      def initialize(name, program = nil)
+      def initialize(name, program = nil, tags = {})
         @event_handlers = { data_received: generic_data_received_handler }
         @event_queue = []
         @name = name
         @program = program
+        @tags = tags || {}
         @functions = {}
       end
 
