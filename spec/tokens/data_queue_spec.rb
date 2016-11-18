@@ -100,7 +100,6 @@ describe RBSim::Tokens::DataQueue do
         end
 
         it "dequeues data" do
-          p subject
           expect(subject.get.data_id).to eq other_data_id
         end
 
