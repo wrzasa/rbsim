@@ -65,8 +65,8 @@ describe RBSim::Tokens::DataQueue, focus: true do
   describe "when all fragments arrive" do
     before :each do
       subject.put data1
-      subject.put other_data1
       subject.put data2
+      subject.put other_data1
       subject.put data3
     end
 
@@ -84,26 +84,19 @@ describe RBSim::Tokens::DataQueue, focus: true do
 
     describe "when data is dequeued" do
       before :each do
-        subject.put data1
-        subject.put other_data1
-        subject.put data2
-        subject.put data3
         subject.get
       end
 
       it_behaves_like "empty queue"
 
+
       describe "when another data arrives" do
         before :each do
-          subject.put data1
-          subject.put other_data1
-          subject.put data2
-          subject.put data3
-          subject.get
           subject.put other_data2
         end
 
         it "dequeues data" do
+          p subject
           expect(subject.get.data_id).to eq other_data_id
         end
 
