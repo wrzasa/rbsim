@@ -19,7 +19,7 @@ describe "Basic simulation example" do
 
         on_event :data_received do |data|
           #log "Got data #{data} in process #{process.name}"
-          stats :request_served, process.name
+          stats tag: :request_served, group_name: process.name
         end
 
         register_event :send
@@ -28,29 +28,29 @@ describe "Basic simulation example" do
       program :apache do
         log "apache starting"
         on_event :data_received do |data|
-          stats_start :apache, process.name
+          stats_start tag: :apache, group_name: process.name
           cpu do |cpu|
             100*data.size*rand / cpu.performance
           end
           send_data to: data.src, size: data.size * 10, type: :response, content: data.content
-          stats_stop :apache, process.name
+          stats_stop tag: :apache, group_name: process.name
         end
       end
 
       node :desktop do
-        cpu 100
+        cpu 100, tags: { custom_tag: 'cpu_name1' }
       end
 
       node :gandalf do
-        cpu 1400
+        cpu 1400, tags: { custom_tag: 'cpu_name2' }
       end
 
-      new_process :client1, program: :wget, args: { target: :server, count: 10 }
-      new_process :client2, program: :wget, args: { target: :server, count: 10 }
-      new_process :server, program: :apache, args: 'apache1'
+      new_process :client1, program: :wget, args: { target: :server, count: 10 }, tags: { kind: :client }
+      new_process :client2, program: :wget, args: { target: :server, count: 10 }, tags: { kind: :client }
+      new_process :server, program: :apache, args: 'apache1', tags: { kind: :server }
 
-      net :net01, bw: 1024
-      net :net02, bw: 510
+      net :net01, bw: 1024, tags: { custom_tag: 'name1' }
+      net :net02, bw: 510, tags: { custom_tag: 'name2' }
 
       route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
 
@@ -63,7 +63,17 @@ describe "Basic simulation example" do
 
   it "serves all requests" do
     expect{ model.run }.to output("0.000: apache starting\n").to_stdout
-    expect(model.stats_summary[:application][:counters][:client1][:request_served]).to eq 10
-    expect(model.stats_summary[:application][:counters][:client2][:request_served]).to eq 10
+    expect(model.stats[:application].counters(group_name: :client1, tag: :request_served).to_h.values.flatten.size).to eq 10
+    expect(model.stats[:application].counters(group_name: :client2, tag: :request_served).to_h.values.flatten.size).to eq 10
+  end
+
+  it "saves resource stats with tags" do
+    model.run
+    expect(model.stats[:resources].durations(resource: 'NET', custom_tag: 'name1').to_a).not_to be_empty
+    expect(model.stats[:resources].durations(resource: 'NET', custom_tag: 'name2').to_a).not_to be_empty
+    expect(model.stats[:resources].durations(resource: 'CPU', custom_tag: 'cpu_name1').to_a).not_to be_empty
+    expect(model.stats[:resources].durations(resource: 'CPU', custom_tag: 'cpu_name2').to_a).not_to be_empty
+    expect(model.stats[:resources].durations(resource: 'DATAQ WAIT', kind: :client).to_a).not_to be_empty
+    expect(model.stats[:resources].durations(resource: 'DATAQ WAIT', kind: :server).to_a).not_to be_empty
   end
 end

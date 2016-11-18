@@ -19,7 +19,7 @@ module RBSim
 
     def stats
       return @stats unless @stats.nil?
-      @stats = model.stats_data
+      @stats = model.stats
     end
 
     # Run specified model with its params

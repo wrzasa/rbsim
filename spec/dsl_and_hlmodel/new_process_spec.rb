@@ -8,7 +8,7 @@ describe "HLModel::Process created with DSL#new_process" do
   let :model do
     RBSim.dsl do
       new_process :worker do
-        stats_start :work, 'worker1'
+        stats_start tag: :work, group_name: 'worker1'
         on_event :data do |volume|
           delay_for 200
           cpu do |c|
@@ -16,8 +16,8 @@ describe "HLModel::Process created with DSL#new_process" do
           end
         end
         delay_for 100
-        stats_stop :work, 'worker1'
-        stats :doing_something, 'worker1'
+        stats_stop tag: :work, group_name: 'worker1'
+        stats tag: :doing_something, group_name: 'worker1'
         cpu do |cpu|
           100/cpu.performance
         end

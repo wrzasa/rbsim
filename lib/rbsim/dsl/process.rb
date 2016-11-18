@@ -1,6 +1,6 @@
 module RBSim
   class DSL
-    def new_process(name, opts = nil, &block)
+    def new_process(name, opts = {}, &block)
       ProcessDSL.new_process(@model, name, opts, &block)
     end
   end
@@ -15,7 +15,7 @@ module RBSim
     # +name+ process name
     # +opts+ +{ program: name_of_program_to_run, args: args_to_pass_to_program_block }+
     # +block+ block defining new process (if given +opts+ are ignored)
-    def self.new_process(model, name, opts = nil, &block)
+    def self.new_process(model, name, opts = {}, &block)
       args = nil
       program = nil
       unless block_given?
@@ -25,16 +25,16 @@ module RBSim
         block = model.programs[program]
         raise UnknownProgramName.new("#{program} for new_process #{name}") if block.nil?
       end
-      process = Docile.dsl_eval(ProcessDSL.new(model, name, program), args, &block).process
+      process = Tokens::ProcessToken.new(name, program, opts[:tags])
+      process = Docile.dsl_eval(ProcessDSL.new(model, name, program, process), args, &block).process
       model.processes[name] = process
     end
 
-    def initialize(model, name, program, process = nil)
+    def initialize(model, name, program, process)
       @name = name
       @model = model
       @program = program
       @process = process
-      @process = Tokens::ProcessToken.new(@name, @program) if @process.nil?
     end
 
     def on_event(event, &block)
@@ -94,28 +94,24 @@ module RBSim
       @process.enqueue_event(:log, message)
     end
 
-    def stats_start(tag, group_name = nil)
-      params = stats_event_params(tag, group_name)
-      @process.enqueue_event(:stats_start, params)
+    def stats_start(tags)
+      @process.enqueue_event(:stats_start, tags)
     end
 
-    def stats_stop(tag, group_name = nil)
-      params = stats_event_params(tag, group_name)
-      @process.enqueue_event(:stats_stop, params)
+    def stats_stop(tags)
+      @process.enqueue_event(:stats_stop, tags)
     end
 
-    def stats(tag, group_name = nil)
-      params = stats_event_params(tag, group_name)
-      @process.enqueue_event(:stats, params)
+    def stats(tags)
+      @process.enqueue_event(:stats, tags)
     end
 
-    def stats_save(value, tag, group_name = nil)
-      params = stats_event_params(tag, group_name)
-      params[:value] = value
+    def stats_save(value, tags)
+      params = { tags: tags, value: value }
       @process.enqueue_event(:stats_save, params)
     end
 
-    def new_process(name, args = nil, &block)
+    def new_process(name, args = {}, &block)
       constructor = proc do |args|
         new_process = self.class.new_process(@model, name, args, &block)
         new_process.node = @process.node
@@ -127,14 +123,6 @@ module RBSim
     # returns time at which the event occured
     def event_time
       @model.simulator.clock
-    end
-
-    private
-
-    def stats_event_params(tag, group_name)
-      params = { tag: tag }
-      params[:group_name] = group_name unless group_name.nil?
-      params
     end
   end
 end

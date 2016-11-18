@@ -5,14 +5,14 @@ describe RBSim::Simulator do
     let :model do
       RBSim.model do
         new_process :worker do
-          stats_start :work, 'worker'
+          stats_start tag: :work, group_name: 'worker'
           delay_for 200
-          stats_stop :work, 'worker'
+          stats_stop tag: :work, group_name: 'worker'
           delay_for 100
-          stats :wait, 'worker'
+          stats tag: :wait, group_name: 'worker'
           delay_for 100
-          stats :wait, 'worker'
-          stats_save 31415, :queue_length, 'worker'
+          stats tag: :wait, group_name: 'worker'
+          stats_save 31415, tag: :queue_length, group_name: 'worker'
         end
 
         node :n1 do
@@ -29,7 +29,7 @@ describe RBSim::Simulator do
       expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stop, {tag: :work, group_name: 'worker'}, 200)
       expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, group_name: 'worker'}, 300)
       expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:stats, {tag: :wait, group_name: 'worker'}, 400)
-      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:save, {value: 31415, tag: :queue_length, group_name: 'worker'}, 400)
+      expect_any_instance_of(RBSim::Statistics).to receive(:event).with(:save, {value: 31415, tags: { tag: :queue_length, group_name: 'worker'} }, 400)
       model.run
     end
 
@@ -66,7 +66,7 @@ describe RBSim::Simulator do
 
           allow(RBSim::Statistics).to receive(:dropped_stats)
           allow_any_instance_of(RBSim::Statistics).to receive(:event) do |*a|
-            if a[1..-2] == [:stats, {tag: :net01, group_name: 'NET DROP'}]
+            if a[1..-2] == [:stats, {net: :net01, event: 'NET DROP'}]
               RBSim::Statistics.dropped_stats
             end
           end
