@@ -33,7 +33,7 @@ page 'network' do
 
       private
       def delay
-        @data.size.to_f/@net.bw.to_f
+        (@data.size.to_f / @data.fragments) / @net.bw.to_f
       end
     end
 
