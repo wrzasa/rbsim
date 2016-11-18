@@ -19,6 +19,11 @@ module RBSim
       @data_fragmentation = 1
     end
 
+    def data_fragmentation=(d)
+      raise "TCPN already initialized. Too late to set data fragmentation" unless @tcpn.nil?
+      @data_fragmentation = d
+    end
+
     def run
       simulator.run
     end

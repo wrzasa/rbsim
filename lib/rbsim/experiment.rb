@@ -26,7 +26,6 @@ module RBSim
     # and collect statistics
     def run(file, params)
       read_model(file, params)
-      @model.data_fragmentation = data_fragmentation unless data_fragmentation.nil?
       @model.run
     end
 
@@ -80,6 +79,7 @@ module RBSim
       @file = file
       @params = params
       @model = RBSim.read file, params
+      @model.data_fragmentation = data_fragmentation unless data_fragmentation.nil?
       @model.tcpn.cb_for :clock, :after, &self.method(:timer)
       @model.tcpn.cb_for :clock, :after, &self.method(:time_limit_observer)
     end
