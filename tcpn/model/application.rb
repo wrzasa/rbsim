@@ -79,7 +79,10 @@ page 'application' do
       def initialize(bndng)
         @process = bndng['process'].value
         @event = @process.serve_system_event :send_data
-        fragments = @process.data_fragmentation
+        fragments = [
+          @process.data_fragmentation,
+          @event[:args][:size].to_i / 1500.bytes
+        ].min
         @data = fragments.times.map do
           d = RBSim::Tokens::DataToken.new(self.object_id, @process.node, @process.name, @event[:args])
           d.fragments = fragments
