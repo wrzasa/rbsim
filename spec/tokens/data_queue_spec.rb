@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RBSim::Tokens::DataQueue, focus: true do
+describe RBSim::Tokens::DataQueue do
   subject { RBSim::Tokens::DataQueue.new(:apache) }
 
   let(:data_id) { 12332432 }
@@ -50,6 +50,10 @@ describe RBSim::Tokens::DataQueue, focus: true do
     end
   end
 
+  it "raises error when fragment count is not set" do
+    data = RBSim::Tokens::Data.new(other_data_id, :node01, :apache1, to: :apache, size: 1024)
+    expect { subject.put data }.to raise_error
+  end
 
   describe "until all fragments arrive" do
     before :each do

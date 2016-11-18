@@ -96,7 +96,9 @@ describe "Application process activity" do
   end
 
   it "receives data" do
-    data_queue.put RBSim::Tokens::DataToken.new(:node01, :process01, to: :child, size: 1234)
+    data = RBSim::Tokens::DataToken.new(867545, :node01, :process01, to: :child, size: 1234)
+    data.fragments = 1
+    data_queue.put data
     received_data = false
     transitions = []
     tcpn.cb_for :transition, :before do |t, e|

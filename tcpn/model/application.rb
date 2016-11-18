@@ -79,7 +79,8 @@ page 'application' do
       def initialize(binding)
         @process = binding['process'].value
         @event = @process.serve_system_event :send_data
-        @data = RBSim::Tokens::DataToken.new(@process.node, @process.name, @event[:args])
+        @data = RBSim::Tokens::DataToken.new(self.object_id, @process.node, @process.name, @event[:args])
+        @data.fragments = 1
       end
 
       def data_token(clock)

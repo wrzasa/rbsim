@@ -6,7 +6,8 @@ describe "TCPN model" do
 
     context "route from node to self" do
       let :data_token do
-        data = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 345, type: :req, content: :anything)
+        data = RBSim::Tokens::DataToken.new(6756454, :node01, :sender, to: :worker1, size: 345, type: :req, content: :anything)
+        data.fragments = 1
         data.dst_node = :node01
         data
       end

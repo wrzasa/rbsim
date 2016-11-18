@@ -66,6 +66,17 @@ module RBSim
     end
 
     class DataQueue
+      class CannotEnqueueDataError < RuntimeError
+        def initialize(data, message)
+          super message
+          @data = data
+        end
+
+        def to_s
+          super  + " " + @data.inspect
+        end
+      end
+
       attr_reader :process_name, :process_tags
       def initialize(process_name, process_tags = {})
         @process_name = process_name
@@ -75,6 +86,9 @@ module RBSim
       end
 
       def put(o)
+        if o.fragments.nil?
+          raise CannotEnqueueDataError.new(o, "Tried to enqueue data without fragment count set!")
+        end
         enqueue_fragment(o)
         check_if_complete(o)
       end
