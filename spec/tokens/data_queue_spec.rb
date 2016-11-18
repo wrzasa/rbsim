@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe RBSim::Tokens::DataQueue do
+describe RBSim::Tokens::DataQueue, focus: true do
   subject { RBSim::Tokens::DataQueue.new(:apache) }
 
   let(:data_id) { 12332432 }
@@ -13,25 +13,25 @@ describe RBSim::Tokens::DataQueue do
   end
 
   let(:data2) do
-    RBSim::Tokens::Data.new(data_id, :node01, :apache1, to: :apache, size: 1024)
+    data = RBSim::Tokens::Data.new(data_id, :node01, :apache1, to: :apache, size: 1024)
     data.fragments = 3
     data
   end
 
   let(:data3) do
-    RBSim::Tokens::Data.new(data_id, :node01, :apache1, to: :apache, size: 1024)
+    data = RBSim::Tokens::Data.new(data_id, :node01, :apache1, to: :apache, size: 1024)
     data.fragments = 3
     data
   end
 
   let(:other_data1) do
-    RBSim::Tokens::Data.new(other_data_id, :node01, :apache1, to: :apache, size: 1024)
+    data = RBSim::Tokens::Data.new(other_data_id, :node01, :apache1, to: :apache, size: 1024)
     data.fragments = 2
     data
   end
 
   let(:other_data2) do
-    RBSim::Tokens::Data.new(other_data_id, :node01, :apache1, to: :apache, size: 1024)
+    data = RBSim::Tokens::Data.new(other_data_id, :node01, :apache1, to: :apache, size: 1024)
     data.fragments = 2
     data
   end
