@@ -10,6 +10,9 @@ module RBSim
 
       attr_reader :name, :program, :functions, :tags
       attr_accessor :node
+      # to how many fragments should be
+      # divided data sent by this process?
+      attr_accessor :data_fragmentation
 
       alias id name
 
@@ -22,6 +25,7 @@ module RBSim
         @program = program
         @tags = tags || {}
         @functions = {}
+        @data_fragmentation = 1
       end
 
       # define a new reusable function for this program

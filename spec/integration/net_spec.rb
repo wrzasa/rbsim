@@ -37,7 +37,7 @@ describe "Network model" do
     allow_any_instance_of(RBSim::HLModel::Net).to receive(:drop?) { |*a| RBSim::HLModel::Net.drop? *a }
 
     # twice in TCPN (arc to data and arc to net) and while collecting statistics
-    expect(RBSim::HLModel::Net).to receive(:drop?).exactly(3) #.and_return true
+    expect(RBSim::HLModel::Net).to receive(:drop?).exactly(3 * model.data_fragmentation) #.and_return true
     model.run
   end
 

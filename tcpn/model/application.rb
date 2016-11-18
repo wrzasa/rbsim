@@ -76,15 +76,19 @@ page 'application' do
     #         type: type of send data (to use in HLModel),
     #         content: content of send data (to use in HLModel) }
     class EventSendData
-      def initialize(binding)
-        @process = binding['process'].value
+      def initialize(bndng)
+        @process = bndng['process'].value
         @event = @process.serve_system_event :send_data
-        @data = RBSim::Tokens::DataToken.new(self.object_id, @process.node, @process.name, @event[:args])
-        @data.fragments = 1
+        fragments = @process.data_fragmentation
+        @data = fragments.times.map do
+          d = RBSim::Tokens::DataToken.new(self.object_id, @process.node, @process.name, @event[:args])
+          d.fragments = fragments
+          d
+        end
       end
 
       def data_token(clock)
-        { val: @data, ts: clock }
+        @data.map { |d| { val: d, ts: clock } }
       end
 
       def process_token(clock)

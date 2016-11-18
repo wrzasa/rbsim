@@ -3,7 +3,7 @@ require 'spec_helper'
 describe "Basic simulation example" do
   let :model do
 
-    RBSim.model do
+    m = RBSim.model do
 
       program :wget do |opts|
         sent = 0
@@ -59,6 +59,9 @@ describe "Basic simulation example" do
       put :client2, on: :desktop
 
     end
+
+    m.data_fragmentation = 2
+    m
   end
 
   it "serves all requests" do
