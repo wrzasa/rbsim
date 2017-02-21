@@ -17,24 +17,24 @@ with RBSim class.
 
 Create a class that inherits `RBsim::Experiment` class. 
 
-   class MyTests < RBSim::Experiment
-   end
+     class MyTests < RBSim::Experiment
+     end
 
 Thereafter you can use it to load model and perform simulations:
 
-   sim = MyTests.new
-   sim.run 'path/to/model_file.rb'
+     sim = MyTests.new
+     sim.run 'path/to/model_file.rb'
 
 Finally, you can save statistics gathered from simulation to a file:
 
-   sim.save_stats 'file_name.stats'
+     sim.save_stats 'file_name.stats'
 
 If the file exists, new statistics will be appended at its end.
 
 The saved statistics can be later loaded and analyzed with the same
 class inheriting from the `RBSim::Experiment`:
 
-   stats = MyTests.read_stats
+     stats = MyTests.read_stats
 
 The `RBSim.read_stats` method will return an array of `MyTests` objects
 for each experiment saved in the file. The objects can then be used to
@@ -613,22 +613,152 @@ The created model is run and its statistics are printed.
 
 You can use `model.stats` to obtain simulation statistics.
 
-## Using resource tags in statistics
+## Using simulation statistics
 
-* net
-* cpu
-* process
+The way of obtaining statistics depends on the method used to create
+simulation. The most convenient is to use subclass of the
+`RBSim::Experiment` class, but it can also be done with the simulaion
+performed with `RBSim` class.
 
-TODO
+### Statistics with subclass of `RBSim::Experiment`
 
-## Using `Experiment` class
+The `RBSim::Experiment` class provides convenient method to obtain
+simulation statistics and its subclass created to run simulation is a
+natural place to implement own methods that process the statistics into
+required collective results.
 
-TODO
+There are two methods available for every instance method in a subclass
+of the `RBSim::Experiment` class. The `app_stats` gives access to
+statistics concerning modeled application, and the `res_stats`
+contains statistics concerning used resources, the ones automatically
+collected by the simulator. 
 
-## Custom Logger 
+For application stats as well as for resource stats the actual data is
+available with three iterators, for three types of
+collected statistics:
 
-TODO
+* data from basic counters collected using `stats`
+statement in the model can be obtained with `counters` iterator
+* data from duration statistics collected with `stats_start` and
+  `stats_stop` statements can be obtained with `duration` iterator
+* data from value stats saved with `stats_save` are available via
+  `values` iterator.
 
-## Custom Statistics Collector
+Each iterator accepts optional parameter describing filters, so it is
+possible to limit amount of data that should be processed. The filters
+allow to select required values on the basis of parameters passed to the
+`stats_*` statements in the model. For example, in order to get
+durations of `operation` called `:update` on can use the following
+snippet:
 
-TODO
+    app_stats.durations(operation: :update)
+
+assuming that the data are collected in the model with statements
+
+    stats_start operation: :update
+
+and 
+
+    stats_stop operation: :update
+
+
+Depending on the type of collected data (counters, durations, values)
+different data are passed by the iterator.
+
+#### Values of counters
+
+Counters are grouped according to parameters (tags) passed to the
+`stats` statement in the model. Every time such statement is reached
+during simulation, current values of the simulation clock is saved. The
+`counters` iterator yields two arguments: `tags` and array of timestamps
+when counters with these tags was triggered.
+
+    app_stats.counters(event: :finished) do |tags, timestamps|
+      # do something with :finished events
+      # if you need you can check the other
+      # tags saved with these events
+    end
+
+#### Duration times
+
+Duration times are saved from the model using `stats_start` and
+`stats_stop` statements. They are also grouped according to the tags
+passed to these statements. Data can be subsequently filtered using
+these tags and the `durations` iterator yields three values: `tags`,
+`start_time`, `stop_time`, where start and stop times are timestamps at
+which simulation reached corresponding statement. 
+
+For example if an operation in a model is braced with statement:
+
+    stats_start operation: :update
+
+and
+
+    stats_stop operation: :update
+
+duration of this operation can be obtained using the following
+statement:
+
+    app_stats.durations(operation: :update) do |tags, start, stop|
+      # do something with the single duration
+      # you can use the values of the tags
+    end
+
+If there were more then one event with the same tags save, the block
+will be yielded for each of them. Similarly, if there were additional
+tags set for the `stats_*` statements, the block will be yielded for
+each of them.
+
+#### Values
+
+Values (e.g. queue length) can be saved while simulation using
+`stats_save` statement with require tags. The save values are grouped
+using tags and time at which they were saved. The `values` iterator
+yields three parameters: `tags`, `timestamp`, `values` where values is a
+list of values saved for the same tags and the same time.
+
+#### Statistics of resources
+
+Statistics of resources are automatically collected by simulator in a
+predefined way. They are available in the `RBSim::Experiment` subclass
+with the `res_stats` method. They are grouped by the predefined tags
+that allow to identify resource that generated specific reading and type
+of the value.
+
+* CPU usage can be obtained using duration events tagged with `resource:
+  'CPU'` tag, and also with `node:` with name of the node the CPU
+  belongs to,
+* network usage for subsequent net segments can be obtained with
+  duration iterator using network `resource: 'NET'` tag; these values
+  are also tagged with and `name:` tag corresponding to the name of the
+  network segment,
+* number of packages dropped by a network segment is available via
+  `counter` iterator using tags `event: 'NET DROP'` with additional
+  `net:` tag corresponding to the name of the segment,
+* waiting time for data packages that were transmitted over the network,
+  but not yet handled by a busy processes are tagged with: `resource
+  'DATAQ WAIT` and `process:` tag corresponding to name of the receiving
+  process.
+* length of the queue that holds data that were transmitted over the
+  network but not yet received by a busy process can be read with
+  `values` counter using `resource: 'DATAQ LEN'` tag with additional tag
+  `process:` corresponding to the process name.
+
+If for a more complicated model of resources there is a need to
+additionally group the resources, it is possible to put additional tags
+to 
+
+* nets
+* cpus
+* processes
+
+and these tags will be saved together with statistices corresponding to
+these processes. So it is e.g. possible to create a group of processes
+of the same type:
+
+    new_process :apache1, program: :webserver, tags { type: :apache }
+    new_process :apache2, program: :webserver, tags { type: :apache }
+
+and then obtain queue lengths for all of them with:
+
+    res_stats.values(resource: 'DATAQ LEN', type: :apache)
