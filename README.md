@@ -13,7 +13,7 @@ There are two ways to create model. Preferred one is to subclass the
 `Experiment` class. But it is also possible to directly create model
 with RBSim class.
 
-### Using `Experiment` class
+### Using `RBsim::Experiment` class
 
 Create a class that inherits `RBsim::Experiment` class. 
 
@@ -40,7 +40,7 @@ The `RBSim.read_stats` method will return an array of `MyTests` objects
 for each experiment saved in the file. The objects can then be used to
 process statistics as described further.
 
-### Using `RBSim`
+### Using `RBSim.model`
 
 You can also define your model using `RBSim.model` method:
 
@@ -762,3 +762,14 @@ of the same type:
 and then obtain queue lengths for all of them with:
 
     res_stats.values(resource: 'DATAQ LEN', type: :apache)
+
+### Statistics when using `RBSim.model`
+
+The only difference from `RBSim::Experiment` is the way to obtain
+objects holding the actual statistics. When model was created using
+`RBSim.model` or `RBSim.read` and saved in a `model` variable, the
+statistics can be obtained using  `model.stats` method. The method
+returns hash with two elements. Under `:app_stats` key there is the same
+object that is available in a subclass of `RBSim::Experiment` using
+method `app_stats`. Similarly there is `:res_stats` key holding the
+the resource statistics.
