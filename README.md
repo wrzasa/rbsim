@@ -9,7 +9,40 @@ statistics module is included.
 
 ## Usage
 
-Define your model using `RBSim.model` method:
+There are two ways to create model. Preferred one is to subclass the
+`Experiment` class. But it is also possible to directly create model
+with RBSim class.
+
+### Using `Experiment` class
+
+Create a class that inherits `RBsim::Experiment` class. 
+
+   class MyTests < RBSim::Experiment
+   end
+
+Thereafter you can use it to load model and perform simulations:
+
+   sim = MyTests.new
+   sim.run 'path/to/model_file.rb'
+
+Finally, you can save statistics gathered from simulation to a file:
+
+   sim.save_stats 'file_name.stats'
+
+If the file exists, new statistics will be appended at its end.
+
+The saved statistics can be later loaded and analyzed with the same
+class inheriting from the `RBSim::Experiment`:
+
+   stats = MyTests.read_stats
+
+The `RBSim.read_stats` method will return an array of `MyTests` objects
+for each experiment saved in the file. The objects can then be used to
+process statistics as described further.
+
+### Using `RBSim`
+
+You can also define your model using `RBSim.model` method:
 
     model = RBSim.model some_params do |params|
       # define your model here
@@ -29,8 +62,8 @@ Run simulator:
     model.run
 
 
-To collect statistics you can also use to get Hash with objects holding complete
-data collected from simulation
+When simulation is finished, the statistics can be obtained with
+`model.stats` method.
 
 ## Model
 
@@ -163,14 +196,14 @@ statement or the last stateent in the function block.
 
 ##### Note on `def`
 
-You don't have to undrstand this. You don't even have to read this
+You don't have to understand this. You don't even have to read this
 unless you insist on using Ruby's `def` defined methods instead of above
 described `function` statement.
 
 You can use Ruby `def` statement to define reusable code in the model,
 but it is **not recommended** unless you know exactly what you are
 doing! The `def` defined methods will be accessible from event handler
-blocks, but when called, they will be evalueated in the context in which
+blocks, but when called, they will be evaluated in the context in which
 they were defined, not in the context of the block calling the function.
 Consequently, any side effects caused by the function (like
 `register_event`, `log`, `stat` or anything the DSL gives you) will be
@@ -289,17 +322,17 @@ The `stats` statements can be used to collect running statistics.
  * `stats_save value, tags` saves given value and current time
 
 The `tags` parameter allows one to group
-statistics by require criteria, e.g. name of specific process
-(apache1, apache2, apache2, ...) in which they were collected. This was
-expected to be a Hash, but can be anything.
+statistics by required criteria, e.g. name of specific process
+(apache1, apache2, apache2, ...) in which they were collected, action
+performred by the process (begin_request, end_request) etc. The
+parameter should be a hash and it is your responsibility to design
+structure of these parameters to be able to conveniently collect
+required events.
 
 Simulator automatically collects statistics for resource usage
 (subsequent CPUs and net segments).
 
-The statistics collected by `stats` statements can be obtained
-after simulation using `model.stats` method.
-
-##### Variabeles, Conditions, Loops
+##### Variables, Conditions, Loops
 
 As shown in examples above (see model of wget), variables can be
 used to steer behavior of a process. Their visibility should be
@@ -481,7 +514,7 @@ units use `in_*` methods, e.g.
     data.in_bytes
     time.in_seconds
 
-So to define that CPU load time in miliseconds should be equal to
+So to define that CPU load time in milliseconds should be equal to
 10 * data volume in bytes, use:
 
     cpu do |cpu|
@@ -492,13 +525,13 @@ Every measurement unit has its equivalent `in_*` method.
 
 ### Example
 
-Below thete is a simble but complete example model of two
+Below there is a simple but complete example model of two
 applications: `wget` sending subsequent requests to specified
 process and `apache` responding to received requests.
 
 The `wget` program accepts parameters describing its target
 (destination of requests) -- `opts[:target]` and count of
-requests to send -- `opts[:count]`. The paremeters are defined
+requests to send -- `opts[:count]`. The parameters are defined
 when new process is defined using this program.  The `apache`
 program takes no additional parameters.
 
@@ -515,7 +548,7 @@ assigned to `gandalf`.
 Logs are printed to STDOUT and statistics are collected. Apache
 `stats` definitions allow to observe time taken by serving
 requests. Client `stats` count served requests and allow to
-verify if aresponses were received for all sent requests.
+verify if responses were received for all sent requests.
 
 The created model is run and its statistics are printed.
 
