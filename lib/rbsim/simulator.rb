@@ -2,6 +2,9 @@ module RBSim
 
   class Simulator
     attr_reader :clock
+    # To how many fragments should be divided data
+    # sent over the network?
+    attr_accessor :data_fragmentation
 
     # Create new simulator
     # +block+ defines new model
@@ -13,6 +16,12 @@ module RBSim
       @stats_collector = Statistics.new
       @resource_stats_collector = Statistics.new
       @clock = 0
+      @data_fragmentation = 1
+    end
+
+    def data_fragmentation=(d)
+      raise "TCPN already initialized. Too late to set data fragmentation" unless @tcpn.nil?
+      @data_fragmentation = d
     end
 
     def run
@@ -48,6 +57,7 @@ module RBSim
 
         hlmodel.processes.each do |name, process|
           process.node = hlmodel.mapping[name]
+          process.data_fragmentation = data_fragmentation
           @tcpn.add_marking_for 'process', process
           @tcpn.add_marking_for 'data to receive', Tokens::DataQueueToken.new(process.name, process.tags)
         end

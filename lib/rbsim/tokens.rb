@@ -21,10 +21,13 @@ module RBSim
 
     class Data
       IncompleteDataDefinition = Class.new RuntimeError
+      attr_reader :data_id # id of data required to collect fragments
       attr_reader :src, :dst, :src_node, :size, :type, :content, :id
       attr_accessor :dst_node, :route
+      attr_accessor :fragments # no. of fragments this data was between
 
-      def initialize(node, process, opts)
+      def initialize(data_id, node, process, opts)
+        @data_id = data_id
         @src_node = node
         @src = process
         @dst = opts[:to]
@@ -63,15 +66,31 @@ module RBSim
     end
 
     class DataQueue
+      class CannotEnqueueDataError < RuntimeError
+        def initialize(data, message)
+          super message
+          @data = data
+        end
+
+        def to_s
+          super  + " " + @data.inspect
+        end
+      end
+
       attr_reader :process_name, :process_tags
       def initialize(process_name, process_tags = {})
         @process_name = process_name
         @process_tags = process_tags
         @queue = []
+        @incomplete_data = Hash.new { { fragments: 0, data: nil } }
       end
 
       def put(o)
-        @queue << o
+        if o.fragments.nil?
+          raise CannotEnqueueDataError.new(o, "Tried to enqueue data without fragment count set!")
+        end
+        enqueue_fragment(o)
+        check_if_complete(o)
       end
 
       def get
@@ -85,6 +104,24 @@ module RBSim
       def empty?
         length == 0
       end
+
+      private
+
+      def enqueue_fragment(o)
+        already_received = @incomplete_data[o.data_id]
+        already_received[:fragments] += 1
+        already_received[:data] ||= o
+        @incomplete_data[o.data_id] = already_received
+      end
+
+      def check_if_complete(o)
+        already_received = @incomplete_data[o.data_id]
+        if already_received[:fragments] == o.fragments
+          @incomplete_data.delete o.data_id
+          @queue << already_received[:data]
+        end
+      end
+
     end
 
     class DataQueueToken < DataQueue

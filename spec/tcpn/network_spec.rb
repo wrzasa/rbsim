@@ -9,7 +9,8 @@ describe "TCPN model" do
     end
 
     let :data_token do
-      data = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+      data = RBSim::Tokens::DataToken.new(6756453, :node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+      data.fragments = 1
       data.dst_node = :node02
       data.route = route
       data
@@ -64,6 +65,25 @@ describe "TCPN model" do
       end
     end
 
+    describe "for fragmented data" do
+      let :data_token do
+        data = RBSim::Tokens::DataToken.new(6756453, :node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+        data.fragments = 10
+        data.dst_node = :node02
+        data.route = route
+        data
+      end
+
+      it "correctly updates timestamps of net tokens respecting number of fragments" do
+        tcpn.sim
+        time = 0
+        [:net01, :net02, :net03].each do |net_name|
+          net = tcpn.marking_for('net').select { |net| net[:val].name == net_name }.first
+          expect(net[:ts]).to eq(data_token.size/net[:val].bw/data_token.fragments + time)
+          time = net[:ts]
+        end
+      end
+    end
 
     describe "dropping packages" do
 
@@ -72,7 +92,8 @@ describe "TCPN model" do
       end
 
       let :data_token do
-        data = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+        data = RBSim::Tokens::DataToken.new(354232, :node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+        data.fragments = 1
         data.dst_node = :node02
         data.route = route
         data
@@ -107,11 +128,13 @@ describe "TCPN model" do
 
       describe "when #drop? returns false then true" do
         let :data_token do
-          data1 = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+          data1 = RBSim::Tokens::DataToken.new(6755, :node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+          data1.fragments = 1
           data1.dst_node = :node02
           data1.route = route
 
-          data2 = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+          data2 = RBSim::Tokens::DataToken.new(9876, :node01, :sender, to: :worker1, size: 4000, type: :req, content: :anything)
+          data2.fragments = 1
           data2.dst_node = :node02
           data2.route = route
 

@@ -70,7 +70,7 @@ describe RBSim::Simulator do
               RBSim::Statistics.dropped_stats
             end
           end
-          expect(RBSim::Statistics).to receive(:dropped_stats).exactly(10).times
+          expect(RBSim::Statistics).to receive(:dropped_stats).exactly(10 * model.data_fragmentation).times
           model.run
         end
       end

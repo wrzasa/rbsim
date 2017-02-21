@@ -5,7 +5,8 @@ describe "TCPN model" do
   describe "page 'add route'" do
 
     let :data_token do
-      data = RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 345, type: :req, content: :anything)
+      data = RBSim::Tokens::DataToken.new(34523, :node01, :sender, to: :worker1, size: 345, type: :req, content: :anything)
+      data.fragments = 1
       data.dst_node = :node02
       data
     end

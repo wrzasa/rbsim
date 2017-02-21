@@ -8,7 +8,7 @@ require 'pathname'
 module RBSim
 
   class Experiment
-    attr_accessor :file, :params, :time_limit
+    attr_accessor :file, :params, :time_limit, :data_fragmentation
     attr_reader :model
 
     RECORD_SEPARATOR = "__ END OF RECORD __"
@@ -79,6 +79,7 @@ module RBSim
       @file = file
       @params = params
       @model = RBSim.read file, params
+      @model.data_fragmentation = data_fragmentation unless data_fragmentation.nil?
       @model.tcpn.cb_for :clock, :after, &self.method(:timer)
       @model.tcpn.cb_for :clock, :after, &self.method(:time_limit_observer)
     end

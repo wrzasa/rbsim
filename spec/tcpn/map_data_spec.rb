@@ -5,7 +5,7 @@ describe "TCPN model" do
   describe "page 'map data'" do
 
     let :data_token do
-      RBSim::Tokens::DataToken.new(:node01, :sender, to: :worker1, size: 345, type: :req, content: :anything)
+      RBSim::Tokens::DataToken.new(6754, :node01, :sender, to: :worker1, size: 345, type: :req, content: :anything)
     end
 
     let :mapping_token do
