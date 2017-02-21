@@ -752,7 +752,7 @@ to
 * cpus
 * processes
 
-and these tags will be saved together with statistices corresponding to
+and these tags will be saved together with statistics corresponding to
 these processes. So it is e.g. possible to create a group of processes
 of the same type:
 
