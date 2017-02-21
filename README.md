@@ -17,24 +17,32 @@ with RBSim class.
 
 Create a class that inherits `RBsim::Experiment` class. 
 
-     class MyTests < RBSim::Experiment
-     end
+```ruby
+ class MyTests < RBSim::Experiment
+ end
+```
 
 Thereafter you can use it to load model and perform simulations:
 
-     sim = MyTests.new
-     sim.run 'path/to/model_file.rb'
+```ruby
+ sim = MyTests.new
+ sim.run 'path/to/model_file.rb'
+```
 
 Finally, you can save statistics gathered from simulation to a file:
 
-     sim.save_stats 'file_name.stats'
+```ruby
+ sim.save_stats 'file_name.stats'
+```
 
 If the file exists, new statistics will be appended at its end.
 
 The saved statistics can be later loaded and analyzed with the same
 class inheriting from the `RBSim::Experiment`:
 
-     stats = MyTests.read_stats
+```ruby
+ stats = MyTests.read_stats
+```
 
 The `RBSim.read_stats` method will return an array of `MyTests` objects
 for each experiment saved in the file. The objects can then be used to
@@ -44,14 +52,18 @@ process statistics as described further.
 
 You can also define your model using `RBSim.model` method:
 
-    model = RBSim.model some_params do |params|
-      # define your model here
-      # use params passed to the block
-    end
+```ruby
+model = RBSim.model some_params do |params|
+  # define your model here
+  # use params passed to the block
+end
+```
 
 Or read the model from a file:
 
-    model = RBSim.read file_name, some_params_hash
+```ruby
+model = RBSim.read file_name, some_params_hash
+```
 
 +some_params_hash+ will be available in the model loaded from the file
 as +params+ variable.
@@ -59,8 +71,9 @@ as +params+ variable.
 
 Run simulator:
 
-    model.run
-
+```ruby
+model.run
+```
 
 When simulation is finished, the statistics can be obtained with
 `model.stats` method.
@@ -93,12 +106,14 @@ to the resources.
 
 Processes are defined by `new_process` statement.
 
-    new_process :sender1 do
-      delay_for time: 100
-      cpu do |cpu|
-        (10000 / cpu.performance).miliseconds
-      end
-    end
+```ruby
+new_process :sender1 do
+  delay_for time: 100
+  cpu do |cpu|
+    (10000 / cpu.performance).miliseconds
+  end
+end
+```
 
 First parameter of the statement is the process name which must
 be unique in the whole model. The block defines behavior of the process
@@ -109,10 +124,15 @@ using statements described below.
 A process can do nothing for some time. This is specified with
 `delay_for` statement.
 
-    delay_for 100.seconds
+```ruby
+delay_for 100.seconds
+```
+
 or
 
-    delay_for time: 100.seconds
+```ruby
+delay_for time: 100.seconds
+```
 
 Using `delay_for` causes process to stop for specified time. It
 will not occupy resources, but it will not serve any incoming
@@ -126,10 +146,11 @@ passed to the statement. The parameter passed to the block
 represents CPU to which this work is assigned. Performance of
 this CPU can be checked using `cpu.performance`.
 
-    cpu do |cpu|
-      (10000 / cpu.performance).miliseconds
-    end
-
+```ruby
+cpu do |cpu|
+  (10000 / cpu.performance).miliseconds
+end
+```
 
 Time values defined by `delay_for` and returned by the `cpu` block
 can be random.
@@ -143,18 +164,20 @@ recommended method of describing processes behavior, also
 recurring behaviors. The following example will repeat sending
 data 10 times.
 
-    new_process :wget do
-      sent = 0
-      on_event :send do
-        cpu do |cpu|
-          (150 / cpu.performance).miliseconds
-        end
-        sent += 1
-        register_event :send, delay: 5.miliseconds if sent < 10
-      end
-
-      register_event :send
+```ruby
+new_process :wget do
+  sent = 0
+  on_event :send do
+    cpu do |cpu|
+      (150 / cpu.performance).miliseconds
     end
+    sent += 1
+    register_event :send, delay: 5.miliseconds if sent < 10
+  end
+
+  register_event :send
+end
+```
 
 The optional `delay:` option of the `register_event` statement
 will cause the event to be registered with specified delay. Thus
@@ -256,9 +279,11 @@ request as timed out or do nothing it response was receivd before.
 A process can send data to another process using its name as
 destination address.
 
-    new_process :sender1 do
-      send_data to: :receiver, size: 1024.bytes, type: :request, content: 'anything useful for your model'
-    end
+```ruby
+new_process :sender1 do
+  send_data to: :receiver, size: 1024.bytes, type: :request, content: 'anything useful for your model'
+end
+```
 
 Data will be sent to process called `:receiver`, size will be
 1024 bytes, `type` and `content` of the data can be set to anything
@@ -271,42 +296,48 @@ data will be dropped and a warning issued. To process received
 data, process must define event handler for `:data_received`
 event.
 
-    on_event :data_received do |data|
-      cpu do |cpu|
-        (data.size / cpu.performance).miliseconds
-      end
-    end
+```ruby
+on_event :data_received do |data|
+  cpu do |cpu|
+    (data.size / cpu.performance).miliseconds
+  end
+end
+```
 
 The parameter passed to the event handler (`data` in the example
 above) contains a Hash describing received data.
 
-    { src: :source_process_name,
-      dst: :destination_process_name,
-      size: data_size,
-      type: 'a value_given_by_sender',
-      content: 'a value given by sender' }
+```ruby
+{ src: :source_process_name,
+  dst: :destination_process_name,
+  size: data_size,
+  type: 'a value_given_by_sender',
+  content: 'a value given by sender' }
+```
 
 The complete example of wget -- sending requests and receiving
 responses can look like this:
 
-    new_process :wget do
-      sent = 0
-      on_event :send do
-        cpu do |cpu|
-          (150 / cpu.performance).miliseconds
-        end
-        send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
-        sent += 1
-        register_event :send, delay: 5.miliseconds if sent < 10
-      end
-
-      on_event :data_received do |data|
-        log "Got data #{data} in process #{process.name}"
-        stats event: :request_served, where: process.name
-      end
-
-      register_event :send
+```ruby
+new_process :wget do
+  sent = 0
+  on_event :send do
+    cpu do |cpu|
+      (150 / cpu.performance).miliseconds
     end
+    send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
+    sent += 1
+    register_event :send, delay: 5.miliseconds if sent < 10
+  end
+
+  on_event :data_received do |data|
+    log "Got data #{data} in process #{process.name}"
+    stats event: :request_served, where: process.name
+  end
+
+  register_event :send
+end
+```
 
 ##### Logs and statistics
 
@@ -355,20 +386,24 @@ Behavior of programs ca be described using the same statemets
 that are used to describe processes.
 
 
-    program :waiter do |time|
-      delay_for time: time
-    end
+```ruby
+program :waiter do |time|
+  delay_for time: time
+end
 
-    program :worker do |volume|
-      cpu do |cpu|
-        ( (volume * volume).in_bytes / cpu.performance ).miliseconds
-      end
-    end
+program :worker do |volume|
+  cpu do |cpu|
+    ( (volume * volume).in_bytes / cpu.performance ).miliseconds
+  end
+end
+```
 
 These two programs can be used to define processes:
 
-    new_process program: waiter, args: 100.miliseconds
-    new_process program: worker, args: 2000.bytes
+```ruby
+new_process program: waiter, args: 100.miliseconds
+new_process program: worker, args: 2000.bytes
+```
 
 `args` passed to the `new_process` statement will be passed to
 the block defining program. So in the example above `time`
@@ -387,11 +422,13 @@ statement.
 Nodes are defined using `node` statement, cpus inside nodes using
 `cpu` statement with performance as parameter.
 
-    node :laptop do
-      cpu 1000
-      cpu 1000
-      cpu 1000
-    end
+```ruby
+node :laptop do
+  cpu 1000
+  cpu 1000
+  cpu 1000
+end
+```
 
 The performance defined here, can be used in `cpu` statement in
 process description.
@@ -404,8 +441,10 @@ name as parameter and a Hash definind other parameters of the
 segment. The most important parameter of each net segmetn is its
 bandwidth:
 
-    net :lan, bw: 1024.bps
-    net :subnet1, bw: 20480.bps
+```ruby
+net :lan, bw: 1024.bps
+net :subnet1, bw: 20480.bps
+```
 
 Additionally it is possible to specify probability that a packet
 transmitted over this network will be dropped. Currently, each message
@@ -418,7 +457,9 @@ There are two ways to define probability drop probability. First,
 specify a `Float` number between 0 and 1. The packets will be dropped
 with this this probability and uniform distribution:
 
-    net :lan, bw: 1024.bps, drop: 0.01
+```ruby
+net :lan, bw: 1024.bps, drop: 0.01
+```
 
 Second, it is possible to define a block of code. That block will be
 evaluated for each packet transmitted over this network and should
@@ -427,7 +468,9 @@ can use Ruby's `rand` function and any desired logic to produce require
 distribution of dropped packets. Fo example, to drop packets according
 to exponential distribution with lambda = 2:
 
-    net :lan, bw: 1024.bps, drop: ->{ -0.5*Math.log(rand) < 0.1 }
+```ruby
+net :lan, bw: 1024.bps, drop: ->{ -0.5*Math.log(rand) < 0.1 }
+```
 
 Currently, it is not possible to make probability of dropping a packet
 dependent on dropping previous packets.
@@ -438,9 +481,11 @@ Routes are used to define which `net` segments should be traversed
 by data transmitted between two given `node`s. Routes can be
 one-way (default) or two-way.
 
-    route from: :laptop, to: :node02, via: [ :net01, :net02 ]
-    route from: :node04, to: :node05, via: [ :net07, :net01 ], twoway: true
-    route from: :node06, to: :node07, via: [ :net07, :net01 ], twoway: :true
+```ruby
+route from: :laptop, to: :node02, via: [ :net01, :net02 ]
+route from: :node04, to: :node05, via: [ :net07, :net01 ], twoway: true
+route from: :node06, to: :node07, via: [ :net07, :net01 ], twoway: :true
+```
 
 Communication between processes located on different nodes
 requires a route defined between the nodes. If there is more then
@@ -455,8 +500,10 @@ are defined as nodes connected with net segments, the application
 can be mapped to the nodes. Mapping is defined using `put`
 statement.
 
-    put :wget, on: :laptop
-    put :server1, on: :gandalf
+```ruby
+put :wget, on: :laptop
+put :server1, on: :gandalf
+```
 
 First parameter is process name, second (after `on:`) is node
 name.
@@ -477,49 +524,59 @@ Simulator operates on three kinds of values:
 For each value one can use specific measurement units:
 
   * for data volume
-    * bits
-    * bytes
+* bits
+* bytes
   * for network bandwidth
-    * bps (bits per second)
-    * Bps (bytes per second)
+* bps (bits per second)
+* Bps (bytes per second)
   * for time:
-    * microseconds
-    * miliseconds
-    * seconds
-    * minutes
-    * hours
-    * days (24 hours)
+* microseconds
+* miliseconds
+* seconds
+* minutes
+* hours
+* days (24 hours)
 
 In every place where data volume should be given, it can be
 defined using expressions like
 
-    1024.bytes
-    128.bits
+```ruby
+1024.bytes
+128.bits
+```
 
 Similarly network bandwidth can be defined using
 
-    128.Bps
-    1024.bps
+```ruby
+128.Bps
+1024.bps
+```
 
 Finally, if time should be given, one should use a unit, to
 ensure correct value, e.g.
 
-    10.seconds
-    100.microseconds
-    2.hours
+```ruby
+10.seconds
+100.microseconds
+2.hours
+```
 
 For values returned from simulator, to ensure value in correct
 units use `in_*` methods, e.g.
 
-    data.in_bytes
-    time.in_seconds
+```ruby
+data.in_bytes
+time.in_seconds
+```
 
 So to define that CPU load time in milliseconds should be equal to
 10 * data volume in bytes, use:
 
-    cpu do |cpu|
-      (data.size.in_bytes * 10).miliseconds
-    end
+```ruby
+cpu do |cpu|
+  (data.size.in_bytes * 10).miliseconds
+end
+```
 
 Every measurement unit has its equivalent `in_*` method.
 
@@ -552,64 +609,66 @@ verify if responses were received for all sent requests.
 
 The created model is run and its statistics are printed.
 
-    require 'rbsim'
+```ruby
+require 'rbsim'
 
-    model = RBSim.model do
+model = RBSim.model do
 
-      program :wget do |opts|
-        sent = 0
-        on_event :send do
-          cpu do |cpu|
-            (150 / cpu.performance).miliseconds
-          end
-          send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
-          sent += 1
-          register_event :send, delay: 5.miliseconds if sent < opts[:count]
-        end
-
-        on_event :data_received do |data|
-          log "Got data #{data} in process #{process.name}"
-          stats event: :request_served, client: process.name
-        end
-
-        register_event :send
+  program :wget do |opts|
+    sent = 0
+    on_event :send do
+      cpu do |cpu|
+        (150 / cpu.performance).miliseconds
       end
-
-      program :apache do
-        on_event :data_received do |data|
-          stats_start server: :apache, name: process.name
-          cpu do |cpu|
-            (100 * data.size.in_bytes / cpu.performance).miliseconds
-          end
-          send_data to: data.src, size: data.size * 10, type: :response, content: data.content
-          stats_stop server: :apache, name: process.name
-        end
-      end
-
-      node :desktop do
-        cpu 100
-      end
-
-      node :gandalf do
-        cpu 1400
-      end
-
-      new_process :client1, program: :wget, args: { target: :server, count: 10 }
-      new_process :client2, program: :wget, args: { target: :server, count: 10 }
-      new_process :server, program: :apache
-
-      net :net01, bw: 1024.bps
-      net :net02, bw: 510.bps
-
-      route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
-
-      put :server, on: :gandalf
-      put :client1, on: :desktop
-      put :client2, on: :desktop
-
+      send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
+      sent += 1
+      register_event :send, delay: 5.miliseconds if sent < opts[:count]
     end
 
-    model.run
+    on_event :data_received do |data|
+      log "Got data #{data} in process #{process.name}"
+      stats event: :request_served, client: process.name
+    end
+
+    register_event :send
+  end
+
+  program :apache do
+    on_event :data_received do |data|
+      stats_start server: :apache, name: process.name
+      cpu do |cpu|
+        (100 * data.size.in_bytes / cpu.performance).miliseconds
+      end
+      send_data to: data.src, size: data.size * 10, type: :response, content: data.content
+      stats_stop server: :apache, name: process.name
+    end
+  end
+
+  node :desktop do
+    cpu 100
+  end
+
+  node :gandalf do
+    cpu 1400
+  end
+
+  new_process :client1, program: :wget, args: { target: :server, count: 10 }
+  new_process :client2, program: :wget, args: { target: :server, count: 10 }
+  new_process :server, program: :apache
+
+  net :net01, bw: 1024.bps
+  net :net02, bw: 510.bps
+
+  route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
+
+  put :server, on: :gandalf
+  put :client1, on: :desktop
+  put :client2, on: :desktop
+
+end
+
+model.run
+```
 
 You can use `model.stats` to obtain simulation statistics.
 
@@ -651,16 +710,21 @@ allow to select required values on the basis of parameters passed to the
 durations of `operation` called `:update` on can use the following
 snippet:
 
-    app_stats.durations(operation: :update)
+```ruby
+app_stats.durations(operation: :update)
+```
 
 assuming that the data are collected in the model with statements
 
-    stats_start operation: :update
+```ruby
+stats_start operation: :update
+```
 
-and 
+and
 
-    stats_stop operation: :update
-
+```ruby
+stats_stop operation: :update
+```
 
 Depending on the type of collected data (counters, durations, values)
 different data are passed by the iterator.
@@ -673,11 +737,13 @@ during simulation, current values of the simulation clock is saved. The
 `counters` iterator yields two arguments: `tags` and array of timestamps
 when counters with these tags was triggered.
 
-    app_stats.counters(event: :finished) do |tags, timestamps|
-      # do something with :finished events
-      # if you need you can check the other
-      # tags saved with these events
-    end
+```ruby
+app_stats.counters(event: :finished) do |tags, timestamps|
+  # do something with :finished events
+  # if you need you can check the other
+  # tags saved with these events
+end
+```
 
 #### Duration times
 
@@ -690,19 +756,25 @@ which simulation reached corresponding statement.
 
 For example if an operation in a model is braced with statement:
 
-    stats_start operation: :update
+```ruby
+stats_start operation: :update
+```
 
 and
 
-    stats_stop operation: :update
+```ruby
+stats_stop operation: :update
+```
 
 duration of this operation can be obtained using the following
 statement:
 
-    app_stats.durations(operation: :update) do |tags, start, stop|
-      # do something with the single duration
-      # you can use the values of the tags
-    end
+```ruby
+app_stats.durations(operation: :update) do |tags, start, stop|
+  # do something with the single duration
+  # you can use the values of the tags
+end
+```
 
 If there were more then one event with the same tags save, the block
 will be yielded for each of them. Similarly, if there were additional
@@ -756,12 +828,16 @@ and these tags will be saved together with statistics corresponding to
 these processes. So it is e.g. possible to create a group of processes
 of the same type:
 
-    new_process :apache1, program: :webserver, tags { type: :apache }
-    new_process :apache2, program: :webserver, tags { type: :apache }
+```ruby
+new_process :apache1, program: :webserver, tags { type: :apache }
+new_process :apache2, program: :webserver, tags { type: :apache }
+```
 
 and then obtain queue lengths for all of them with:
 
-    res_stats.values(resource: 'DATAQ LEN', type: :apache)
+```ruby
+res_stats.values(resource: 'DATAQ LEN', type: :apache)
+```
 
 ### Statistics when using `RBSim.model`
 
