@@ -9,6 +9,171 @@ using convenient Ruby-based DSL. Simulation is based on Timed Colored
 Petri nets designed by K. Jensen, thus ensuring reliable analysis. Basic
 statistics module is included.
 
+### Example
+
+In order to provide quick overview of the method here you will find
+example usage of RBSim. Detailed description of
+model, simulation and processing statistics can be found in next
+sections.
+
+Below there is a simple but complete example model of two
+applications: `wget` sending subsequent requests to specified
+process and `apache` responding to received requests.
+
+The `wget` program accepts parameters describing its target
+(destination of requests) -- `opts[:target]` and count of
+requests to send -- `opts[:count]`. The parameters are defined
+when new process is defined using this program.  The `apache`
+program takes no additional parameters.
+
+Two client processes are started using program `wget`: `client1`
+and `client2`. Using `apache` program one server is started:
+`server`. Application uses two nodes: `desktop` with one slower
+processor and `gandalf` with one faster CPU. The nodes are
+connected by two nets and one two-way route.  Both clients are
+assigned to the `desktop` node while server is run on `gandalf`.
+
+The clients are mapped to the `desktop` node and the server is
+assigned to `gandalf`.
+
+Logs are printed to STDOUT and statistics are collected. Apache
+`stats` definitions allow to observe time taken by serving
+requests. Client `stats` count served requests and allow to
+verify if responses were received for all sent requests.
+
+The created model is run and its statistics are printed.
+
+The `model.rb` file contains model of the application and resources
+described with DSL:
+
+```ruby
+program :wget do |opts|
+	sent = 0
+	on_event :send do
+		cpu do |cpu|
+			(150 / cpu.performance).miliseconds
+		end
+		send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
+		sent += 1
+		register_event :send, delay: 5.miliseconds if sent < opts[:count]
+	end
+
+	on_event :data_received do |data|
+		log "Got data #{data} in process #{process.name}"
+		stats event: :request_served, client: process.name
+	end
+
+	register_event :send
+end
+
+program :apache do
+	on_event :data_received do |data|
+		stats_start server: :apache, name: process.name
+		cpu do |cpu|
+			(100 * data.size.in_bytes / cpu.performance).miliseconds
+		end
+		send_data to: data.src, size: data.size * 10, type: :response, content: data.content
+		stats_stop server: :apache, name: process.name
+	end
+end
+
+node :desktop do
+	cpu 100
+end
+
+node :gandalf do
+	cpu 1400
+end
+
+new_process :client1, program: :wget, args: { target: :server, count: 10 }
+new_process :client2, program: :wget, args: { target: :server, count: 10 }
+new_process :server, program: :apache
+
+net :net01, bw: 1024.bps
+net :net02, bw: 510.bps
+
+route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
+
+put :server, on: :gandalf
+put :client1, on: :desktop
+put :client2, on: :desktop
+```
+
+Creating empty subclass of `RBsim::Experiment` in `rbsim_example.rb`
+file is sufficient to start simulation:
+
+```ruby
+class Experiment < RBSim::Experiment
+end
+```
+
+The simulation can be started with the following code:
+
+```ruby
+require './rbsim_example'
+
+params = { }
+
+sim = Experiment.new
+sim.run './model.rb', params
+sim.save_stats 'simulation.stats'
+```
+
+The `save_stats` method appends statistics to the specified file.
+Statistics saved can be loaded with:
+
+```ruby
+all_stats = Experiment.read_stats 'simulation.stats'
+```
+
+The `all_stats` will be an iterator yielding objects of class `Experiement`,
+so statistics of first experiment can be accessed using:
+
+```ruby
+all_stats.first.app_stats  # application statistics
+all_stats.first.res_stats  # resource statistics
+```
+
+Processing statistics into required results can be implemented in the
+`Experiement` class (so far this class was empty) like this:
+
+```ruby
+class Experiment < RBSim::Experiment
+
+  def print_req_times_for(server)
+    app_stats.durations(server: server) do |tags, start, stop|
+      puts "Request time #{(stop - start).in_miliseconds} ms. "
+    end
+  end
+
+  def mean_req_time_for(server)
+    req_times = app_stats.durations(server: server).to_a
+    sum = req_times.reduce(0) do |acc, data|
+      _, start, stop = *data
+      acc + stop - start
+    end
+    sum / req_times.size
+  end
+
+end
+```
+
+Then, the statistics can be conveniently used like this:
+
+```ruby
+all_stats = Experiment.read_stats 'simulation.stats'
+first_experiment = all_stats.first
+first_experiment.print_req_times_for(:apache)
+puts "Mean request time for apache: "
+puts "#{first_experiment.mean_req_time_for(:apache).in_seconds} s"
+```
+
+You can of course iterate over subsequent experiments to get statistics
+involving a number of different tests.
+
+In next sections you will find description of subsequent parts of the
+RBSim tool.
+
 ## Usage
 
 There are two ways to create model. Preferred one is to subclass the
@@ -582,103 +747,11 @@ end
 
 Every measurement unit has its equivalent `in_*` method.
 
-### Example
-
-Below there is a simple but complete example model of two
-applications: `wget` sending subsequent requests to specified
-process and `apache` responding to received requests.
-
-The `wget` program accepts parameters describing its target
-(destination of requests) -- `opts[:target]` and count of
-requests to send -- `opts[:count]`. The parameters are defined
-when new process is defined using this program.  The `apache`
-program takes no additional parameters.
-
-Two client processes are started using program `wget`: `client1`
-and `client2`. Using `apache` program one server is started:
-`server`. Application uses two nodes: `desktop` with one slower
-processor and `gandalf` with one faster CPU. The nodes are
-connected by two nets and one two-way route.  Both clients are
-assigned to the `desktop` node while server is run on `gandalf`.
-
-The clients are mapped to the `desktop` node and the server is
-assigned to `gandalf`.
-
-Logs are printed to STDOUT and statistics are collected. Apache
-`stats` definitions allow to observe time taken by serving
-requests. Client `stats` count served requests and allow to
-verify if responses were received for all sent requests.
-
-The created model is run and its statistics are printed.
-
-```ruby
-require 'rbsim'
-
-model = RBSim.model do
-
-  program :wget do |opts|
-    sent = 0
-    on_event :send do
-      cpu do |cpu|
-        (150 / cpu.performance).miliseconds
-      end
-      send_data to: opts[:target], size: 1024.bytes, type: :request, content: sent
-      sent += 1
-      register_event :send, delay: 5.miliseconds if sent < opts[:count]
-    end
-
-    on_event :data_received do |data|
-      log "Got data #{data} in process #{process.name}"
-      stats event: :request_served, client: process.name
-    end
-
-    register_event :send
-  end
-
-  program :apache do
-    on_event :data_received do |data|
-      stats_start server: :apache, name: process.name
-      cpu do |cpu|
-        (100 * data.size.in_bytes / cpu.performance).miliseconds
-      end
-      send_data to: data.src, size: data.size * 10, type: :response, content: data.content
-      stats_stop server: :apache, name: process.name
-    end
-  end
-
-  node :desktop do
-    cpu 100
-  end
-
-  node :gandalf do
-    cpu 1400
-  end
-
-  new_process :client1, program: :wget, args: { target: :server, count: 10 }
-  new_process :client2, program: :wget, args: { target: :server, count: 10 }
-  new_process :server, program: :apache
-
-  net :net01, bw: 1024.bps
-  net :net02, bw: 510.bps
-
-  route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
-
-  put :server, on: :gandalf
-  put :client1, on: :desktop
-  put :client2, on: :desktop
-
-end
-
-model.run
-```
-
-You can use `model.stats` to obtain simulation statistics.
-
 ## Using simulation statistics
 
 The way of obtaining statistics depends on the method used to create
 simulation. The most convenient is to use subclass of the
-`RBSim::Experiment` class, but it can also be done with the simulaion
+`RBSim::Experiment` class, but it can also be done with the simulation
 performed with `RBSim` class.
 
 ### Statistics with subclass of `RBSim::Experiment`
