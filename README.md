@@ -224,6 +224,24 @@ start simulation. In order to use time units you need to `require
 sim.time_limit = 10.seconds
 ```
 
+RBSim uses coarse model of network transmission. If you application
+requires more precise estimation of network transmission time, you can
+set:
+
+```ruby
+sim.data_fragmentation = number_of_fragments
+```
+
+This will cause each data package transmitted over the network to be
+divided into at most `number_of_fragments` (but not smaller then 1500B).
+If your application efficiency depends significantly on numerous data
+transmissions influencing each other this may improve accuracy, but it
+will also increase simulation time. If this is not sufficient and
+efficiency of your application depends on network transmission time
+(network bounded), not on application logic and logic of communication
+in the system, you should probably revert to a dedicated network
+simulator.
+
 ### Using `RBSim.model`
 
 You can also define your model using `RBSim.model` method:
