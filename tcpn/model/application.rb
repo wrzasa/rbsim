@@ -83,6 +83,7 @@ page 'application' do
           @process.data_fragmentation,
           @event[:args][:size].to_i / 1500.bytes
         ].min
+        fragments = 1 if fragments == 0
         @data = fragments.times.map do
           d = RBSim::Tokens::DataToken.new(self.object_id, @process.node, @process.name, @event[:args])
           d.fragments = fragments
