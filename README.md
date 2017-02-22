@@ -261,8 +261,8 @@ Or read the model from a file:
 model = RBSim.read file_name, some_params_hash
 ```
 
-+some_params_hash+ will be available in the model loaded from the file
-as +params+ variable.
+`some_params_hash` will be available in the model loaded from the file
+as `params` variable.
 
 
 Run simulator:
