@@ -15,7 +15,8 @@ page 'map data' do
     end
 
     class TCPNMapDataDestination
-      ProcessNotMappedToNode = Class.new RuntimeError
+      class ProcessNotMappedToNode < RuntimeError
+      end
 
       def initialize(binding)
         @data = binding['data to send'].value

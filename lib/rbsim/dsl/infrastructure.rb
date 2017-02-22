@@ -36,7 +36,8 @@ module RBSim
     end
 
     def cpu(performance, args = {})
-      @cpus << Tokens::CPUToken.new(performance, nil, args[:tags])
+      tags = args[:tags] || {}
+      @cpus << Tokens::CPUToken.new(performance, nil, tags)
     end
 
     def build

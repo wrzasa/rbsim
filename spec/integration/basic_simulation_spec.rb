@@ -37,6 +37,18 @@ describe "Basic simulation example" do
         end
       end
 
+      program :just_load_cpu do
+        cpu do |cpu|
+          10
+        end
+      end
+
+      program :just_send do
+        send_data to: process.name, size: 1024, type: :request, content: :nothing_important
+        on_event :data_received do
+        end
+      end
+
       node :desktop do
         cpu 100, tags: { custom_tag: 'cpu_name1' }
       end
@@ -45,18 +57,28 @@ describe "Basic simulation example" do
         cpu 1400, tags: { custom_tag: 'cpu_name2' }
       end
 
+      node :whatever do
+        cpu 100
+      end
+
       new_process :client1, program: :wget, args: { target: :server, count: 10 }, tags: { kind: :client }
       new_process :client2, program: :wget, args: { target: :server, count: 10 }, tags: { kind: :client }
       new_process :server, program: :apache, args: 'apache1', tags: { kind: :server }
+      new_process :cpu_loader, program: :just_load_cpu
+      new_process :net_loader, program: :just_send
 
       net :net01, bw: 1024, tags: { custom_tag: 'name1' }
       net :net02, bw: 510, tags: { custom_tag: 'name2' }
+      net :no_tags, bw: 1024
 
       route from: :desktop, to: :gandalf, via: [ :net01, :net02 ], twoway: true
+      route from: :whatever, to: :whatever, via: [ :no_tags ]
 
       put :server, on: :gandalf
       put :client1, on: :desktop
       put :client2, on: :desktop
+      put :cpu_loader, on: :whatever
+      put :net_loader, on: :whatever
 
     end
 
