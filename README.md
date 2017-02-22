@@ -9,12 +9,13 @@ using convenient Ruby-based DSL. Simulation is based on Timed Colored
 Petri nets designed by K. Jensen, thus ensuring reliable analysis. Basic
 statistics module is included.
 
-### Example
-
 In order to provide quick overview of the method here you will find
 example usage of RBSim. Detailed description of
-model, simulation and processing statistics can be found in next
-sections.
+model, simulation and processing statistics can be found in the
+following sections.
+
+
+# Example
 
 Below there is a simple but complete example model of two
 applications: `wget` sending subsequent requests to specified
