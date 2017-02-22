@@ -1,8 +1,10 @@
 RBSim
 =====
 
+This is a technical description of the RBSim software package.
+
 RBSim is a simulation tools designed for analysis of architecture of
-concurrent and distributed applications. Application should be descibed
+concurrent and distributed applications. Application should be described
 using convenient Ruby-based DSL. Simulation is based on Timed Colored
 Petri nets designed by K. Jensen, thus ensuring reliable analysis. Basic
 statistics module is included.
