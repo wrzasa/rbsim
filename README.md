@@ -209,12 +209,20 @@ The saved statistics can be later loaded and analyzed with the same
 class inheriting from the `RBSim::Experiment`:
 
 ```ruby
- stats = MyTests.read_stats
+ stats = MyTests.read_stats 'file_name.stats'
 ```
 
 The `RBSim.read_stats` method will return an array of `MyTests` objects
 for each experiment saved in the file. The objects can then be used to
 process statistics as described further.
+
+You can limit simulation time by setting `sim.time_limit` before you
+start simulation. In order to use time units you need to `require
+'rbsim/numeric_units'` before.
+
+```ruby
+sim.time_limit = 10.seconds
+```
 
 ### Using `RBSim.model`
 
