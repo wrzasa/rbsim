@@ -9,20 +9,20 @@ Gem::Specification.new do |s|
   s.name = 'rbsim'
   s.version = RBSim::VERSION
   s.authors = ['Wojciech Rząsa']
-  s.email = %w(wrzasa@prz-rzeszow.pl)
-  s.homepage = 'http://wrzasa.sd.prz.edu.pl/'
+  s.email = %w(me@wojciechrzasa.pl)
+  s.homepage = 'https://github.com/wrzasa/rbsim'
   s.summary = 'Distributed inftastructure and system simulator with convenient DSL.'
   s.description = 'You can model your distributed infrastructora and application and simulate its behavior and observe its efficiency easily.'
-  s.license = '(c) WRz'
+  s.license = 'GPL-3.0'
 
   s.platform = 'ruby'
   s.required_ruby_version = '~> 2.0'
 
 #  s.rubyforge_project = ''
 
-  s.files = `hg locate`.split("\n")
-  s.test_files = `hg locate spec/*`.split("\n")
-  s.executables = `hg locate -- bin/*`.split("\n").map{ |f| File.basename(f) }
+  s.files = `git ls-files -z`.split("\x0")
+  s.test_files = s.files.grep(%r{^(test|spec|features)/})
+  s.executables = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
   s.require_paths = %w(lib)
 
   s.add_runtime_dependency 'docile', '~> 1.1'
