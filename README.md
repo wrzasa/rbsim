@@ -14,6 +14,14 @@ find example usage of RBSim. Detailed description of model,
 simulation and processing statistics can be found in the
 following sections.
 
+# Installation
+
+```
+gem install rbsim
+```
+
+Or use example project from https://github.com/wrzasa/rbsim-example
+
 
 # Example
 
