@@ -953,3 +953,8 @@ returns hash with two elements. Under `:app_stats` key there is the same
 object that is available in a subclass of `RBSim::Experiment` using
 method `app_stats`. Similarly there is `:res_stats` key holding the
 the resource statistics.
+
+
+# Copyright
+
+Copyright (c) 2014-2018 Wojciech Rząsa. See LICENSE.txt for further details. Contact me if interested in different license conditions.
