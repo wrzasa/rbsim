@@ -18,8 +18,6 @@ Gem::Specification.new do |s|
   s.platform = 'ruby'
   s.required_ruby_version = '~> 2.0'
 
-#  s.rubyforge_project = ''
-
   s.files = `git ls-files -z`.split("\x0")
   s.test_files = s.files.grep(%r{^(test|spec|features)/})
   s.executables = s.files.grep(%r{^bin/}) { |f| File.basename(f) }
